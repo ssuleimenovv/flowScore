@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
 )
@@ -31,8 +32,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	state := flow.NewState(flow.DefaultParams())
 	for e := range events {
-		fmt.Printf("%s  %-15s %-4s  %s\n", e.Clock(), e.Type, e.Side, e.Player)
+		state.Apply(e)
+		home, away := state.Flow()
+		fmt.Printf("%s  %-15s %-4s  %-34s  flow %3.0f : %-3.0f\n",
+			e.Clock(), e.Type, e.Side, e.Player, home, away)
 	}
 
 	if ctx.Err() != nil {

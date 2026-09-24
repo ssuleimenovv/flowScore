@@ -49,3 +49,10 @@ func (e Event) Clock() string {
 	total := int(e.Elapsed.Seconds())
 	return fmt.Sprintf("%02d:%02d", total/60, total%60)
 }
+
+func (s Side) Opponent() Side {
+	if s == Home {
+		return Away
+	}
+	return Home
+}

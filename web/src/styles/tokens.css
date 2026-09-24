@@ -1,0 +1,15 @@
+:root {
+  --fs-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fs-duration-fast: 150ms;
+  --fs-duration-base: 300ms;
+  --fs-duration-slow: 700ms;
+}
+
+/* media - reduced-motion for all css transitions on higher layers */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fs-duration-fast: 0ms;
+    --fs-duration-base: 0ms;
+    --fs-duration-slow: 0ms;
+  }
+}

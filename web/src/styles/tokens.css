@@ -1,18 +1,151 @@
+/* FlowScore design tokens. Source of truth: design/mockup/Tokens.dc.html */
+
+/* Theme colors: dark is the default, as in the mockup */
 :root {
-  --fs-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --fs-duration-fast: 150ms;
-  --fs-duration-base: 300ms;
-  --fs-duration-slow: 700ms;
-  --fs-font-ui: 'Onest Variable', system-ui, -apple-system, sans-serif;
-  --fs-font-mono: 'Jetbrains Mono Variable', ui-monospace, 'SF Mono', monospace;
-  --fs-font-display: 'Big Shoulders Variable', 'Onest Variable', sans-serif;
+  color-scheme: dark;
+
+  --fs-bg: #0b0909;
+  --fs-surface: #151112;
+  --fs-surface-2: #1f1a1b;
+  --fs-line: #2e2728;
+  --fs-text: #f5efee;
+  --fs-muted: #a89e9f;
+  --fs-faint: #5f5556;
+  --fs-home: #ff3b4a;
+  --fs-home-soft: rgba(255, 59, 74, 0.13);
+  --fs-on-home: #1c0305;
+  --fs-away: #8fb8d6;
+  --fs-away-soft: rgba(143, 184, 214, 0.13);
+  --fs-on-away: #0a1a26;
+  --fs-live: #ff3b4a;
+  --fs-live-soft: rgba(255, 59, 74, 0.13);
+  --fs-accent: #d9162b;
+  --fs-on-accent: #ffffff;
+  --fs-ok: #30d158;
+  --fs-track: #241e1f;
+  --fs-fill: rgba(120, 120, 128, 0.3);
+  --fs-seg-selected: #5b5456;
+  --fs-bar-bg: rgba(11, 9, 9, 0.78);
+  --fs-separator: rgba(84, 84, 88, 0.55);
 }
 
-/* media - reduced-motion for all css transitions on higher layers */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --fs-bg: #f5f3f2;
+  --fs-surface: #ffffff;
+  --fs-surface-2: #efebea;
+  --fs-line: #e0dad8;
+  --fs-text: #161213;
+  --fs-muted: #5e5557;
+  --fs-faint: #b3aaa9;
+  --fs-home: #d0142a;
+  --fs-home-soft: rgba(208, 20, 42, 0.09);
+  --fs-on-home: #ffffff;
+  --fs-away: #2f6a96;
+  --fs-away-soft: rgba(47, 106, 150, 0.1);
+  --fs-on-away: #ffffff;
+  --fs-live: #d0142a;
+  --fs-live-soft: rgba(208, 20, 42, 0.09);
+  --fs-accent: #d0142a;
+  --fs-on-accent: #ffffff;
+  --fs-ok: #248a3d;
+  --fs-track: #eae5e3;
+  --fs-fill: rgba(120, 120, 128, 0.16);
+  --fs-seg-selected: #ffffff;
+  --fs-bar-bg: rgba(245, 243, 242, 0.82);
+  --fs-separator: rgba(60, 60, 67, 0.18);
+}
+
+/* Theme-independent tokens */
+:root {
+  /* Fonts */
+  --fs-font-ui: 'Onest Variable', system-ui, -apple-system, sans-serif;
+  --fs-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', monospace;
+  --fs-font-display: 'Big Shoulders Display Variable', 'Onest Variable', sans-serif;
+
+  /* Type scale, iOS HIG. 1rem = 17px */
+  --fs-text-large-title: 2rem; /* 34 */
+  --fs-text-title-2: 1.2941rem; /* 22 */
+  --fs-text-title-3: 1.1765rem; /* 20, from artboards */
+  --fs-text-headline: 1rem; /* 17 */
+  --fs-text-body: 1rem; /* 17 */
+  --fs-text-subheadline: 0.8824rem; /* 15 */
+  --fs-text-footnote: 0.7647rem; /* 13 */
+  --fs-text-caption: 0.7059rem; /* 12 */
+  --fs-text-tab: 0.5882rem; /* 10, tab bar labels, from artboards */
+
+  /* Radii */
+  --fs-radius-sm: 8px;
+  --fs-radius-md: 12px; /* lists */
+  --fs-radius-lg: 20px; /* cards */
+  --fs-radius-full: 999px;
+
+  /* Spacing */
+  --fs-space-4: 4px;
+  --fs-space-8: 8px;
+  --fs-space-12: 12px;
+  --fs-space-16: 16px;
+  --fs-space-24: 24px;
+  --fs-space-32: 32px;
+  --fs-space-40: 40px;
+
+  /* Layout, iOS HIG */
+  --fs-touch: 44px;
+  --fs-nav-height: 44px;
+  --fs-large-title-height: 52px;
+  --fs-tab-height: 49px;
+  --fs-row-min: 44px;
+  --fs-hairline: 0.5px;
+  --fs-inset: 16px;
+  --fs-screen-padding: 16px;
+  --fs-page-padding: 40px; /* desktop ≥ 1200 */
+  --fs-sidebar-min: 380px;
+  --fs-sidebar-max: 400px;
+
+  /* Materials */
+  --fs-material: saturate(180%) blur(20px);
+
+  /* Motion */
+  --fs-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --fs-ease-switch: cubic-bezier(0.3, 0.7, 0.3, 1);
+
+  --fs-duration-press: 140ms;
+  --fs-duration-fade: 150ms;
+  --fs-duration-color: 200ms;
+  --fs-duration-toggle: 220ms;
+  --fs-duration-nudge: 250ms;
+  --fs-duration-lift: 300ms;
+  --fs-duration-grow: 500ms;
+  --fs-duration-enter: 700ms;
+  --fs-duration-bar: 800ms;
+  --fs-duration-bar-h: 900ms;
+  --fs-duration-count: 1200ms;
+  --fs-duration-spin: 900ms;
+  --fs-duration-skeleton: 1400ms;
+  --fs-duration-pulse: 1600ms;
+  --fs-duration-marquee: 38s;
+  --fs-stagger: 60ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --fs-duration-fast: 0ms;
-    --fs-duration-base: 0ms;
-    --fs-duration-slow: 0ms;
+    --fs-duration-press: 0ms;
+    --fs-duration-fade: 0ms;
+    --fs-duration-color: 0ms;
+    --fs-duration-toggle: 0ms;
+    --fs-duration-nudge: 0ms;
+    --fs-duration-lift: 0ms;
+    --fs-duration-grow: 0ms;
+    --fs-duration-enter: 0ms;
+    --fs-duration-bar: 0ms;
+    --fs-duration-bar-h: 0ms;
+    --fs-duration-count: 0ms;
+    --fs-stagger: 0ms;
   }
 }
+
+/* Breakpoints (CSS variables don't work inside @media, so they live here as a reference):
+   < 768    — 1 column, bottom tab bar, tabs on match page
+   768–1199 — top nav, 2 card columns, sidebar moves below
+   ≥ 1200   — content + sidebar 380–400px, page padding 40px */

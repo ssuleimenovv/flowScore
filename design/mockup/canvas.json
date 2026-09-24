@@ -1,0 +1,539 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Admin.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Админ · тёмная",
+      "w": 1440,
+      "x": 3040,
+      "y": 3060
+    },
+    "AdminLight.dc.html": {
+      "h": 1000,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Админ · светлая",
+      "w": 1440,
+      "x": 3040,
+      "y": 8300
+    },
+    "ApiMap.dc.html": {
+      "h": 1320,
+      "is_interactive": true,
+      "page": "system",
+      "title": "Экраны и эндпоинты",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Auth.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Вход · тёмная",
+      "w": 1440,
+      "x": 1520,
+      "y": 3060
+    },
+    "AuthLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Вход · светлая",
+      "w": 1440,
+      "x": 1520,
+      "y": 8300
+    },
+    "League.dc.html": {
+      "h": 1120,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Лиги · тёмная",
+      "w": 1440,
+      "x": 1520,
+      "y": 1760
+    },
+    "LeagueLight.dc.html": {
+      "h": 1120,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Лиги · светлая",
+      "w": 1440,
+      "x": 1520,
+      "y": 7000
+    },
+    "Main.dc.html": {
+      "h": 1400,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Главная · тёмная",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "MainLight.dc.html": {
+      "h": 1400,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Главная · светлая",
+      "w": 1440,
+      "x": 0,
+      "y": 5240
+    },
+    "Match.dc.html": {
+      "h": 1640,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Матч · тёмная",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "MatchLight.dc.html": {
+      "h": 1640,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Матч · светлая",
+      "w": 1440,
+      "x": 1520,
+      "y": 5240
+    },
+    "MobileAuth.dc.html": {
+      "h": 944,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Вход · тёмная",
+      "w": 390,
+      "x": 4230,
+      "y": 0
+    },
+    "MobileAuthLight.dc.html": {
+      "h": 944,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Вход · светлая",
+      "w": 390,
+      "x": 4230,
+      "y": 2800
+    },
+    "MobileHome.dc.html": {
+      "h": 2060,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Главная · тёмная",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "MobileHomeLight.dc.html": {
+      "h": 2060,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Главная · светлая",
+      "w": 390,
+      "x": 0,
+      "y": 2800
+    },
+    "MobileLeague.dc.html": {
+      "h": 1420,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Лиги · тёмная",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "MobileLeagueLight.dc.html": {
+      "h": 1420,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Лиги · светлая",
+      "w": 390,
+      "x": 2350,
+      "y": 2800
+    },
+    "MobileMatch.dc.html": {
+      "h": 1740,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Матч · тёмная",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "MobileMatchLight.dc.html": {
+      "h": 1740,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Матч · светлая",
+      "w": 390,
+      "x": 470,
+      "y": 2800
+    },
+    "MobileNotifications.dc.html": {
+      "h": 1280,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Уведомления · тёмная",
+      "w": 390,
+      "x": 3290,
+      "y": 0
+    },
+    "MobileNotificationsLight.dc.html": {
+      "h": 1280,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Уведомления · светлая",
+      "w": 390,
+      "x": 3290,
+      "y": 2800
+    },
+    "MobilePlayer.dc.html": {
+      "h": 1740,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Игрок · тёмная",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "MobilePlayerLight.dc.html": {
+      "h": 1740,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Игрок · светлая",
+      "w": 390,
+      "x": 1880,
+      "y": 2800
+    },
+    "MobileProfile.dc.html": {
+      "h": 2180,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Настройки · тёмная",
+      "w": 390,
+      "x": 3760,
+      "y": 0
+    },
+    "MobileProfileLight.dc.html": {
+      "h": 2180,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Настройки · светлая",
+      "w": 390,
+      "x": 3760,
+      "y": 2800
+    },
+    "MobileSearch.dc.html": {
+      "h": 1160,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Поиск · тёмная",
+      "w": 390,
+      "x": 2820,
+      "y": 0
+    },
+    "MobileSearchLight.dc.html": {
+      "h": 1160,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Поиск · светлая",
+      "w": 390,
+      "x": 2820,
+      "y": 2800
+    },
+    "MobileSimulator.dc.html": {
+      "h": 2000,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Симулятор · тёмная",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "MobileSimulatorLight.dc.html": {
+      "h": 2000,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Симулятор · светлая",
+      "w": 390,
+      "x": 940,
+      "y": 2800
+    },
+    "MobileStates.dc.html": {
+      "h": 2380,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Состояния",
+      "w": 390,
+      "x": 4700,
+      "y": 0
+    },
+    "MobileTeam.dc.html": {
+      "h": 1660,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Команда · тёмная",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "MobileTeamLight.dc.html": {
+      "h": 1660,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Команда · светлая",
+      "w": 390,
+      "x": 1410,
+      "y": 2800
+    },
+    "Notifications.dc.html": {
+      "h": 1060,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Уведомления · тёмная",
+      "w": 1440,
+      "x": 4560,
+      "y": 1760
+    },
+    "NotificationsLight.dc.html": {
+      "h": 1060,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Уведомления · светлая",
+      "w": 1440,
+      "x": 4560,
+      "y": 7000
+    },
+    "Player.dc.html": {
+      "h": 1180,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Игрок · тёмная",
+      "w": 1440,
+      "x": 0,
+      "y": 1760
+    },
+    "PlayerLight.dc.html": {
+      "h": 1180,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Игрок · светлая",
+      "w": 1440,
+      "x": 0,
+      "y": 7000
+    },
+    "Profile.dc.html": {
+      "h": 1760,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Настройки · тёмная",
+      "w": 1440,
+      "x": 0,
+      "y": 3060
+    },
+    "ProfileLight.dc.html": {
+      "h": 1760,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Настройки · светлая",
+      "w": 1440,
+      "x": 0,
+      "y": 8300
+    },
+    "Search.dc.html": {
+      "h": 1080,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Поиск · тёмная",
+      "w": 1440,
+      "x": 3040,
+      "y": 1760
+    },
+    "SearchLight.dc.html": {
+      "h": 1080,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Поиск · светлая",
+      "w": 1440,
+      "x": 3040,
+      "y": 7000
+    },
+    "Simulator.dc.html": {
+      "h": 1320,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Симулятор · тёмная",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "SimulatorLight.dc.html": {
+      "h": 1320,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Симулятор · светлая",
+      "w": 1440,
+      "x": 3040,
+      "y": 5240
+    },
+    "States.dc.html": {
+      "h": 1560,
+      "is_interactive": true,
+      "page": "system",
+      "title": "Состояния: загрузка, ошибки, уведомления",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Team.dc.html": {
+      "h": 1240,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Команда · тёмная",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "TeamLight.dc.html": {
+      "h": 1240,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Команда · светлая",
+      "w": 1440,
+      "x": 4560,
+      "y": 5240
+    },
+    "Tokens.dc.html": {
+      "h": 1720,
+      "is_interactive": true,
+      "page": "system",
+      "title": "Токены",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-22T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "page": "mobile",
+    "view": "canvas"
+  },
+  "notes": {
+    "n_mob": {
+      "fill": "orange",
+      "page": "desktop",
+      "size": 40,
+      "text": "Мобильные экраны — на странице «Mobile · iOS» (переключатель страниц холста).",
+      "w": 420,
+      "x": 6080,
+      "y": 0
+    },
+    "t_dd": {
+      "kind": "title1",
+      "maxW": 5920,
+      "page": "desktop",
+      "text": "Desktop · тёмная тема",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t_dl": {
+      "kind": "title1",
+      "maxW": 5920,
+      "page": "desktop",
+      "text": "Desktop · светлая тема",
+      "w": 240,
+      "x": 0,
+      "y": 4940
+    },
+    "t_md": {
+      "kind": "title1",
+      "maxW": 5090,
+      "page": "mobile",
+      "text": "Mobile · тёмная тема",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t_ml": {
+      "kind": "title1",
+      "maxW": 4700,
+      "page": "mobile",
+      "text": "Mobile · светлая тема",
+      "w": 240,
+      "x": 0,
+      "y": 2500
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Match.dc.html",
+    "Simulator.dc.html",
+    "Team.dc.html",
+    "Player.dc.html",
+    "League.dc.html",
+    "Search.dc.html",
+    "Notifications.dc.html",
+    "Profile.dc.html",
+    "Auth.dc.html",
+    "Admin.dc.html",
+    "MainLight.dc.html",
+    "MatchLight.dc.html",
+    "SimulatorLight.dc.html",
+    "TeamLight.dc.html",
+    "PlayerLight.dc.html",
+    "LeagueLight.dc.html",
+    "SearchLight.dc.html",
+    "NotificationsLight.dc.html",
+    "ProfileLight.dc.html",
+    "AuthLight.dc.html",
+    "AdminLight.dc.html",
+    "MobileHome.dc.html",
+    "MobileMatch.dc.html",
+    "MobileSimulator.dc.html",
+    "MobileTeam.dc.html",
+    "MobilePlayer.dc.html",
+    "MobileLeague.dc.html",
+    "MobileSearch.dc.html",
+    "MobileNotifications.dc.html",
+    "MobileProfile.dc.html",
+    "MobileAuth.dc.html",
+    "MobileStates.dc.html",
+    "MobileHomeLight.dc.html",
+    "MobileMatchLight.dc.html",
+    "MobileSimulatorLight.dc.html",
+    "MobileTeamLight.dc.html",
+    "MobilePlayerLight.dc.html",
+    "MobileLeagueLight.dc.html",
+    "MobileSearchLight.dc.html",
+    "MobileNotificationsLight.dc.html",
+    "MobileProfileLight.dc.html",
+    "MobileAuthLight.dc.html",
+    "States.dc.html",
+    "ApiMap.dc.html",
+    "Tokens.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "mobile",
+      "name": "Mobile · iOS"
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop"
+    },
+    {
+      "id": "system",
+      "name": "Состояния · API · токены"
+    }
+  ],
+  "title": "FlowScore"
+}

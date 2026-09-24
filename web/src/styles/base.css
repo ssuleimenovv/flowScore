@@ -10,6 +10,7 @@
 }
 
 html {
+  font-size: 106.25%;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -29,6 +30,8 @@ body {
   font-family: var(--fs-font-ui);
   font-optical-sizing: auto;
   line-height: 1.5;
+  color: var(--fs-text);
+  background: var(--fs-bg);
   -webkit-font-smoothing: antialiased;
 }
 

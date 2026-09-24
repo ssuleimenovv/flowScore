@@ -1,0 +1,582 @@
+openapi: 3.1.0
+info:
+  title: FlowScore API
+  version: 0.1.0
+  description: |
+    Match page slice. Source of truth for routes: design/mockup/ApiMap.dc.html.
+    Flow semantics: docs/FLOW.md.
+servers:
+  - url: http://localhost:8080/api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: matches
+
+paths:
+  /matches/{matchId}:
+    get:
+      tags: [matches]
+      operationId: getMatch
+      summary: Match header, score and stats
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Match'
+        '304':
+          description: Not modified (If-None-Match matched)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /matches/{matchId}/flow:
+    get:
+      tags: [matches]
+      operationId: getMatchFlow
+      summary: Current Flow and per-minute history
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowSeries'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /matches/{matchId}/events:
+    get:
+      tags: [matches]
+      operationId: getMatchEvents
+      summary: Match timeline, newest first
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /matches/{matchId}/insight:
+    get:
+      tags: [matches]
+      operationId: getMatchInsight
+      summary: AI output — explanation, outcome prediction, fan sentiment
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Insight'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /ws/matches/{matchId}/stream:
+    servers:
+      - url: ws://localhost:8080
+    get:
+      tags: [matches]
+      operationId: streamMatch
+      summary: WebSocket — live updates for one match
+      description: |
+        Upgrades to WebSocket. The server pushes WsMessage frames (JSON).
+        On a gap in `seq` the client refetches the REST resources.
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '101':
+          description: Switching protocols. Frames follow the WsMessage schema.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WsMessage'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    MatchId:
+      name: matchId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: m_01J8ZQ4T7K
+
+  headers:
+    ETag:
+      schema:
+        type: string
+
+  responses:
+    Unauthorized:
+      description: Access token missing or expired
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Match not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds to wait
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Error:
+      description: Unexpected error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+  schemas:
+    Problem:
+      description: RFC 9457 Problem Details
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        requestId:
+          type: string
+          description: Shown in the error card ("req 7f3a91")
+
+    Side:
+      type: string
+      enum: [home, away]
+
+    Team:
+      type: object
+      required: [id, code, name]
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+          description: Three-letter code, e.g. MCI
+        name:
+          type: string
+
+    Score:
+      type: object
+      required: [home, away]
+      properties:
+        home:
+          type: integer
+          minimum: 0
+        away:
+          type: integer
+          minimum: 0
+
+    Match:
+      type: object
+      required: [id, status, kickoffAt, competition, home, away, score, clock, stats]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, live, halftime, finished, postponed]
+        kickoffAt:
+          type: string
+          format: date-time
+        competition:
+          type: object
+          required: [id, name]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            round:
+              type: string
+        venue:
+          type: object
+          properties:
+            name:
+              type: string
+            city:
+              type: string
+        home:
+          $ref: '#/components/schemas/Team'
+        away:
+          $ref: '#/components/schemas/Team'
+        score:
+          $ref: '#/components/schemas/Score'
+        halftimeScore:
+          oneOf:
+            - $ref: '#/components/schemas/Score'
+            - type: 'null'
+        clock:
+          $ref: '#/components/schemas/Clock'
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatRow'
+
+    Clock:
+      type: object
+      required: [elapsedSeconds, period, observedAt]
+      properties:
+        elapsedSeconds:
+          type: integer
+          description: Match time in seconds (72:14 → 4334)
+        period:
+          type: string
+          enum: [first_half, second_half, extra_time, penalties]
+        observedAt:
+          type: string
+          format: date-time
+          description: Server time when elapsedSeconds was measured; the client keeps ticking from here
+
+    StatRow:
+      type: object
+      required: [key, home, away]
+      properties:
+        key:
+          type: string
+          description: possession, shots, shots_on_target, xg, key_passes, pressure_tackles
+        home:
+          type: number
+        away:
+          type: number
+
+    FlowValues:
+      type: object
+      required: [home, away]
+      properties:
+        home:
+          type: number
+          minimum: 0
+          maximum: 100
+        away:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    FlowPoint:
+      type: object
+      required: [minute, home, away]
+      properties:
+        minute:
+          type: integer
+          minimum: 1
+        home:
+          type: number
+        away:
+          type: number
+
+    FlowSeries:
+      type: object
+      required: [matchId, current, delta10, points, updatedAt]
+      properties:
+        matchId:
+          type: string
+        current:
+          $ref: '#/components/schemas/FlowValues'
+        delta10:
+          type: object
+          description: Flow now minus Flow 10 match minutes ago
+          required: [home, away]
+          properties:
+            home:
+              type: number
+            away:
+              type: number
+        points:
+          type: array
+          description: One point per played minute. The client derives the wave and 1/5/15 windows.
+          items:
+            $ref: '#/components/schemas/FlowPoint'
+        updatedAt:
+          type: string
+          format: date-time
+
+    MatchEvent:
+      type: object
+      required: [id, type, side, minute]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            [goal, shot_on_target, shot_off_target, shot_blocked, corner,
+             yellow_card, red_card, substitution, foul, offside, take_on,
+             halftime, fulltime]
+        side:
+          oneOf:
+            - $ref: '#/components/schemas/Side'
+            - type: 'null'
+        minute:
+          type: integer
+        addedTime:
+          type: [integer, 'null']
+          description: 45+2 → minute 45, addedTime 2
+        player:
+          $ref: '#/components/schemas/PersonRef'
+        assist:
+          $ref: '#/components/schemas/PersonRef'
+        xG:
+          type: [number, 'null']
+        position:
+          type: object
+          description: 0–100, attacking left to right
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+        scoreAfter:
+          $ref: '#/components/schemas/Score'
+        flowImpact:
+          type: [number, 'null']
+          description: The event's weight w(e) from docs/FLOW.md
+
+    PersonRef:
+      type: [object, 'null']
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+
+    EventList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchEvent'
+
+    Probabilities:
+      type: object
+      required: [home, draw, away]
+      properties:
+        home:
+          type: integer
+        draw:
+          type: integer
+        away:
+          type: integer
+
+    Insight:
+      type: object
+      required: [matchId, prediction]
+      properties:
+        matchId:
+          type: string
+        explanation:
+          description: Null until the Explainability agent answers
+          oneOf:
+            - $ref: '#/components/schemas/Explanation'
+            - type: 'null'
+        prediction:
+          type: object
+          required: [current, preMatch, model]
+          properties:
+            current:
+              $ref: '#/components/schemas/Probabilities'
+            preMatch:
+              $ref: '#/components/schemas/Probabilities'
+            model:
+              type: string
+              example: LightGBM v0.3
+        sentiment:
+          oneOf:
+            - $ref: '#/components/schemas/Sentiment'
+            - type: 'null'
+
+    Explanation:
+      type: object
+      required: [title, text, factors, generatedAt]
+      properties:
+        title:
+          type: string
+        text:
+          type: string
+        factors:
+          type: array
+          items:
+            type: object
+            required: [label, impact]
+            properties:
+              label:
+                type: string
+              impact:
+                type: number
+        generatedAt:
+          type: string
+          format: date-time
+
+    Sentiment:
+      type: object
+      required: [messagesPerMinute, home, away]
+      properties:
+        messagesPerMinute:
+          type: integer
+        home:
+          $ref: '#/components/schemas/FanMood'
+        away:
+          $ref: '#/components/schemas/FanMood'
+
+    FanMood:
+      type: object
+      required: [score, mood]
+      properties:
+        score:
+          type: number
+          minimum: -1
+          maximum: 1
+        mood:
+          type: string
+          example: эйфория
+
+    WsMessage:
+      oneOf:
+        - $ref: '#/components/schemas/WsMatchEvent'
+        - $ref: '#/components/schemas/WsFlowUpdate'
+        - $ref: '#/components/schemas/WsPredictionUpdate'
+        - $ref: '#/components/schemas/WsInsightUpdate'
+      discriminator:
+        propertyName: type
+        mapping:
+          match.event: '#/components/schemas/WsMatchEvent'
+          flow.update: '#/components/schemas/WsFlowUpdate'
+          prediction.update: '#/components/schemas/WsPredictionUpdate'
+          insight.update: '#/components/schemas/WsInsightUpdate'
+
+    WsEnvelope:
+      type: object
+      required: [type, matchId, seq, sentAt]
+      properties:
+        type:
+          type: string
+        matchId:
+          type: string
+        seq:
+          type: integer
+          description: Increases by 1 per message within a match; a gap means messages were lost
+        sentAt:
+          type: string
+          format: date-time
+
+    WsMatchEvent:
+      allOf:
+        - $ref: '#/components/schemas/WsEnvelope'
+        - type: object
+          required: [data]
+          properties:
+            type:
+              const: match.event
+            data:
+              $ref: '#/components/schemas/MatchEvent'
+
+    WsFlowUpdate:
+      allOf:
+        - $ref: '#/components/schemas/WsEnvelope'
+        - type: object
+          required: [data]
+          properties:
+            type:
+              const: flow.update
+            data:
+              type: object
+              required: [current, delta10, point]
+              properties:
+                current:
+                  $ref: '#/components/schemas/FlowValues'
+                delta10:
+                  $ref: '#/components/schemas/FlowValues'
+                point:
+                  $ref: '#/components/schemas/FlowPoint'
+
+    WsPredictionUpdate:
+      allOf:
+        - $ref: '#/components/schemas/WsEnvelope'
+        - type: object
+          required: [data]
+          properties:
+            type:
+              const: prediction.update
+            data:
+              $ref: '#/components/schemas/Probabilities'
+
+    WsInsightUpdate:
+      allOf:
+        - $ref: '#/components/schemas/WsEnvelope'
+        - type: object
+          required: [data]
+          properties:
+            type:
+              const: insight.update
+            data:
+              $ref: '#/components/schemas/Explanation'

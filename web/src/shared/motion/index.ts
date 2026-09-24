@@ -3,16 +3,16 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import 'lenis/dist/lenis.css'
 
-import { DURATION, EASE } from './tokens'
+import { DURATION, EASE, EASE_SWITCH, STAGGER } from './tokens'
 import { MQ } from './media'
 import { createSmoothScroll } from './smoothScroll'
 
-export { DURATION, EASE, MQ }
+export { DURATION, EASE, EASE_SWITCH, STAGGER, MQ }
 
 export const motion: Plugin = {
   install() {
     gsap.registerPlugin(ScrollTrigger)
-    gsap.defaults({ ease: EASE, duration: DURATION.base })
+    gsap.defaults({ ease: EASE, duration: DURATION.enter })
 
     gsap.matchMedia().add(`${MQ.desktop} and ${MQ.motionOk}`, () => {
       return createSmoothScroll()

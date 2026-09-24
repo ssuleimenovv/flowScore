@@ -6,7 +6,7 @@ import { router } from './router'
 
 import '@fontsource-variable/onest'
 import '@fontsource-variable/jetbrains-mono'
-import '@fontsource-variable/big-shoulders/opsz.css'
+import '@fontsource-variable/big-shoulders-display'
 
 import '@/styles/tokens.css'
 import '@/styles/base.css'

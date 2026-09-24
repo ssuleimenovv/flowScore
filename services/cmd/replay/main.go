@@ -1,33 +1,41 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 
+	"github.com/ssuleimenovv/flowscore/services/internal/provider"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
 )
 
 func main() {
-	matchID := flag.Int("match", 3754314, "StatsBomb match ID")
-	matches := flag.String("matches", "data/statsbomb/matches-2-27.json", "matches file")
-	events := flag.String("events", "data/statsbomb/events-3754314.json", "events file")
+	matchID := flag.String("match", "3754314", "StatsBomb match ID")
+	speed := flag.Float64("speed", 60, "1 = real time, 60 = one match minute per second")
 	flag.Parse()
 
-	evs, err := statsbomb.LoadMatch(*matches, *events, *matchID)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	var p provider.Provider = &statsbomb.Replay{
+		MatchesPath: "data/statsbomb/matches-2-27.json",
+		EventsDir:   "data/statsbomb",
+		Speed:       *speed,
+	}
+
+	events, err := p.Stream(ctx, *matchID)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	counts := map[string]int{}
-	for _, e := range evs {
-		counts[string(e.Type)]++
-
-		xg := ""
-		if e.XG != nil {
-			xg = fmt.Sprintf("xG %.2f", *e.XG)
-		}
-		fmt.Printf("%s  %-15s %-4s  %-25s %s\n", e.Clock(), e.Type, e.Side, e.Player, xg)
+	for e := range events {
+		fmt.Printf("%s  %-15s %-4s  %s\n", e.Clock(), e.Type, e.Side, e.Player)
 	}
-	fmt.Println(counts)
+
+	if ctx.Err() != nil {
+		fmt.Println("stopped")
+	}
 }

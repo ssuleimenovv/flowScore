@@ -4,6 +4,10 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router'
 
+import '@fontsource-variable/onest'
+import '@fontsource-variable/jetbrains-mono'
+import '@fontsource-variable/big-shoulders/opsz.css'
+
 import '@/styles/tokens.css'
 import '@/styles/base.css'
 

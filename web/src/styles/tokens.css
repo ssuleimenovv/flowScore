@@ -3,6 +3,9 @@
   --fs-duration-fast: 150ms;
   --fs-duration-base: 300ms;
   --fs-duration-slow: 700ms;
+  --fs-font-ui: 'Onest Variable', system-ui, -apple-system, sans-serif;
+  --fs-font-mono: 'Jetbrains Mono Variable', ui-monospace, 'SF Mono', monospace;
+  --fs-font-display: 'Big Shoulders Variable', 'Onest Variable', sans-serif;
 }
 
 /* media - reduced-motion for all css transitions on higher layers */

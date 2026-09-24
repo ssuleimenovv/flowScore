@@ -1,0 +1,74 @@
+/* Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Dynamic Type: on iOS, 1rem follows the user's text size setting */
+@supports (font: -apple-system-body) {
+  @media (pointer: coarse) {
+    html {
+      font: -apple-system-body;
+    }
+  }
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--fs-font-ui);
+  font-optical-sizing: auto;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+#app {
+  isolation: isolate;
+  min-height: 100dvh;
+}
+
+/* Safe areas: applied by layout chrome (nav bar, tab bar), never on body */
+:root {
+  --fs-safe-top: env(safe-area-inset-top, 0px);
+  --fs-safe-right: env(safe-area-inset-right, 0px);
+  --fs-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --fs-safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* Dynamic Type - the main focus raw,  */

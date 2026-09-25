@@ -32,6 +32,13 @@ func (s *State) Apply(e event.Event) {
 	s.period = e.Period
 	s.Advance(e.Elapsed)
 
+	if e.Type == event.Possession && e.HomeShare != nil {
+		lead := *e.HomeShare - 0.5 // +0.2 means home had the ball 70% of the minute
+		s.impulse[event.Home] += s.p.Possession * lead
+		s.impulse[event.Away] -= s.p.Possession * lead
+		return
+	}
+
 	side, w := s.p.weight(e)
 	s.impulse[side] += w
 }

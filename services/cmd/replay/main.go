@@ -41,13 +41,16 @@ func main() {
 	lastMinute := -1
 	for u := range updates {
 		minute := int(u.At.Minutes())
-		if u.Cause == nil && minute == lastMinute {
-			continue // print ticks once per match minute
+
+		// Ticks and possession updates are printed once per match minute.
+		quiet := u.Cause == nil || u.Cause.Type == event.Possession
+		if quiet && minute == lastMinute {
+			continue
 		}
 		lastMinute = minute
 
 		label := ""
-		if u.Cause != nil {
+		if !quiet {
 			label = fmt.Sprintf("%s %s · %s", u.Cause.Type, u.Cause.Side, u.Cause.Player)
 		}
 		fmt.Printf("%s  %20s %3.0f │ %-3.0f %-20s  %s\n",

@@ -63,3 +63,13 @@ func TestNegativeImpulseShowsZero(t *testing.T) {
 	home, _ := s.Flow()
 	near(t, "home", home, 0)
 }
+
+func TestPossesstionLeadHelpsHolder(t *testing.T) {
+	s := NewState(DefaultParams())
+	share := 0.7
+	s.Apply(event.Event{Type: event.Possession, Period: 1, Elapsed: time.Minute, HomeShare: &share})
+
+	home, away := s.Flow()
+	near(t, "home", home, 10.05)
+	near(t, "away", away, 0)
+}

@@ -19,6 +19,7 @@ const (
 	Foul          Type = "foul"
 	Offside       Type = "offside"
 	TakeOn        Type = "take_on"
+	Possession    Type = "possession" // Possession is internal: one per match minute, never shown in the timelines
 )
 
 type Side string
@@ -34,15 +35,17 @@ type Position struct {
 }
 
 type Event struct {
-	ID      string
-	MatchID string
-	Type    Type
-	Side    Side
-	Period  int
-	Elapsed time.Duration // match time: 46:10 in the second half is 46m10s
-	Player  string
-	Pos     *Position
-	XG      *float64
+	ID        string
+	MatchID   string
+	Type      Type
+	Side      Side
+	Period    int
+	Elapsed   time.Duration // match time: 46:10 in the second half is 46m10s
+	Player    string
+	Pos       *Position
+	XG        *float64
+	HomeShare *float64 // homeshare is set on possession events: the home team's share of the ball
+	// during the minute, from 0 to 1
 }
 
 func (e Event) Clock() string {

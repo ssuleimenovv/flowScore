@@ -1,8 +1,6 @@
 package statsbomb
 
 import (
-	"time"
-
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 )
 
@@ -19,7 +17,7 @@ func mapEvent(r rawEvent, matchID string, homeTeamID int) []event.Event {
 		MatchID: matchID,
 		Side:    event.Away,
 		Period:  r.Period,
-		Elapsed: time.Duration(r.Minute)*time.Minute + time.Duration(r.Second)*time.Second,
+		Elapsed: elapsed(r),
 	}
 	if r.Team.ID == homeTeamID {
 		base.Side = event.Home

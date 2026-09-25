@@ -6,14 +6,15 @@ type ref struct {
 }
 
 type rawEvent struct {
-	ID       string    `json:"id"`
-	Period   int       `json:"period"`
-	Minute   int       `json:"minute"`
-	Second   int       `json:"second"`
-	Type     ref       `json:"type"`
-	Team     ref       `json:"team"`
-	Player   *ref      `json:"player"`
-	Location []float64 `json:"location"`
+	ID             string    `json:"id"`
+	Period         int       `json:"period"`
+	Minute         int       `json:"minute"`
+	Second         int       `json:"second"`
+	Type           ref       `json:"type"`
+	Team           ref       `json:"team"`
+	Player         *ref      `json:"player"`
+	Location       []float64 `json:"location"`
+	PossessionTeam ref       `json:"possession_team"`
 
 	Shot *struct {
 		XG      float64 `json:"statsbomb_xg"`

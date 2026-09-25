@@ -1,9 +1,11 @@
 package statsbomb
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
@@ -36,6 +38,15 @@ func LoadMatch(matchesPath, eventsPath string, matchID int) ([]event.Event, erro
 	for _, r := range raw {
 		out = append(out, mapEvent(r, id, homeTeamID)...)
 	}
+	out = append(out, possessionEvents(raw, id, homeTeamID)...)
+
+	// Possession events are appended at the end; put everything back in match order.
+	slices.SortStableFunc(out, func(a, b event.Event) int {
+		if a.Period != b.Period {
+			return cmp.Compare(a.Period, b.Period)
+		}
+		return cmp.Compare(a.Elapsed, b.Elapsed)
+	})
 	return out, nil
 }
 

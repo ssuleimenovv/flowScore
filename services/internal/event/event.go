@@ -31,7 +31,8 @@ const (
 
 // Position is on a 0–100 pitch, attacking left to right.
 type Position struct {
-	X, Y float64
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
 }
 
 type Event struct {

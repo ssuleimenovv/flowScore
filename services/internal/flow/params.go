@@ -32,8 +32,8 @@ func DefaultParams() Params {
 	}
 }
 
-// weight returns which team the event benefits and by how much
-func (p Params) weight(e event.Event) (event.Side, float64) {
+// Weight returns which team the event benefits and by how much
+func (p Params) Weight(e event.Event) (event.Side, float64) {
 	switch e.Type {
 	case event.ShotOnTarget, event.ShotOffTarget, event.ShotBlocked:
 		xg := p.DefaultXG

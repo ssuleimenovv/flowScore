@@ -39,7 +39,7 @@ func (s *State) Apply(e event.Event) {
 		return
 	}
 
-	side, w := s.p.weight(e)
+	side, w := s.p.Weight(e)
 	s.impulse[side] += w
 }
 

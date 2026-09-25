@@ -6,10 +6,13 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
+  plugins: [vue(), vueDevTools()],
+  server: {
+    proxy: {
+      // WebSocket stream of the Go gateway (services/cmd/gateway)
+      '/ws': { target: 'ws://localhost:8080', ws: true },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

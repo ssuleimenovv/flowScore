@@ -23,9 +23,13 @@ func NewPublisher(hub *Hub, matchID string, params flow.Params) *Publisher {
 	return &Publisher{hub: hub, matchID: matchID, params: params, history: map[int]FlowValues{}}
 }
 
-// Run publishes until updates is closed.
+// Run publishes one match until updates is closed. seq keeps growing across
+// replays, so a client never sees it go back.
 func (p *Publisher) Run(updates <-chan flow.Update) {
+	clear(p.history) // minutes of the previous replay
+
 	for u := range updates {
+
 		if u.Cause != nil && u.Cause.Type != event.Possession {
 			p.send("match.event", p.matchEvent(*u.Cause))
 		}

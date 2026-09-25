@@ -10,22 +10,27 @@ import (
 
 const writeTimeout = 5 * time.Second
 
-// StreamHandler serves GET /ws/matches/{matchId}/stream
-func StreamHandler(hub *Hub, allowedOrigins []string) http.HandlerFunc {
+// Register adds the live routes to mux. The route pattern and PathValue
+// live next to each other, so their parameter names cannot drift apart.
+func Register(mux *http.ServeMux, hub *Hub, allowedOrigins []string) {
+	mux.HandleFunc("GET /ws/matches/{matchId}/stream", streamHandler(hub, allowedOrigins))
+}
+
+func streamHandler(hub *Hub, allowedOrigins []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		matchID := r.PathValue("matchId")
 
-		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: alloweddOrigins})
+		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: allowedOrigins})
 		if err != nil {
-			return // accept has already written the HTTP errors
+			return // Accept has already written the HTTP error
 		}
 		defer conn.CloseNow()
 
 		client := hub.Subscribe(matchID)
 		defer hub.Unsubscribe(matchID, client)
 
-		// we never read from the client, but the library must still process
-		// its control frames. ctx is cancelled when the client disconnects
+		// We never read from the client, but the library must still process
+		// its control frames. ctx is cancelled when the client disconnects.
 		ctx := conn.CloseRead(r.Context())
 
 		for {

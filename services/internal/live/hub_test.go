@@ -38,20 +38,18 @@ func TestHubDropsSlowClient(t *testing.T) {
 	}
 }
 
-func TestFirstSubscriber(t *testing.T) {
+func TestJoinedCollapsesSignals(t *testing.T) {
 	hub := NewHub()
+	hub.Subscribe("m1")
+	hub.Subscribe("m1") // must not block although nobody reads Joined yet
+
+	<-hub.Joined()
 	select {
-	case <-hub.FirstSubscriber():
-		t.Fatal("closed before anyone subscribed")
+	case <-hub.Joined():
+		t.Fatal("two subscriptions produced two signals, want one")
 	default:
 	}
-
-	hub.Subscribe("m1")
-	hub.Subscribe("m1") // a second call must not close the channel twice
-
-	select {
-	case <-hub.FirstSubscriber():
-	default:
-		t.Fatal("not closed after the first subscriber")
+	if n := hub.Count("m1"); n != 2 {
+		t.Errorf("Count = %d, want 2", n)
 	}
 }

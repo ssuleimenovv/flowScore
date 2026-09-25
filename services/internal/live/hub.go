@@ -20,21 +20,27 @@ func (c *Client) Messages() <-chan []byte {
 type Hub struct {
 	mu      sync.Mutex
 	matches map[string]map[*Client]struct{}
-
-	firstOnce sync.Once
-	first     chan struct{}
+	joined  chan struct{}
 }
 
 func NewHub() *Hub {
 	return &Hub{
 		matches: map[string]map[*Client]struct{}{},
-		first:   make(chan struct{}),
+		joined:  make(chan struct{}, 1),
 	}
 }
 
-// FirstSubscriber is closed when the first client subscribes to any match.
-func (h *Hub) FirstSubscriber() <-chan struct{} {
-	return h.first
+// Joined receives a signal after someone subscribes. Several subscriptions
+// in a row may collapse into one signal, so check Count after receiving.
+func (h *Hub) Joined() <-chan struct{} {
+	return h.joined
+}
+
+// Count returns how many clients watch the match.
+func (h *Hub) Count(matchID string) int {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return len(h.matches[matchID])
 }
 
 func (h *Hub) Subscribe(matchID string) *Client {
@@ -47,7 +53,10 @@ func (h *Hub) Subscribe(matchID string) *Client {
 	h.matches[matchID][c] = struct{}{}
 	h.mu.Unlock()
 
-	h.firstOnce.Do(func() { close(h.first) })
+	select {
+	case h.joined <- struct{}{}:
+	default: // a signal is already waiting
+	}
 	return c
 }
 

@@ -27,7 +27,7 @@ func main() {
 	hub := live.NewHub()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /ws/matches/{matchId}/stream", live.StreamHandler(hub, []string{"localhost:5173"}))
+	live.Register(mux, hub, []string{"localhost:5173"})
 	srv := &http.Server{Addr: *addr, Handler: mux}
 
 	go func() {
@@ -37,7 +37,7 @@ func main() {
 		}
 	}()
 
-	go replay(ctx, hub, *matchID, *speed)
+	go loopReplay(ctx, hub, *matchID, *speed)
 
 	<-ctx.Done()
 	log.Print("shutting down")
@@ -50,13 +50,28 @@ func main() {
 	}
 }
 
-func replay(ctx context.Context, hub *live.Hub, matchID string, speed float64) {
-	select {
-	case <-hub.FirstSubscriber():
-	case <-ctx.Done():
-		return
-	}
+// loopReplay plays the match again and again while anyone watches it.
+func loopReplay(ctx context.Context, hub *live.Hub, matchID string, speed float64) {
+	params := flow.DefaultParams()
+	publisher := live.NewPublisher(hub, matchID, params)
 
+	for ctx.Err() == nil {
+		for hub.Count(matchID) == 0 {
+			select {
+			case <-hub.Joined():
+			case <-ctx.Done():
+				return
+			}
+		}
+
+		if err := replayOnce(ctx, publisher, params, matchID, speed); err != nil {
+			log.Printf("replay: %v", err)
+			return
+		}
+	}
+}
+
+func replayOnce(ctx context.Context, publisher *live.Publisher, params flow.Params, matchID string, speed float64) error {
 	provider := &statsbomb.Replay{
 		MatchesPath: "data/statsbomb/matches-2-27.json",
 		EventsDir:   "data/statsbomb",
@@ -64,15 +79,12 @@ func replay(ctx context.Context, hub *live.Hub, matchID string, speed float64) {
 	}
 	events, err := provider.Stream(ctx, matchID)
 	if err != nil {
-		log.Printf("replay: %v", err)
-		return
+		return err
 	}
 
-	params := flow.DefaultParams()
 	engine := flow.Engine{Params: params, Speed: speed, Tick: 5 * time.Second}
-	updates := engine.Run(ctx, matchID, events)
-
 	log.Printf("replaying match %s at x%.0f", matchID, speed)
-	live.NewPublisher(hub, matchID, params).Run(updates)
+	publisher.Run(engine.Run(ctx, matchID, events))
 	log.Print("replay finished")
+	return nil
 }

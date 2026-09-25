@@ -46,7 +46,12 @@ type Event struct {
 }
 
 func (e Event) Clock() string {
-	total := int(e.Elapsed.Seconds())
+	return FormatClock(e.Elapsed)
+}
+
+// FormatClock renders match time as mm:ss
+func FormatClock(d time.Duration) string {
+	total := int(d.Seconds())
 	return fmt.Sprintf("%02d:%02d", total/60, total%60)
 }
 

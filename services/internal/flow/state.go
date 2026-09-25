@@ -48,6 +48,11 @@ func (s *State) Advance(t time.Duration) {
 	s.at = t
 }
 
+// At returns the match time the state has been advanced to
+func (s *State) At() time.Duration {
+	return s.at
+}
+
 // Flow returns both teams' Flow on the 0–100 scale.
 func (s *State) Flow() (home, away float64) {
 	return s.flow(event.Home), s.flow(event.Away)

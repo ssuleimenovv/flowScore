@@ -1,19 +1,22 @@
 <script setup lang="ts">
 // The Match screen (Match and MobileMatch boards).
 import { computed, onUnmounted, watchEffect } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useNavTitle } from '@/app/layout/navigation'
-import MatchHero from '@/features/match/ui/MatchHero.vue'
-import FlowWaveCard from '@/features/match/ui/FlowWaveCard.vue'
-import FlowWaveSkeleton from '@/features/match/ui/FlowWaveSkeleton.vue'
 import ChronicleCard from '@/features/match/ui/ChronicleCard.vue'
 import ChronicleSkeleton from '@/features/match/ui/ChronicleSkeleton.vue'
+import FlowWaveCard from '@/features/match/ui/FlowWaveCard.vue'
+import FlowWaveSkeleton from '@/features/match/ui/FlowWaveSkeleton.vue'
+import MatchHero from '@/features/match/ui/MatchHero.vue'
 import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
+import MatchTabs, { type MatchTab } from '@/features/match/ui/MatchTabs.vue'
+import SimulatorCta from '@/features/match/ui/SimulatorCta.vue'
 import { useMatchClock } from '@/features/match/useMatchClock'
 import { useMatchLive } from '@/features/match/useMatchLive'
 import { ApiError } from '@/shared/api/http'
 import { resolveScreenState } from '@/shared/state/screenState'
+import { useMediaQuery } from '@/shared/state/useMediaQuery'
 import { useNetwork } from '@/shared/state/useNetwork'
 import AppCard from '@/shared/ui/AppCard.vue'
 import ErrorState from '@/shared/ui/ErrorState.vue'
@@ -49,6 +52,27 @@ const screen = computed(() =>
   }),
 )
 
+// The phone shows one section at a time. The open tab lives in the URL
+// (?tab=events), so "Назад" and a shared link come back to it.
+const router = useRouter()
+const TABS: MatchTab[] = ['flow', 'events', 'stats', 'ai']
+const tab = computed<MatchTab>({
+  get: () => TABS.find((t) => t === route.query.tab) ?? 'flow',
+  set: (next) =>
+    void router.replace({ query: { ...route.query, tab: next === 'flow' ? undefined : next } }),
+})
+
+// On the phone a section is a tab panel; on the desktop everything is on screen
+// at once and the tab roles would only confuse a screen reader.
+const phone = useMediaQuery('(max-width: 767px)')
+function panel(id: MatchTab) {
+  return {
+    id: `panel-${id}`,
+    class: { active: tab.value === id },
+    ...(phone.value ? { role: 'tabpanel', 'aria-labelledby': `tab-${id}` } : {}),
+  }
+}
+
 const notFound = computed(() => error.value instanceof ApiError && error.value.status === 404)
 
 // Mobile nav bar: "Premier League" / "37-й тур · Etihad Stadium", as on MobileMatch
@@ -79,17 +103,38 @@ onUnmounted(() => setTitle(null))
       @reconnect="reconnectNow"
     />
 
-    <!-- Both layouts are in the DOM; CSS shows one of them at the 768 px breakpoint -->
-    <!-- Main column and sidebar, as on the Match board -->
+    <!-- Main column and sidebar, as on the Match board. On the phone the same
+         cards become tab panels, and CSS shows only the open one -->
     <div v-if="screen.view === 'content' && state" class="layout">
       <div class="main">
         <!-- Both scoreboards are in the DOM; CSS shows one of them at 768 px -->
         <div class="wide"><MatchHero :live="state" :seconds /></div>
         <div class="narrow"><MatchHeroCompact :live="state" :seconds /></div>
-        <FlowWaveCard :live="state" :seconds />
+        <div class="narrow"><MatchTabs v-model="tab" /></div>
+        <div class="panel" v-bind="panel('flow')"><FlowWaveCard :live="state" :seconds /></div>
       </div>
-      <aside class="side" aria-label="Хроника матча">
-        <ChronicleCard :live="state" />
+      <aside class="side">
+        <div class="panel" v-bind="panel('events')"><ChronicleCard :live="state" /></div>
+        <div class="panel" :class="{ active: tab === 'flow' }"><SimulatorCta /></div>
+        <!-- Stats and AI have no data yet; only the phone has a tab to fill -->
+        <div class="panel narrow-only" v-bind="panel('stats')">
+          <AppCard class="fs-in">
+            <StateMessage
+              icon="pulse"
+              title="Статистики пока нет"
+              text="Удары, xG и владение появятся здесь по ходу матча."
+            />
+          </AppCard>
+        </div>
+        <div class="panel narrow-only" v-bind="panel('ai')">
+          <AppCard class="fs-in">
+            <StateMessage
+              icon="star"
+              title="AI-разбор готовится"
+              text="Объясним, что двигает поток, когда наберётся достаточно событий."
+            />
+          </AppCard>
+        </div>
       </aside>
     </div>
 
@@ -154,12 +199,21 @@ onUnmounted(() => setTitle(null))
   margin-top: var(--fs-space-16);
 }
 
+/* Phone: only the open tab's cards are shown. Showing a card again replays its
+   fs-in entrance, so switching tabs animates for free */
+@media (max-width: 767px) {
+  .panel:not(.active) {
+    display: none;
+  }
+}
+
 /* Desktop: cards on a padded page, as on the Match board */
 @media (min-width: 768px) {
   .page {
     gap: var(--fs-space-24);
     padding: 28px var(--fs-page-padding) var(--fs-space-40);
   }
+
   .layout,
   .main,
   .side {
@@ -170,7 +224,8 @@ onUnmounted(() => setTitle(null))
     display: contents;
   }
 
-  .narrow {
+  .narrow,
+  .narrow-only {
     display: none;
   }
 

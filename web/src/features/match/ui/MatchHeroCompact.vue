@@ -54,7 +54,7 @@ const minute = computed(() => formatMinute(seconds, match.value.clock.period))
   display: flex;
   flex-direction: column;
   gap: var(--fs-space-16);
-  padding: 18px 0 var(--fs-space-16);
+  padding-top: 18px;
 }
 
 .top {

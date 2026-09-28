@@ -11,6 +11,7 @@ export type IconName =
   | 'sun'
   | 'moon'
   | 'back'
+  | 'arrow'
   | 'check'
   | 'close'
   | 'retry'
@@ -53,6 +54,7 @@ const icons: Record<IconName, Shape> = {
   },
   moon: { paths: ['M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z'] },
   back: { paths: ['M15 5l-7 7 7 7'] },
+  arrow: { paths: ['M5 12h14M13 616 6-6 6'] },
   check: { paths: ['M5 12.5l4.5 4.5L19 7.5'] },
   close: { paths: ['M6 6l12 12M18 6L6 18'] },
   retry: { paths: ['M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4'] },

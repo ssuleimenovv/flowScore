@@ -8,12 +8,28 @@ import { useNetwork } from '@/shared/state/useNetwork'
 import { resolveScreenState } from '@/shared/state/screenState'
 import { useTheme } from '@/shared/theme/useTheme'
 import type { ThemePreference } from '@/shared/theme/theme'
+import type AppCard from '@/shared/ui/AppCard.vue'
+import type AppSpinner from '@/shared/ui/AppSpinner.vue'
+import type ErrorState from '@/shared/ui/ErrorState.vue'
+import type OfflineBanner from '@/shared/ui/OfflineBanner.vue'
+import type ReconnectBanner from '@/shared/ui/ReconnectBanner.vue'
+import type StateMessage from '@/shared/ui/StateMessage.vue'
 
 const route = useRoute()
 const matchId = String(route.params.matchId ?? '3754314')
 
-const { state, request, error, socketStatus, secondsToRetry, reconnectNow, retry } =
-  useMatchLive(matchId)
+const {
+  state,
+  request,
+  error,
+  updatedAt,
+  socketStatus,
+  retryAt,
+  secondsToRetry,
+  reconnectNow,
+  retry,
+} = useMatchLive(matchId)
+
 const { online } = useNetwork()
 const { preference, setPreference } = useTheme()
 
@@ -34,7 +50,7 @@ watchEffect(() => {
 onUnmounted(() => setTitle(null))
 
 const themes: Array<[ThemePreference, string]> = [
-  ['dark', 'Темная'],
+  ['dark', 'Тёмная'],
   ['light', 'Светлая'],
   ['system', 'Как в системе'],
 ]
@@ -55,7 +71,7 @@ function signed(n: number): string {
 </script>
 
 <template>
-  <main class="dev">
+  <div class="dev">
     <div class="themes" role="group" aria-label="Оформление">
       <button
         v-for="[value, label] in themes"
@@ -68,23 +84,33 @@ function signed(n: number): string {
       </button>
     </div>
 
-    <p v-if="screen.banner === 'reconnecting'" class="banner">
-      Live-поток прервался.
-      <span v-if="secondsToRetry !== null">Переподключение через {{ secondsToRetry }} с…</span>
-      <button type="button" @click="reconnectNow">Сейчас</button>
-    </p>
+    <OfflineBanner v-if="screen.banner === 'offline'" :updated-at="updatedAt" />
+    <ReconnectBanner
+      v-else-if="screen.banner === 'reconnecting'"
+      :seconds="secondsToRetry"
+      :retry-at="retryAt"
+      @reconnect="reconnectNow"
+    />
 
     <p class="meta">
       socket {{ socketStatus }} · request {{ request }} · view {{ screen.view }}
       <span v-if="state">· seq {{ Object.values(state.seq).join('/') }}</span>
     </p>
 
-    <p v-if="screen.view === 'loading'">Загрузка…</p>
-    <p v-else-if="screen.view === 'offline'">Нет подключения.</p>
-    <p v-else-if="screen.view === 'error'">
-      Не удалось загрузить матч: {{ error }}
-      <button type="button" @click="retry">Повторить</button>
+    <p v-if="screen.view === 'loading'" class="connecting">
+      <AppSpinner />
+      Подключаемся к live-потоку…
     </p>
+    <AppCard v-else-if="screen.view === 'offline'">
+      <StateMessage
+        icon="offline"
+        title="Нет подключения"
+        text="Покажем матч, когда сеть вернётся."
+      />
+    </AppCard>
+    <AppCard v-else-if="screen.view === 'error'">
+      <ErrorState title="Не удалось загрузить матч" :error @retry="retry" />
+    </AppCard>
 
     <template v-if="state">
       <header class="score">
@@ -122,7 +148,7 @@ function signed(n: number): string {
         </li>
       </ol>
     </template>
-  </main>
+  </div>
 </template>
 
 <style scoped>
@@ -133,14 +159,13 @@ function signed(n: number): string {
   font-family: var(--fs-font-mono);
 }
 
-.banner {
+.connecting {
   display: flex;
-  gap: var(--fs-space-12);
+  gap: 10px;
   align-items: center;
-  padding: var(--fs-space-12) var(--fs-space-16);
-  border-radius: var(--fs-radius-md);
-  background: var(--fs-live-soft);
+  color: var(--fs-muted);
 }
+
 
 .meta {
   color: var(--fs-muted);

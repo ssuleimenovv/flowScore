@@ -116,3 +116,16 @@ p {
   outline: 2px solid var(--fs-home);
   outline-offset: 2px;
 }
+
+/* Entrance from the mockup: fade up 16px. Stagger with style */
+.fs-in {
+  animation: fs-in var(--fs-duration-enter) var(--fs-ease) both;
+  animation-delay: calc(var(--fs-stagger) * var(--fs-i, 0));
+}
+
+@keyframes fs-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}

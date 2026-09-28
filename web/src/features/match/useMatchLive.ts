@@ -18,6 +18,8 @@ export function useMatchLive(matchId: string) {
   const socketStatus = ref<SocketStatus>('connecting')
   const retryAt = ref<number | null>(null)
   const now = ref(Date.now())
+  // When the data last changed; the offline banner shows it ("данные на 21:14")
+  const updatedAt = shallowRef<Date | null>(null)
 
   const secondsToRetry = computed(() =>
     retryAt.value === null ? null : Math.max(0, Math.ceil((retryAt.value - now.value) / 1000)),
@@ -44,6 +46,7 @@ export function useMatchLive(matchId: string) {
       buffer = []
 
       state.value = next
+      updatedAt.value = new Date()
       error.value = null
       request.value = 'success'
     } catch (err) {
@@ -63,6 +66,7 @@ export function useMatchLive(matchId: string) {
         return
       }
       state.value = applyMessage(state.value, message)
+      updatedAt.value = new Date()
     },
     onStatus(next, at) {
       socketStatus.value = next
@@ -93,7 +97,9 @@ export function useMatchLive(matchId: string) {
     state,
     request,
     error,
+    updatedAt,
     socketStatus,
+    retryAt,
     secondsToRetry,
     reconnectNow: socket.reconnectNow,
     retry: loadSnapshot,

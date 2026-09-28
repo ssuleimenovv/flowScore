@@ -34,5 +34,10 @@ export const router = createRouter({
     { path: '/favorites', component: stub, meta: { tab: 'favorites', stubTitle: 'Избранное' } },
     { path: '/notifications', component: stub, meta: { inner: true, stubTitle: 'Уведомления' } },
     ...(import.meta.env.DEV ? devRoutes : []),
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/pages/NotFoundPage.vue'),
+    },
   ],
 })

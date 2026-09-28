@@ -4,6 +4,8 @@ import { computed, onUnmounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNavTitle } from '@/app/layout/navigation'
 import MatchHero from '@/features/match/ui/MatchHero.vue'
+import FlowWaveCard from '@/features/match/ui/FlowWaveCard.vue'
+import FlowWaveSkeleton from '@/features/match/ui/FlowWaveSkeleton.vue'
 import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
 import { useMatchClock } from '@/features/match/useMatchClock'
@@ -79,11 +81,13 @@ onUnmounted(() => setTitle(null))
     <template v-if="screen.view === 'content' && state">
       <div class="wide"><MatchHero :live="state" :seconds /></div>
       <div class="narrow"><MatchHeroCompact :live="state" :seconds /></div>
+      <FlowWaveCard :live="state" :seconds />
     </template>
 
     <template v-else-if="screen.view === 'loading'">
       <div class="wide"><MatchHeroSkeleton /></div>
       <div class="narrow"><MatchHeroSkeleton compact /></div>
+      <FlowWaveSkeleton />
     </template>
 
     <AppCard v-else-if="notFound" class="message">

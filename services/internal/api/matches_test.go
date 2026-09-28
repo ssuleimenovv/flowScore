@@ -17,7 +17,7 @@ func server(t *testing.T) *httptest.Server {
 		ID:   "m1",
 		Home: event.Team{ID: "36", Code: "MCI", Name: "Manchester City"},
 		Away: event.Team{ID: "1", Code: "ARS", Name: "Arsenal"},
-	})
+	}, 0)
 
 	mux := http.NewServeMux()
 	Register(mux, store)

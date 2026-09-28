@@ -188,6 +188,7 @@ export interface components {
             /** @enum {string} */
             type: "goal" | "shot_on_target" | "shot_off_target" | "shot_blocked" | "corner" | "yellow_card" | "red_card" | "substitution" | "foul" | "offside" | "take_on" | "halftime" | "fulltime";
             side: components["schemas"]["Side"] | null;
+            /** @description The minute on the clock, as the live badge shows it (72:14 → 72) */
             minute: number;
             /** @description 45+2 → minute 45, addedTime 2 */
             addedTime?: number | null;

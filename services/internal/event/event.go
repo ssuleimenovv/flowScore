@@ -19,6 +19,8 @@ const (
 	Foul          Type = "foul"
 	Offside       Type = "offside"
 	TakeOn        Type = "take_on"
+	Halftime      Type = "halftime" // the whistles have no side and no flow weight
+	Fulltime      Type = "fulltime"
 	Possession    Type = "possession" // Possession is internal: one per match minute, never shown in the timelines
 )
 
@@ -42,7 +44,8 @@ type Event struct {
 	Side      Side
 	Period    int
 	Elapsed   time.Duration // match time: 46:10 in the second half is 46m10s
-	Player    string
+	Player    string        // the name fans know: "Sergio Aguero", not the full legal name
+	PlayerID  string
 	Pos       *Position
 	XG        *float64
 	HomeShare *float64 // homeshare is set on possession events: the home team's share of the ball

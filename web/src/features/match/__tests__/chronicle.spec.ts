@@ -37,7 +37,7 @@ describe('chronicle', () => {
       minute: '45+2′',
       code: 'ГОЛ',
       title: 'Гол! Foden',
-      detail: 'Ассист Bruyne · 1:1',
+      detail: 'Ассист De Bruyne · 1:1',
       goal: 'home',
       impact: { text: '+23', side: 'home' },
     })

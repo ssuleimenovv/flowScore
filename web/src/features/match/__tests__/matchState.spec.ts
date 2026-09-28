@@ -27,7 +27,13 @@ const events = { items: [], seq: 10 } satisfies EventList
 
 const snapshot = () => fromSnapshot(match, flow, events)
 
-function flowUpdate(seq: number, minute: number, home: number, elapsedSeconds = 0): WsMessage {
+function flowUpdate(
+  seq: number,
+  minute: number,
+  home: number,
+  elapsedSeconds = 0,
+  period: Match['clock']['period'] = 'first_half',
+): WsMessage {
   return {
     type: 'flow.update',
     matchId: 'm1',
@@ -37,13 +43,18 @@ function flowUpdate(seq: number, minute: number, home: number, elapsedSeconds = 
       current: { home, away: 0 },
       delta10: { home: 0, away: 0 },
       point: { minute, home, away: 0 },
-      clock: { elapsedSeconds, period: 'first_half', observedAt: '2026-09-28T10:00:05Z' },
+      clock: { elapsedSeconds, period, observedAt: '2026-09-28T10:00:05Z' },
     },
   }
 }
 
 function goal(seq: number, side: 'home' | 'away'): WsMessage {
   const data = { id: `g${seq}`, type: 'goal', side, minute: 30 } as MatchEvent
+  return { type: 'match.event', matchId: 'm1', seq, sentAt: '', data }
+}
+
+function whistle(seq: number, type: 'halftime' | 'fulltime'): WsMessage {
+  const data = { id: type, type, side: null, minute: 45 } as MatchEvent
   return { type: 'match.event', matchId: 'm1', seq, sentAt: '', data }
 }
 
@@ -95,5 +106,26 @@ describe('matchState', () => {
   it('does not count a goal the snapshot already has', () => {
     const next = applyMessage(snapshot(), goal(9, 'home'))
     expect(next.score).toEqual({ home: 1, away: 0 })
+  })
+
+  it('starts the break with the first-half score', () => {
+    const next = applyMessage(snapshot(), whistle(11, 'halftime'))
+    expect(next.match.status).toBe('halftime')
+    expect(next.match.halftimeScore).toEqual({ home: 1, away: 0 })
+    expect(next.events[0]!.type).toBe('halftime')
+  })
+
+  it('stays on the break until the second half kicks off', () => {
+    const onBreak = applyMessage(snapshot(), whistle(11, 'halftime'))
+    const tick = applyMessage(onBreak, flowUpdate(12, 46, 50, 2800))
+    expect(tick.match.status).toBe('halftime')
+
+    const kickoff = applyMessage(tick, flowUpdate(13, 46, 50, 2700, 'second_half'))
+    expect(kickoff.match.status).toBe('live')
+  })
+
+  it('finishes the match on the final whistle', () => {
+    const next = applyMessage(snapshot(), whistle(11, 'fulltime'))
+    expect(next.match.status).toBe('finished')
   })
 })

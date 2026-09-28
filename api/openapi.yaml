@@ -379,6 +379,7 @@ components:
             - type: 'null'
         minute:
           type: integer
+          description: The minute on the clock, as the live badge shows it (72:14 → 72)
         addedTime:
           type: [integer, 'null']
           description: 45+2 → minute 45, addedTime 2

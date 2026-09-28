@@ -72,7 +72,7 @@ type PersonRef struct {
 type MatchEvent struct {
 	ID         string          `json:"id"`
 	Type       event.Type      `json:"type"`
-	Side       event.Side      `json:"side"`
+	Side       *event.Side     `json:"side"` // nil for the whistles
 	Minute     int             `json:"minute"`
 	AddedTime  *int            `json:"addedTime"`
 	Player     *PersonRef      `json:"player"`
@@ -84,12 +84,13 @@ type MatchEvent struct {
 // periodEnd is the regular last minute of each period.
 var periodEnd = map[int]int{1: 45, 2: 90, 3: 105, 4: 120}
 
-// minuteOf turns match time into the football minute: 45:49 in the first half
-// is the 46th minute, shown as 45+1.
+// minuteOf turns match time into the minute on the clock, the way the live
+// badge shows it: 72:14 is 72′. Past the regular end it is added time:
+// 45:49 in the first half is 45+1.
 func minuteOf(period int, elapsed time.Duration) (minute int, added *int) {
-	minute = int(elapsed.Minutes()) + 1
-	if end, ok := periodEnd[period]; ok && minute > end {
-		extra := minute - end
+	minute = int(elapsed.Minutes())
+	if end, ok := periodEnd[period]; ok && minute >= end {
+		extra := minute - end + 1
 		return end, &extra
 	}
 	return minute, nil

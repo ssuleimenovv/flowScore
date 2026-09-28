@@ -32,7 +32,7 @@ export function buildWave(points: FlowPoint[], window: number): Array<number | n
 }
 
 export interface GoalMark {
-  minute: number
+  column: number // the wave's minute column the goal falls in, from 1
   side: Side
   label: string // "0:1 Сака"
 }
@@ -49,13 +49,39 @@ export function goalMarks(events: MatchEvent[]): GoalMark[] {
     if (goal.side === 'home') home++
     else away++
     const scorer = goal.player ? ` ${surname(goal.player.name)}` : ''
-    return { minute: goal.minute, side: goal.side, label: `${home}:${away}${scorer}` }
+    return { column: column(goal), side: goal.side, label: `${home}:${away}${scorer}` }
   })
 }
 
-// "Alexis Alejandro Sánchez Sánchez" → "Sánchez". A guess: the data has full
-// names only, until the backend sends short ones.
+// A goal at 7:30 is 7′, but the wave keeps it in column 8, the one that ends
+// at 8:00. In added time 45+2 is the 47th minute played: column 47.
+function column(goal: MatchEvent): number {
+  return goal.minute + (goal.addedTime ?? 1)
+}
+
+// Words that belong to the surname in front of it: "De Bruyne", "van Dijk"
+const PARTICLES = new Set([
+  'de',
+  'da',
+  'di',
+  'del',
+  'della',
+  'dos',
+  'du',
+  'van',
+  'von',
+  'der',
+  'den',
+  'ter',
+  'le',
+  'la',
+])
+
+// "Sergio Agüero" → "Agüero", "Kevin De Bruyne" → "De Bruyne". The backend
+// sends the name fans know, so the last word is the surname.
 export function surname(name: string): string {
   const words = name.trim().split(/\s+/)
-  return words[words.length - 1] ?? name
+  let start = words.length - 1
+  while (start > 1 && PARTICLES.has(words[start - 1]!.toLowerCase())) start--
+  return words.slice(start).join(' ') || name
 }

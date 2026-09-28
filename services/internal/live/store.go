@@ -12,8 +12,9 @@ import (
 // A client loads it first and then applies stream messages with a greater Seq.
 type Snapshot struct {
 	Match     event.Match
-	Status    string // scheduled, live, finished
+	Status    string // scheduled, live, halftime, finished
 	Score     Score
+	Halftime  *Score // score at the break, nil before it
 	Period    int
 	At        time.Duration // match time of the last update
 	Flow      FlowValues
@@ -42,23 +43,19 @@ func NewStore() *Store {
 
 // Schedule registers a match that has not started yet.
 func (s *Store) Schedule(m event.Match) {
-	s.reset(m, "scheduled")
+	s.reset(m, "scheduled", 0)
 }
 
-// Start resets the match to kick-off.
-func (s *Store) Start(m event.Match) {
-	s.reset(m, "live")
+// Start resets the match to kick-off. seq is the last message already sent:
+// the fresh snapshot counts as including it, so older messages are skipped.
+func (s *Store) Start(m event.Match, seq int64) {
+	s.reset(m, "live", seq)
 }
 
-func (s *Store) reset(m event.Match, status string) {
+func (s *Store) reset(m event.Match, status string, seq int64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.matches[m.ID] = &Snapshot{Match: m, Status: status, Period: 1, UpdatedAt: time.Now().UTC()}
-}
-
-// Finish marks the match as played.
-func (s *Store) Finish(matchID string) {
-	s.update(matchID, func(snap *Snapshot) { snap.Status = "finished" })
+	s.matches[m.ID] = &Snapshot{Match: m, Status: status, Period: 1, Seq: seq, UpdatedAt: time.Now().UTC()}
 }
 
 // Get returns a copy of the snapshot. The caller may keep reading it

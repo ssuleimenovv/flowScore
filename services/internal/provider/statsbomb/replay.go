@@ -27,7 +27,9 @@ func (r *Replay) Stream(ctx context.Context, matchID string) (<-chan event.Event
 	}
 
 	eventsPath := filepath.Join(r.EventsDir, "events-"+matchID+".json")
-	evs, err := LoadMatch(r.MatchesPath, eventsPath, id)
+	lineupsPath := filepath.Join(r.EventsDir, "lineups-"+matchID+".json")
+	evs, err := LoadMatch(r.MatchesPath, eventsPath, lineupsPath, id)
+
 	if err != nil {
 		return nil, err
 	}

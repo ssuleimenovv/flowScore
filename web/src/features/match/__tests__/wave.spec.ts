@@ -31,22 +31,39 @@ describe('buildWave', () => {
 })
 
 describe('goalMarks', () => {
-  const goal = (minute: number, side: 'home' | 'away', name: string) =>
-    ({ id: `${minute}`, type: 'goal', side, minute, player: { id: '', name } }) as MatchEvent
+  const goal = (minute: number, side: 'home' | 'away', name: string, addedTime?: number) =>
+    ({
+      id: `${minute}`,
+      type: 'goal',
+      side,
+      minute,
+      addedTime: addedTime ?? null,
+      player: { id: '', name },
+    }) as MatchEvent
 
   it('labels each goal with the score it made, oldest first', () => {
     // The stream keeps events newest first
     const events = [goal(58, 'home', 'Phil Foden'), goal(23, 'away', 'Bukayo Saka')]
     expect(goalMarks(events)).toEqual([
-      { minute: 23, side: 'away', label: '0:1 Saka' },
-      { minute: 58, side: 'home', label: '1:1 Foden' },
+      { column: 24, side: 'away', label: '0:1 Saka' },
+      { column: 59, side: 'home', label: '1:1 Foden' },
     ])
+  })
+
+  it('puts an added-time goal in the column of the minute played', () => {
+    const [mark] = goalMarks([goal(45, 'home', 'Phil Foden', 2)])
+    expect(mark!.column).toBe(47)
   })
 })
 
 describe('surname', () => {
   it('takes the last word', () => {
-    expect(surname('Alexis Alejandro Sánchez Sánchez')).toBe('Sánchez')
+    expect(surname('Sergio Agüero')).toBe('Agüero')
     expect(surname('Fernandinho')).toBe('Fernandinho')
+  })
+
+  it('keeps the particles of a surname', () => {
+    expect(surname('Kevin De Bruyne')).toBe('De Bruyne')
+    expect(surname('Virgil van Dijk')).toBe('van Dijk')
   })
 })

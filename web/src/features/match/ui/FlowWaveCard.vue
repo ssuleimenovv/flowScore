@@ -63,7 +63,8 @@ const tipLeft = computed(() => (hovered.value === null ? '0' : center(hovered.va
 const tip = computed(() => {
   if (hovered.value === null) return null
   const value = wave.value[hovered.value] ?? null
-  const minute = `${hovered.value + 1}′`
+  // Column n ends at n:00, so it is minute n − 1 on the clock, as in the chronicle
+  const minute = `${hovered.value}′`
   if (value === null) return `${minute} · ещё не сыграно`
   const n = Math.round(value)
   if (n === 0) return `${minute} · поровну`
@@ -95,7 +96,7 @@ function placeMarks() {
   // DOM children keep the v-for order, so child i is marks[i]
   placed.value = Array.from(box.children, (pill, i) => {
     const w = (pill as HTMLElement).offsetWidth
-    const mid = ((marks.value[i]!.minute - 0.5) / total.value) * width
+    const mid = ((marks.value[i]!.column - 0.5) / total.value) * width
     const left = Math.min(Math.max(0, mid - w / 2), width - w)
     let row = rowEnds.findIndex((end) => end + 6 <= left)
     if (row === -1) row = rowEnds.length
@@ -108,7 +109,7 @@ function markStyle(i: number) {
   const place = placed.value[i]
   const mark = marks.value[i]!
   // Before the first measurement: centered on its minute
-  if (!place) return { left: center(mark.minute), transform: 'translateX(-50%)' }
+  if (!place) return { left: center(mark.column), transform: 'translateX(-50%)' }
   return { left: `${place.left}px`, top: `${place.row * MARK_ROW}px` }
 }
 
@@ -189,7 +190,7 @@ const ticks = [0, 15, 30, 45, 60, 75, 90]
     <div ref="marksBox" class="marks" :style="{ height: marksHeight }">
       <span
         v-for="(mark, i) in marks"
-        :key="`${mark.minute}-${mark.label}`"
+        :key="`${mark.column}-${mark.label}`"
         class="mark"
         :class="mark.side"
         :style="markStyle(i)"

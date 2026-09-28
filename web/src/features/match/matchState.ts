@@ -47,10 +47,8 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
       const { current, delta10, point, clock } = message.data
       return {
         ...state,
-        // The clock resyncs on every update: the client ticks in real time,
-        // while a replay runs faster and a real match pauses at half-time.
         // The match part may be newer than the flow part, so only move it forward
-        match: message.seq > state.seq.match ? { ...state.match, clock } : state.match,
+        match: message.seq > state.seq.match ? resync(state.match, clock) : state.match,
         flow: current,
         delta10,
         points: upsertPoint(state.points, point),
@@ -68,10 +66,11 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
           seq: { ...next.seq, events: message.seq },
         }
       }
-      if (event.type === 'goal' && message.seq > state.seq.match) {
+      if (message.seq > state.seq.match) {
         next = {
           ...next,
-          score: addGoal(next.score, event.side),
+          match: whistle(next.match, next.score, event.type),
+          score: event.type === 'goal' ? addGoal(next.score, event.side) : next.score,
           seq: { ...next.seq, match: message.seq },
         }
       }
@@ -81,6 +80,22 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
     default:
       return state // prediction.update and insight.update come with the AI step
   }
+}
+
+// The clock resyncs on every flow update: the client ticks in real time, while
+// a replay runs faster and a real match stops at the break. The first update
+// of the second half also ends the break.
+function resync(match: Match, clock: Match['clock']): Match {
+  const resumed = match.status === 'halftime' && clock.period !== 'first_half'
+  return { ...match, clock, status: resumed ? 'live' : match.status }
+}
+
+// A whistle changes the status: the break keeps the first-half score for
+// "1-й тайм 0:1", the final whistle ends the match.
+function whistle(match: Match, score: Score, type: MatchEvent['type']): Match {
+  if (type === 'halftime') return { ...match, status: 'halftime', halftimeScore: score }
+  if (type === 'fulltime') return { ...match, status: 'finished' }
+  return match
 }
 
 // upsertPoint replaces the point of the same minute or inserts it in order.

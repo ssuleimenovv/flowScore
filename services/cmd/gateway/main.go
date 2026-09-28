@@ -82,8 +82,11 @@ func loopReplay(ctx context.Context, hub *live.Hub, store *live.Store, info even
 			}
 		}
 
+		// Kick-off goes into the store before the viewers of the last replay are
+		// dropped, so the snapshot they reload is already the new match
+		publisher.Start(info)
 		if round > 0 {
-			hub.CloseMatch(matchID) // viewers reconnect and reload the snapshot
+			hub.CloseMatch(matchID)
 		}
 		if err := replayOnce(ctx, publisher, params, info, speed); err != nil {
 			log.Printf("replay: %v", err)
@@ -106,7 +109,7 @@ func replayOnce(ctx context.Context, publisher *live.Publisher, params flow.Para
 
 	engine := flow.Engine{Params: params, Speed: speed, Tick: 5 * time.Second}
 	log.Printf("replaying match %s at x%.0f", matchID, speed)
-	publisher.Run(info, engine.Run(ctx, matchID, events))
+	publisher.Run(engine.Run(ctx, matchID, events))
 	log.Print("replay finished")
 	return nil
 }

@@ -70,17 +70,18 @@ type match struct {
 func matchResponse(s live.Snapshot) any {
 	m := s.Match
 	return match{
-		ID:          m.ID,
-		Status:      s.Status,
-		KickoffAt:   m.KickoffAt,
-		Competition: competition{ID: m.CompetitionID, Name: m.Competition, Round: m.Round},
-		Venue:       venue{Name: m.Venue},
-		Home:        toTeam(m.Home),
-		Away:        toTeam(m.Away),
-		Score:       s.Score,
-		Clock:       live.ClockOf(s.Period, s.At, s.UpdatedAt),
-		Stats:       []statRow{}, // not computed yet; an empty list, not null
-		Seq:         s.Seq,
+		ID:            m.ID,
+		Status:        s.Status,
+		KickoffAt:     m.KickoffAt,
+		Competition:   competition{ID: m.CompetitionID, Name: m.Competition, Round: m.Round},
+		Venue:         venue{Name: m.Venue},
+		Home:          toTeam(m.Home),
+		Away:          toTeam(m.Away),
+		Score:         s.Score,
+		HalftimeScore: s.Halftime,
+		Clock:         live.ClockOf(s.Period, s.At, s.UpdatedAt),
+		Stats:         []statRow{}, // not computed yet; an empty list, not null
+		Seq:           s.Seq,
 	}
 }
 

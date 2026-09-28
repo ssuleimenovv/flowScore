@@ -11,7 +11,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 )
 
-func LoadMatch(matchesPath, eventsPath string, matchID int) ([]event.Event, error) {
+func LoadMatch(matchesPath, eventsPath, lineupsPath string, matchID int) ([]event.Event, error) {
 	match, err := findMatch(matchesPath, matchID)
 	if err != nil {
 		return nil, err
@@ -23,10 +23,15 @@ func LoadMatch(matchesPath, eventsPath string, matchID int) ([]event.Event, erro
 		return nil, fmt.Errorf("read events: %w", err)
 	}
 
+	names, err := loadNames(lineupsPath)
+	if err != nil {
+		return nil, err
+	}
+
 	id := strconv.Itoa(matchID)
 	var out []event.Event
 	for _, r := range raw {
-		out = append(out, mapEvent(r, id, homeTeamID)...)
+		out = append(out, mapEvent(r, id, homeTeamID, names)...)
 	}
 	out = append(out, possessionEvents(raw, id, homeTeamID)...)
 

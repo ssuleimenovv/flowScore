@@ -1,6 +1,9 @@
 package statsbomb
 
 import (
+	"cmp"
+	"strconv"
+
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 )
 
@@ -10,8 +13,9 @@ const (
 )
 
 // mapEvent converts one StatsBomb event into zero, one or two of our events.
-// A foul with a card becomes two: the foul and the card.
-func mapEvent(r rawEvent, matchID string, homeTeamID int) []event.Event {
+// A foul with a card becomes two: the foul and the card. names comes from
+// loadNames; a player missing from it keeps the name in the event.
+func mapEvent(r rawEvent, matchID string, homeTeamID int, names map[int]string) []event.Event {
 	base := event.Event{
 		ID:      r.ID,
 		MatchID: matchID,
@@ -23,7 +27,8 @@ func mapEvent(r rawEvent, matchID string, homeTeamID int) []event.Event {
 		base.Side = event.Home
 	}
 	if r.Player != nil {
-		base.Player = r.Player.Name
+		base.PlayerID = strconv.Itoa(r.Player.ID)
+		base.Player = cmp.Or(names[r.Player.ID], r.Player.Name)
 	}
 	if len(r.Location) == 2 {
 		base.Pos = &event.Position{

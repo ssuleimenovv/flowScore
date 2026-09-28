@@ -19,6 +19,7 @@ type Publisher struct {
 	params  flow.Params
 	seq     int64
 	period  int
+	at      time.Duration      // match time of the last update
 	history map[int]FlowValues // Flow at the end of each match minute
 }
 
@@ -26,15 +27,22 @@ func NewPublisher(hub *Hub, store *Store, matchID string, params flow.Params) *P
 	return &Publisher{hub: hub, store: store, matchID: matchID, params: params, history: map[int]FlowValues{}}
 }
 
-// Run publishes one match until updates is closed. seq keeps growing across
-// replays, so a client never sees it go back.
-func (p *Publisher) Run(match event.Match, updates <-chan flow.Update) {
+// Start puts the match at kick-off. seq keeps growing across replays, so a
+// message of the previous replay that a client still holds counts as old.
+func (p *Publisher) Start(match event.Match) {
 	clear(p.history) // minutes of the previous replay
 	p.period = 1
-	p.store.Start(match)
+	p.at = 0
+	p.store.Start(match, p.seq)
+}
 
+// Run publishes the match started with Start until updates is closed.
+func (p *Publisher) Run(updates <-chan flow.Update) {
 	for u := range updates {
-		if u.Cause != nil {
+		if u.Cause != nil && u.Cause.Period != p.period {
+			if p.period == 1 {
+				p.whistle(event.Halftime, "halftime")
+			}
 			p.period = u.Cause.Period
 		}
 
@@ -43,7 +51,7 @@ func (p *Publisher) Run(match event.Match, updates <-chan flow.Update) {
 			p.emit("match.event", me, func(s *Snapshot) {
 				s.Events = append(s.Events, me)
 				if me.Type == event.Goal {
-					addGoal(&s.Score, me.Side)
+					addGoal(&s.Score, *me.Side)
 				}
 			})
 		}
@@ -55,10 +63,29 @@ func (p *Publisher) Run(match event.Match, updates <-chan flow.Update) {
 			s.Points = upsertPoint(s.Points, fu.Point)
 			s.At = u.At
 			s.Period = p.period
+			if s.Status == "halftime" && p.period > 1 {
+				s.Status = "live" // the second half has kicked off
+			}
 		})
+		p.at = u.At
 	}
 
-	p.store.Finish(p.matchID)
+	p.whistle(event.Fulltime, "finished")
+}
+
+// whistle ends a half or the match: a timeline event without a side that
+// also changes the match status, so viewers learn it without a reload.
+func (p *Publisher) whistle(t event.Type, status string) {
+	minute, added := minuteOf(p.period, p.at)
+	me := MatchEvent{ID: p.matchID + ":" + string(t), Type: t, Minute: minute, AddedTime: added}
+	p.emit("match.event", me, func(s *Snapshot) {
+		s.Events = append(s.Events, me)
+		s.Status = status
+		if t == event.Halftime {
+			score := s.Score
+			s.Halftime = &score
+		}
+	})
 }
 
 func (p *Publisher) flowUpdate(u flow.Update) FlowUpdate {
@@ -82,7 +109,7 @@ func (p *Publisher) matchEvent(e event.Event) MatchEvent {
 	me := MatchEvent{
 		ID:         e.ID,
 		Type:       e.Type,
-		Side:       e.Side,
+		Side:       &e.Side,
 		Minute:     minute,
 		AddedTime:  added,
 		XG:         e.XG,
@@ -90,7 +117,7 @@ func (p *Publisher) matchEvent(e event.Event) MatchEvent {
 		FlowImpact: &impact,
 	}
 	if e.Player != "" {
-		me.Player = &PersonRef{Name: e.Player}
+		me.Player = &PersonRef{ID: e.PlayerID, Name: e.Player}
 	}
 	return me
 }

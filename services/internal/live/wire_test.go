@@ -12,10 +12,11 @@ func TestMinuteOf(t *testing.T) {
 		minute  int
 		added   int // 0 means no added time
 	}{
-		{1, 7*time.Minute + 30*time.Second, 8, 0},
-		{1, 44*time.Minute + 59*time.Second, 45, 0},
+		{1, 7*time.Minute + 30*time.Second, 7, 0},
+		{1, 44*time.Minute + 59*time.Second, 44, 0},
+		{1, 45 * time.Minute, 45, 1},
 		{1, 45*time.Minute + 49*time.Second, 45, 1},
-		{2, 45*time.Minute + 44*time.Second, 46, 0},
+		{2, 45*time.Minute + 44*time.Second, 45, 0},
 		{2, 92*time.Minute + 34*time.Second, 90, 3},
 	}
 

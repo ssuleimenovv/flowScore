@@ -1,25 +1,25 @@
 <script setup lang="ts">
-// Development page: shows the raw live stream. Not a screen from the mockup.
+// Development page: shows the raw match data. Not a screen from the mockup.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMatchStream } from '@/shared/live/useMatchStream'
+import { useMatchLive } from '@/features/match/useMatchLive'
 import { useNetwork } from '@/shared/state/useNetwork'
 import { resolveScreenState } from '@/shared/state/screenState'
 
 const route = useRoute()
 const matchId = String(route.params.matchId ?? '3754314')
 
-const { status, secondsToRetry, flow, delta10, wave, events, gaps, reconnectNow } =
-  useMatchStream(matchId)
+const { state, request, error, socketStatus, secondsToRetry, reconnectNow, retry } =
+  useMatchLive(matchId)
 const { online } = useNetwork()
 
 const screen = computed(() =>
   resolveScreenState({
-    status: flow.value ? 'success' : 'pending',
-    hasData: flow.value !== null,
+    status: request.value,
+    hasData: state.value !== null,
     isEmpty: false,
     online: online.value,
-    socket: status.value,
+    socket: socketStatus.value,
   }),
 )
 
@@ -37,33 +37,53 @@ function signed(n: number): string {
     </p>
 
     <p class="meta">
-      match {{ matchId }} · socket {{ status }} · view {{ screen.view }} · gaps {{ gaps }}
+      socket {{ socketStatus }} · request {{ request }} · view {{ screen.view }}
+      <span v-if="state">· seq {{ Object.values(state.seq).join('/') }}</span>
     </p>
 
-    <section v-if="flow" class="flow">
-      <div>
-        <span class="num home">{{ Math.round(flow.home) }}</span>
-        <span v-if="delta10" class="delta">{{ signed(delta10.home) }} за 10′</span>
-      </div>
-      <div>
-        <span class="num away">{{ Math.round(flow.away) }}</span>
-        <span v-if="delta10" class="delta">{{ signed(delta10.away) }} за 10′</span>
-      </div>
-    </section>
+    <p v-if="screen.view === 'loading'">Загрузка…</p>
+    <p v-else-if="screen.view === 'offline'">Нет подключения.</p>
+    <p v-else-if="screen.view === 'error'">
+      Не удалось загрузить матч: {{ error }}
+      <button type="button" @click="retry">Повторить</button>
+    </p>
 
-    <div class="wave" aria-label="Волна потока">
-      <div v-for="p in wave" :key="p.minute" class="col">
-        <span class="up" :style="{ height: `${Math.max(0, p.home - p.away) / 2}%` }" />
-        <span class="down" :style="{ height: `${Math.max(0, p.away - p.home) / 2}%` }" />
-      </div>
-    </div>
+    <template v-if="state">
+      <header class="score">
+        <span>{{ state.match.home.code }}</span>
+        <span class="num">{{ state.score.home }} : {{ state.score.away }}</span>
+        <span>{{ state.match.away.code }}</span>
+        <span class="meta">
+          {{ state.match.competition.name }} · {{ state.match.competition.round }}-й тур ·
+          {{ state.match.venue?.name }}
+        </span>
+      </header>
 
-    <ol class="events">
-      <li v-for="e in events.slice(0, 12)" :key="e.seq">
-        {{ e.minute }}{{ e.addedTime ? `+${e.addedTime}` : '' }}′ · {{ e.type }} · {{ e.side }} ·
-        {{ e.player?.name }}
-      </li>
-    </ol>
+      <section class="flow">
+        <div>
+          <span class="num home">{{ Math.round(state.flow.home) }}</span>
+          <span class="meta">{{ signed(state.delta10.home) }} за 10′</span>
+        </div>
+        <div>
+          <span class="num away">{{ Math.round(state.flow.away) }}</span>
+          <span class="meta">{{ signed(state.delta10.away) }} за 10′</span>
+        </div>
+      </section>
+
+      <div class="wave" aria-label="Волна потока">
+        <div v-for="p in state.points" :key="p.minute" class="col">
+          <span class="up" :style="{ height: `${Math.max(0, p.home - p.away) / 2}%` }" />
+          <span class="down" :style="{ height: `${Math.max(0, p.away - p.home) / 2}%` }" />
+        </div>
+      </div>
+
+      <ol class="events">
+        <li v-for="e in state.events.slice(0, 12)" :key="e.id">
+          {{ e.minute }}{{ e.addedTime ? `+${e.addedTime}` : '' }}′ · {{ e.type }} · {{ e.side }} ·
+          {{ e.player?.name }}
+        </li>
+      </ol>
+    </template>
   </main>
 </template>
 
@@ -84,9 +104,14 @@ function signed(n: number): string {
   background: var(--fs-live-soft);
 }
 
-.meta,
-.delta {
+.meta {
   color: var(--fs-muted);
+}
+
+.score {
+  display: flex;
+  gap: var(--fs-space-16);
+  align-items: baseline;
 }
 
 .flow {

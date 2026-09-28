@@ -9,7 +9,8 @@ export default defineConfig({
   plugins: [vue(), vueDevTools()],
   server: {
     proxy: {
-      // WebSocket stream of the Go gateway (services/cmd/gateway)
+      // Go gateway (services/cmd/gateway): REST and the WebSocket stream
+      '/api': { target: 'http://localhost:8080' },
       '/ws': { target: 'ws://localhost:8080', ws: true },
     },
   },

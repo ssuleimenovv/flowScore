@@ -6,6 +6,8 @@ import { useNavTitle } from '@/app/layout/navigation'
 import MatchHero from '@/features/match/ui/MatchHero.vue'
 import FlowWaveCard from '@/features/match/ui/FlowWaveCard.vue'
 import FlowWaveSkeleton from '@/features/match/ui/FlowWaveSkeleton.vue'
+import ChronicleCard from '@/features/match/ui/ChronicleCard.vue'
+import ChronicleSkeleton from '@/features/match/ui/ChronicleSkeleton.vue'
 import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
 import { useMatchClock } from '@/features/match/useMatchClock'
@@ -78,17 +80,29 @@ onUnmounted(() => setTitle(null))
     />
 
     <!-- Both layouts are in the DOM; CSS shows one of them at the 768 px breakpoint -->
-    <template v-if="screen.view === 'content' && state">
-      <div class="wide"><MatchHero :live="state" :seconds /></div>
-      <div class="narrow"><MatchHeroCompact :live="state" :seconds /></div>
-      <FlowWaveCard :live="state" :seconds />
-    </template>
+    <!-- Main column and sidebar, as on the Match board -->
+    <div v-if="screen.view === 'content' && state" class="layout">
+      <div class="main">
+        <!-- Both scoreboards are in the DOM; CSS shows one of them at 768 px -->
+        <div class="wide"><MatchHero :live="state" :seconds /></div>
+        <div class="narrow"><MatchHeroCompact :live="state" :seconds /></div>
+        <FlowWaveCard :live="state" :seconds />
+      </div>
+      <aside class="side" aria-label="Хроника матча">
+        <ChronicleCard :live="state" />
+      </aside>
+    </div>
 
-    <template v-else-if="screen.view === 'loading'">
-      <div class="wide"><MatchHeroSkeleton /></div>
-      <div class="narrow"><MatchHeroSkeleton compact /></div>
-      <FlowWaveSkeleton />
-    </template>
+    <div v-else-if="screen.view === 'loading'" class="layout">
+      <div class="main">
+        <div class="wide"><MatchHeroSkeleton /></div>
+        <div class="narrow"><MatchHeroSkeleton compact /></div>
+        <FlowWaveSkeleton />
+      </div>
+      <aside class="side">
+        <ChronicleSkeleton />
+      </aside>
+    </div>
 
     <AppCard v-else-if="notFound" class="message">
       <NotFoundState
@@ -120,6 +134,14 @@ onUnmounted(() => setTitle(null))
   padding: 0 var(--fs-screen-padding) var(--fs-space-16);
 }
 
+.layout,
+.main,
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fs-space-16);
+}
+
 .wide {
   display: none;
 }
@@ -138,6 +160,11 @@ onUnmounted(() => setTitle(null))
     gap: var(--fs-space-24);
     padding: 28px var(--fs-page-padding) var(--fs-space-40);
   }
+  .layout,
+  .main,
+  .side {
+    gap: var(--fs-space-24);
+  }
 
   .wide {
     display: contents;
@@ -149,6 +176,15 @@ onUnmounted(() => setTitle(null))
 
   .message {
     margin-top: 0;
+  }
+}
+
+/* Wide desktop: the sidebar stands next to the main column. Below 1200 it moves under it */
+@media (min-width: 1200px) {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--fs-sidebar-max);
+    align-items: start;
   }
 }
 </style>

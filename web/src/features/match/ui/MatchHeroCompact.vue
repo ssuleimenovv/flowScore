@@ -133,5 +133,6 @@ const minute = computed(() => formatMinute(seconds, match.value.clock.period))
   font-size: var(--fs-text-tab);
   font-weight: 700;
   letter-spacing: 0.14em;
+  text-align: center;
 }
 </style>

@@ -6,6 +6,7 @@ import "github.com/ssuleimenovv/flowscore/services/internal/event"
 type Params struct {
 	Tau          float64 // impulse memory, match minutes
 	K            float64 // scale of the 0–100 curve
+	Base         float64 // S₀: impulse of a team that is just playing, the Flow floor
 	HalftimeKeep float64 // share of impulse kept after the break (r)
 	ShotBase     float64
 	ShotPerXG    float64
@@ -17,7 +18,8 @@ type Params struct {
 func DefaultParams() Params {
 	return Params{
 		Tau:          5,
-		K:            17,
+		K:            18.7,
+		Base:         3,
 		HalftimeKeep: 0.7,
 		ShotBase:     6,
 		ShotPerXG:    7.3,

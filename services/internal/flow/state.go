@@ -34,13 +34,19 @@ func (s *State) Apply(e event.Event) {
 
 	if e.Type == event.Possession && e.HomeShare != nil {
 		lead := *e.HomeShare - 0.5 // +0.2 means home had the ball 70% of the minute
-		s.impulse[event.Home] += s.p.Possession * lead
-		s.impulse[event.Away] -= s.p.Possession * lead
+		s.add(event.Home, s.p.Possession*lead)
+		s.add(event.Away, -s.p.Possession*lead)
 		return
 	}
 
-	side, w := s.p.Weight(e)
-	s.impulse[side] += w
+	s.add(s.p.Weight(e))
+}
+
+// add puts a weight into the team's impulse. A negative weight only dampens
+// what the team has built up and never leaves a debt: otherwise a long spell
+// without the ball would hide the team's next shots until the debt is paid off.
+func (s *State) add(side event.Side, w float64) {
+	s.impulse[side] = math.Max(0, s.impulse[side]+w)
 }
 
 // Advance lets the impulse decay up to match time t. Time never goes back.
@@ -60,11 +66,12 @@ func (s *State) At() time.Duration {
 	return s.at
 }
 
-// Flow returns both teams' Flow on the 0–100 scale.
+// Flow returns both teams' Flow on the 0–100 scale. A team on the pitch always
+// has the base impulse, so its Flow never falls to zero.
 func (s *State) Flow() (home, away float64) {
 	return s.flow(event.Home), s.flow(event.Away)
 }
 
 func (s *State) flow(side event.Side) float64 {
-	return 100 * (1 - math.Exp(-math.Max(0, s.impulse[side])/s.p.K))
+	return 100 * (1 - math.Exp(-(s.p.Base+s.impulse[side])/s.p.K))
 }

@@ -141,6 +141,7 @@ export interface components {
             halftimeScore?: components["schemas"]["Score"] | null;
             clock: components["schemas"]["Clock"];
             stats: components["schemas"]["StatRow"][];
+            seq: components["schemas"]["SnapshotSeq"];
         };
         Clock: {
             /** @description Match time in seconds (72:14 → 4334) */
@@ -180,6 +181,7 @@ export interface components {
             points: components["schemas"]["FlowPoint"][];
             /** Format: date-time */
             updatedAt: string;
+            seq: components["schemas"]["SnapshotSeq"];
         };
         MatchEvent: {
             id: string;
@@ -207,7 +209,13 @@ export interface components {
         } | null;
         EventList: {
             items: components["schemas"]["MatchEvent"][];
+            seq: components["schemas"]["SnapshotSeq"];
         };
+        /**
+         * @description Seq of the last stream message already included in this response.
+         *     Apply only stream messages with a greater seq.
+         */
+        SnapshotSeq: number;
         Probabilities: {
             home: number;
             draw: number;

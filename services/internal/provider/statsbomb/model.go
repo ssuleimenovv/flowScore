@@ -39,8 +39,23 @@ type rawEvent struct {
 }
 
 type rawMatch struct {
-	MatchID  int `json:"match_id"`
+	MatchID     int    `json:"match_id"`
+	MatchDate   string `json:"match_date"`
+	KickOff     string `json:"kick_off"`
+	MatchWeek   int    `json:"match_week"`
+	Competition struct {
+		ID   int    `json:"competition_id"`
+		Name string `json:"competition_name"`
+	} `json:"competition"`
+	Stadium *struct {
+		Name string `json:"name"`
+	} `json:"stadium"`
 	HomeTeam struct {
-		ID int `json:"home_team_id"`
+		ID   int    `json:"home_team_id"`
+		Name string `json:"home_team_name"`
 	} `json:"home_team"`
+	AwayTeam struct {
+		ID   int    `json:"away_team_id"`
+		Name string `json:"away_team_name"`
+	} `json:"away_team"`
 }

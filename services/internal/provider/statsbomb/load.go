@@ -12,21 +12,11 @@ import (
 )
 
 func LoadMatch(matchesPath, eventsPath string, matchID int) ([]event.Event, error) {
-	var matches []rawMatch
-	if err := readJSON(matchesPath, &matches); err != nil {
-		return nil, fmt.Errorf("read matches: %w", err)
+	match, err := findMatch(matchesPath, matchID)
+	if err != nil {
+		return nil, err
 	}
-
-	homeTeamID := 0
-	for _, m := range matches {
-		if m.MatchID == matchID {
-			homeTeamID = m.HomeTeam.ID
-			break
-		}
-	}
-	if homeTeamID == 0 {
-		return nil, fmt.Errorf("match %d not found in %s", matchID, matchesPath)
-	}
+	homeTeamID := match.HomeTeam.ID
 
 	var raw []rawEvent
 	if err := readJSON(eventsPath, &raw); err != nil {
@@ -48,6 +38,20 @@ func LoadMatch(matchesPath, eventsPath string, matchID int) ([]event.Event, erro
 		return cmp.Compare(a.Elapsed, b.Elapsed)
 	})
 	return out, nil
+}
+
+// findMatch looks the fixture up in the season's matches file.
+func findMatch(matchesPath string, matchID int) (rawMatch, error) {
+	var matches []rawMatch
+	if err := readJSON(matchesPath, &matches); err != nil {
+		return rawMatch{}, fmt.Errorf("read matches: %w", err)
+	}
+	for _, m := range matches {
+		if m.MatchID == matchID {
+			return m, nil
+		}
+	}
+	return rawMatch{}, fmt.Errorf("match %d not found in %s", matchID, matchesPath)
 }
 
 func readJSON(path string, v any) error {

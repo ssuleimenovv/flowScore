@@ -236,7 +236,7 @@ components:
 
     Match:
       type: object
-      required: [id, status, kickoffAt, competition, home, away, score, clock, stats]
+      required: [id, status, kickoffAt, competition, home, away, score, clock, stats, seq]
       properties:
         id:
           type: string
@@ -279,6 +279,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StatRow'
+        seq: 
+          $ref : '#/components/schemas/SnapshotSeq'
 
     Clock:
       type: object
@@ -334,7 +336,7 @@ components:
 
     FlowSeries:
       type: object
-      required: [matchId, current, delta10, points, updatedAt]
+      required: [matchId, current, delta10, points, updatedAt, seq]
       properties:
         matchId:
           type: string
@@ -357,7 +359,8 @@ components:
         updatedAt:
           type: string
           format: date-time
-
+        seq:
+          $ref: '#/components/schemas/SnapshotSeq'
     MatchEvent:
       type: object
       required: [id, type, side, minute]
@@ -410,12 +413,21 @@ components:
 
     EventList:
       type: object
-      required: [items]
+      required: [items, seq]
       properties:
         items:
           type: array
           items:
             $ref: '#/components/schemas/MatchEvent'
+        seq:
+          $ref: '#/components/schemas/SnapshotSeq'
+
+    SnapshotSeq:
+      type: integer
+      description: |
+        Seq of the last stream message already included in this response.
+        Apply only stream messages with a greater seq.
+
 
     Probabilities:
       type: object

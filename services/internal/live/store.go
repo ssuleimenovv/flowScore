@@ -1,0 +1,99 @@
+package live
+
+import (
+	"slices"
+	"sync"
+	"time"
+
+	"github.com/ssuleimenovv/flowscore/services/internal/event"
+)
+
+// Snapshot is the state of one match that the REST API returns.
+// A client loads it first and then applies stream messages with a greater Seq.
+type Snapshot struct {
+	Match     event.Match
+	Status    string // scheduled, live, finished
+	Score     Score
+	Period    int
+	At        time.Duration // match time of the last update
+	Flow      FlowValues
+	Delta10   FlowValues
+	Points    []FlowPoint  // one per match minute, in order
+	Events    []MatchEvent // oldest first
+	Seq       int64        // last stream message already included
+	UpdatedAt time.Time
+}
+
+type Score struct {
+	Home int `json:"home"`
+	Away int `json:"away"`
+}
+
+// Store keeps the latest snapshot of every match. The Publisher writes while
+// HTTP handlers read at the same time, so access goes through an RWMutex.
+type Store struct {
+	mu      sync.RWMutex
+	matches map[string]*Snapshot
+}
+
+func NewStore() *Store {
+	return &Store{matches: map[string]*Snapshot{}}
+}
+
+// Schedule registers a match that has not started yet.
+func (s *Store) Schedule(m event.Match) {
+	s.reset(m, "scheduled")
+}
+
+// Start resets the match to kick-off.
+func (s *Store) Start(m event.Match) {
+	s.reset(m, "live")
+}
+
+func (s *Store) reset(m event.Match, status string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.matches[m.ID] = &Snapshot{Match: m, Status: status, Period: 1, UpdatedAt: time.Now().UTC()}
+}
+
+// Finish marks the match as played.
+func (s *Store) Finish(matchID string) {
+	s.update(matchID, func(snap *Snapshot) { snap.Status = "finished" })
+}
+
+// Get returns a copy of the snapshot. The caller may keep reading it
+// after the lock is released while the Publisher goes on appending.
+func (s *Store) Get(matchID string) (Snapshot, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	snap, ok := s.matches[matchID]
+	if !ok {
+		return Snapshot{}, false
+	}
+	c := *snap
+	c.Points = slices.Clone(snap.Points)
+	c.Events = slices.Clone(snap.Events)
+	return c, true
+}
+
+func (s *Store) update(matchID string, fn func(*Snapshot)) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if snap, ok := s.matches[matchID]; ok {
+		fn(snap)
+		snap.UpdatedAt = time.Now().UTC()
+	}
+}
+
+// upsertPoint replaces the point of the same minute or appends a new one.
+// Minutes can repeat: 45+1 of the first half and the start of the second
+// half both count as minute 46.
+func upsertPoint(points []FlowPoint, p FlowPoint) []FlowPoint {
+	if i := slices.IndexFunc(points, func(q FlowPoint) bool { return q.Minute == p.Minute }); i >= 0 {
+		points[i] = p
+		return points
+	}
+	return append(points, p)
+}

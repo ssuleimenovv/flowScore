@@ -82,6 +82,17 @@ func (h *Hub) Publish(matchID string, msg []byte) {
 	}
 }
 
+// CloseMatch drops every client of one match. Their browsers reconnect
+// and load a fresh snapshot, which is how they learn the match restarted.
+func (h *Hub) CloseMatch(matchID string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	for c := range h.matches[matchID] {
+		h.remove(matchID, c)
+	}
+}
+
 // Close drops every client of every match.
 func (h *Hub) Close() {
 	h.mu.Lock()

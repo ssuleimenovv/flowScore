@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import DesktopHeader from './layout/DesktopHeader.vue'
-import MobileNavBar from './layout/MobileNavbar.vue'
+import MobileNavBar from './layout/MobileNavBar.vue'
 import TabBar from './layout/TabBar.vue'
 
 const route = useRoute()

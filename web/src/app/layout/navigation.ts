@@ -1,5 +1,5 @@
 import { readonly, ref } from 'vue'
-import type { IconName } from '@/shared/up/AppIcon.vue'
+import type { IconName } from '@/shared/ui/AppIcon.vue'
 
 export type TabId = 'home' | 'leagues' | 'simulator' | 'search' | 'profile' | 'favorites'
 

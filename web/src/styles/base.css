@@ -103,9 +103,16 @@ p {
   opacity: 0.6;
 }
 
-/* Hover onle where there is a mouse: on touch screens it would stick after a tap */
+/* Hover only where there is a mouse: on touch screens it would stick after a tap */
 @media (hover: hover) {
   .fs-press:hover {
     filter: brightness(1.08);
   }
+}
+
+/* Keyboard focus ring from the States board. Mouse and touch focus stay clean */
+
+:focus-visible {
+  outline: 2px solid var(--fs-home);
+  outline-offset: 2px;
 }

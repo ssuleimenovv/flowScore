@@ -10,6 +10,11 @@ const devRoutes: RouteRecordRaw[] = [
     component: () => import('@/pages/DevStreamPage.vue'),
     meta: { tab: 'home', inner: true },
   },
+  {
+    path: '/dev/ui',
+    name: 'dev-ui',
+    component: () => import('@/pages/DevUiPage.vue'),
+  },
 ]
 
 export const router = createRouter({

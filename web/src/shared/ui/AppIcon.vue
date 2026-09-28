@@ -2,7 +2,24 @@
 // Stroke icons from the mockup (24×24 grid). In the native shell they
 // become SF Symbols (see the Tokens board).
 export type IconName =
-  'home' | 'trophy' | 'sliders' | 'search' | 'person' | 'bell' | 'sun' | 'moon' | 'back'
+  | 'home'
+  | 'trophy'
+  | 'sliders'
+  | 'search'
+  | 'person'
+  | 'bell'
+  | 'sun'
+  | 'moon'
+  | 'back'
+  | 'check'
+  | 'close'
+  | 'retry'
+  | 'ball'
+  | 'star'
+  | 'warning'
+  | 'offline'
+  | 'lock'
+  | 'pulse'
 
 interface Shape {
   paths: string[]
@@ -36,6 +53,26 @@ const icons: Record<IconName, Shape> = {
   },
   moon: { paths: ['M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z'] },
   back: { paths: ['M15 5l-7 7 7 7'] },
+  check: { paths: ['M5 12.5l4.5 4.5L19 7.5'] },
+  close: { paths: ['M6 6l12 12M18 6L6 18'] },
+  retry: { paths: ['M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4'] },
+  ball: { paths: ['M12 7l4 3-1.5 4.5h-5L8 10z'], circles: [[12, 12, 9]] },
+  star: { paths: ['M12 3l2.8 5.8 6.2.8-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.8z'] },
+  warning: { paths: ['M12 3l9.5 17h-19z', 'M12 10v4M12 17h.01'] },
+  offline: {
+    paths: [
+      'M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M12 19h.01',
+      'M3 3l18 18',
+    ],
+  },
+  // The mockup draws the lock body as <rect x=4 y=11 w=16 h=10 rx=2>; same shape as a path
+  lock: {
+    paths: [
+      'M6 11h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z',
+      'M8 11V7a4 4 0 0 1 8 0v4',
+    ],
+  },
+  pulse: { paths: ['M3 12h4l3-8 4 16 3-8h4'] },
 }
 
 const { name, size = 24 } = defineProps<{ name: IconName; size?: number }>()

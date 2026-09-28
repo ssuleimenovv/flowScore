@@ -8,7 +8,7 @@ const route = useRoute()
 <template>
   <section class="stub">
     <h1>{{ route.meta.stubTitle }}</h1>
-    <p1>Экран еще не сделан</p1>
+    <p>Экран еще не сделан</p>
   </section>
 </template>
 

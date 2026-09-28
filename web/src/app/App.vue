@@ -21,7 +21,8 @@ const inner = computed(() => route.meta.inner === true)
   </div>
 
   <main class="content">
-    <RouterView />
+    <!-- The key remounts the page when only the id changes (/matches/1 → /matches/2) -->
+    <RouterView :key="route.path" />
   </main>
 
   <div class="mobile-only">

@@ -26,6 +26,14 @@ export const router = createRouter({
       component: () => import('@/pages/HomePage.vue'),
       meta: { tab: 'home' },
     },
+
+    {
+      path: '/matches/:matchId',
+      name: 'match',
+      component: () => import('@/pages/MatchPage.vue'),
+      meta: { tab: 'home', inner: true },
+    },
+
     // Screens from the mockup that are not built yet
     { path: '/leagues', component: stub, meta: { tab: 'leagues', stubTitle: 'Лиги' } },
     { path: '/simulator', component: stub, meta: { tab: 'simulator', stubTitle: 'Симулятор' } },

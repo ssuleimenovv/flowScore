@@ -44,9 +44,13 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
   switch (message.type) {
     case 'flow.update': {
       if (message.seq <= state.seq.flow) return state
-      const { current, delta10, point } = message.data
+      const { current, delta10, point, clock } = message.data
       return {
         ...state,
+        // The clock resyncs on every update: the client ticks in real time,
+        // while a replay runs faster and a real match pauses at half-time.
+        // The match part may be newer than the flow part, so only move it forward
+        match: message.seq > state.seq.match ? { ...state.match, clock } : state.match,
         flow: current,
         delta10,
         points: upsertPoint(state.points, point),

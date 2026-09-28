@@ -71,6 +71,7 @@ func (p *Publisher) flowUpdate(u flow.Update) FlowUpdate {
 		Current: current,
 		Delta10: FlowValues{Home: current.Home - before.Home, Away: current.Away - before.Away},
 		Point:   FlowPoint{Minute: minute, Home: current.Home, Away: current.Away},
+		Clock:   ClockOf(p.period, u.At, time.Now().UTC()),
 	}
 }
 

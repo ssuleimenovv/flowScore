@@ -280,6 +280,8 @@ export interface components {
                 current: components["schemas"]["FlowValues"];
                 delta10: components["schemas"]["FlowValues"];
                 point: components["schemas"]["FlowPoint"];
+                /** @description Match time at this update; the client resyncs its ticking clock to it */
+                clock: components["schemas"]["Clock"];
             };
         } & {
             /**

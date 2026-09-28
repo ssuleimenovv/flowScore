@@ -562,7 +562,7 @@ components:
               const: flow.update
             data:
               type: object
-              required: [current, delta10, point]
+              required: [current, delta10, point, clock]
               properties:
                 current:
                   $ref: '#/components/schemas/FlowValues'
@@ -570,6 +570,9 @@ components:
                   $ref: '#/components/schemas/FlowValues'
                 point:
                   $ref: '#/components/schemas/FlowPoint'
+                clock:
+                  $ref: '#/components/schemas/Clock'
+                  description: Match time at this update; the client resyncs its ticking clock to it
 
     WsPredictionUpdate:
       allOf:

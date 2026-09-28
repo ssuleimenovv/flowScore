@@ -31,6 +31,36 @@ type FlowUpdate struct {
 	Current FlowValues `json:"current"`
 	Delta10 FlowValues `json:"delta10"`
 	Point   FlowPoint  `json:"point"`
+	Clock   Clock      `json:"clock"`
+}
+
+// Clock is the match time as the contract sends it, in the REST match and in
+// every flow.update. The client keeps it ticking from ObservedAt.
+type Clock struct {
+	ElapsedSeconds int       `json:"elapsedSeconds"`
+	Period         string    `json:"period"`
+	ObservedAt     time.Time `json:"observedAt"`
+}
+
+func ClockOf(period int, elapsed time.Duration, observedAt time.Time) Clock {
+	return Clock{
+		ElapsedSeconds: int(elapsed.Seconds()),
+		Period:         periodName(period),
+		ObservedAt:     observedAt,
+	}
+}
+
+func periodName(period int) string {
+	switch period {
+	case 2:
+		return "second_half"
+	case 3, 4:
+		return "extra_time"
+	case 5:
+		return "penalties"
+	default:
+		return "first_half"
+	}
 }
 
 type PersonRef struct {

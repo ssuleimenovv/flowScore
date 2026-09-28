@@ -1,6 +1,7 @@
 package live
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -68,5 +69,38 @@ func TestUpsertPointReplacesSameMinute(t *testing.T) {
 
 	if len(points) != 3 || points[1].Home != 30 || points[2].Minute != 47 {
 		t.Errorf("points = %+v", points)
+	}
+}
+
+func TestFlowUpdateCarriesClock(t *testing.T) {
+	hub := NewHub()
+	client := hub.Subscribe("m1")
+	p := NewPublisher(hub, NewStore(), "m1", flow.DefaultParams())
+
+	kickoff := 45 * time.Minute
+	updates := make(chan flow.Update, 1)
+	updates <- flow.Update{
+		At:    kickoff + 12*time.Second,
+		Cause: &event.Event{Type: event.Foul, Period: 2, Elapsed: kickoff},
+	}
+	close(updates)
+	p.Run(event.Match{ID: "m1"}, updates)
+
+	// A foul is a match.event; the flow.update comes right after ut
+	<-client.Messages()
+	var msg struct {
+		Type string
+		Data FlowUpdate
+	}
+	if err := json.Unmarshal(<-client.Messages(), &msg); err != nil {
+		t.Fatal(err)
+	}
+	want := Clock{ElapsedSeconds: 2712, Period: "second_half"}
+	got := msg.Data.Clock
+	if msg.Type != "flow.update" || got.ElapsedSeconds != want.ElapsedSeconds || got.Period != want.Period {
+		t.Errorf("%s clock = %+v, want %+v", msg.Type, got, want)
+	}
+	if got.ObservedAt.IsZero() {
+		t.Error("observedAt is empty")
 	}
 }

@@ -4,6 +4,7 @@ import type { EventList, FlowSeries, Match, MatchEvent, WsMessage } from '@/shar
 import { applyMessage, fromSnapshot } from '../matchState'
 
 const match = {
+  clock: { elapsedSeconds: 120, period: 'first_half', observedAt: '2026-09-28T10:00:00Z' },
   id: 'm1',
   status: 'live',
   score: { home: 1, away: 0 },
@@ -26,7 +27,7 @@ const events = { items: [], seq: 10 } satisfies EventList
 
 const snapshot = () => fromSnapshot(match, flow, events)
 
-function flowUpdate(seq: number, minute: number, home: number): WsMessage {
+function flowUpdate(seq: number, minute: number, home: number, elapsedSeconds = 0): WsMessage {
   return {
     type: 'flow.update',
     matchId: 'm1',
@@ -36,6 +37,7 @@ function flowUpdate(seq: number, minute: number, home: number): WsMessage {
       current: { home, away: 0 },
       delta10: { home: 0, away: 0 },
       point: { minute, home, away: 0 },
+      clock: { elapsedSeconds, period: 'first_half', observedAt: '2026-09-28T10:00:05Z' },
     },
   }
 }
@@ -59,6 +61,23 @@ describe('matchState', () => {
     const next = applyMessage(snapshot(), flowUpdate(11, 3, 70))
     expect(next.flow.home).toBe(70)
     expect(next.points.map((p) => p.minute)).toEqual([1, 2, 3])
+  })
+
+  it('moves the clock to the one in the flow update', () => {
+    const next = applyMessage(snapshot(), flowUpdate(11, 3, 70, 150))
+    expect(next.match.clock).toEqual({
+      elapsedSeconds: 150,
+      period: 'first_half',
+      observedAt: '2026-09-28T10:00:05Z',
+    })
+    expect(next.match.score).toEqual(match.score)
+  })
+
+  it('keeps the clock of a newer match part', () => {
+    const state = { ...snapshot(), seq: { match: 12, flow: 10, events: 10 } }
+    const next = applyMessage(state, flowUpdate(11, 3, 70, 150))
+    expect(next.flow.home).toBe(70)
+    expect(next.match.clock.elapsedSeconds).toBe(120)
   })
 
   it('replaces the point of the same minute', () => {

@@ -46,12 +46,6 @@ type venue struct {
 	Name string `json:"name"`
 }
 
-type clock struct {
-	ElapsedSeconds int       `json:"elapsedSeconds"`
-	Period         string    `json:"period"`
-	ObservedAt     time.Time `json:"observedAt"`
-}
-
 type statRow struct {
 	Key  string  `json:"key"`
 	Home float64 `json:"home"`
@@ -68,7 +62,7 @@ type match struct {
 	Away          team        `json:"away"`
 	Score         live.Score  `json:"score"`
 	HalftimeScore *live.Score `json:"halftimeScore"`
-	Clock         clock       `json:"clock"`
+	Clock         live.Clock  `json:"clock"`
 	Stats         []statRow   `json:"stats"`
 	Seq           int64       `json:"seq"`
 }
@@ -84,13 +78,9 @@ func matchResponse(s live.Snapshot) any {
 		Home:        toTeam(m.Home),
 		Away:        toTeam(m.Away),
 		Score:       s.Score,
-		Clock: clock{
-			ElapsedSeconds: int(s.At.Seconds()),
-			Period:         periodName(s.Period),
-			ObservedAt:     s.UpdatedAt,
-		},
-		Stats: []statRow{}, // not computed yet; an empty list, not null
-		Seq:   s.Seq,
+		Clock:       live.ClockOf(s.Period, s.At, s.UpdatedAt),
+		Stats:       []statRow{}, // not computed yet; an empty list, not null
+		Seq:         s.Seq,
 	}
 }
 
@@ -127,19 +117,6 @@ func eventsResponse(s live.Snapshot) any {
 
 func toTeam(t event.Team) team {
 	return team{ID: t.ID, Code: t.Code, Name: t.Name}
-}
-
-func periodName(period int) string {
-	switch period {
-	case 2:
-		return "second_half"
-	case 3, 4:
-		return "extra_time"
-	case 5:
-		return "penalties"
-	default:
-		return "first_half"
-	}
 }
 
 // orEmpty turns a nil slice into an empty one: JSON gets [] instead of null.

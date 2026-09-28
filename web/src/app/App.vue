@@ -4,6 +4,7 @@ import { RouterView, useRoute } from 'vue-router'
 import DesktopHeader from './layout/DesktopHeader.vue'
 import MobileNavBar from './layout/MobileNavBar.vue'
 import TabBar from './layout/TabBar.vue'
+import ToastHost from '@/shared/toast/ToastHost.vue'
 
 const route = useRoute()
 const active = computed(() => route.meta.tab)
@@ -26,6 +27,7 @@ const inner = computed(() => route.meta.inner === true)
   <div class="mobile-only">
     <TabBar :active />
   </div>
+  <ToastHost />
 </template>
 
 <style scoped>

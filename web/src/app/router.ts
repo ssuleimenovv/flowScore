@@ -33,6 +33,7 @@ export const router = createRouter({
     { path: '/settings', component: stub, meta: { tab: 'profile', stubTitle: 'Настройки' } },
     { path: '/favorites', component: stub, meta: { tab: 'favorites', stubTitle: 'Избранное' } },
     { path: '/notifications', component: stub, meta: { inner: true, stubTitle: 'Уведомления' } },
+    { path: '/login', component: stub, meta: { inner: true, stubTitle: 'Вход' } },
     ...(import.meta.env.DEV ? devRoutes : []),
     {
       path: '/:pathMatch(.*)*',

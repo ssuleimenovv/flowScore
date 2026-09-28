@@ -129,3 +129,9 @@ p {
     transform: translateY(16px);
   }
 }
+
+/* An open modal stops the page behind it from scrolling  */
+
+html:has(dialog[open]) {
+  overflow: hidden;
+}

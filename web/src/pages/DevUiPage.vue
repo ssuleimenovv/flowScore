@@ -11,6 +11,10 @@ import NotFoundState from '@/shared/ui/NotFoundState.vue'
 import OfflineBanner from '@/shared/ui/OfflineBanner.vue'
 import ReconnectBanner from '@/shared/ui/ReconnectBanner.vue'
 import StateMessage from '@/shared/ui/StateMessage.vue'
+import LiveBanner from '@/shared/ui/LiveBanner.vue'
+import SessionExpiredDialog from '@/shared/ui/SessionExpiredDialog.vue'
+import AppToast from '@/shared/toast/AppToast.vue'
+import { useToast, type ToastInput } from '@/shared/toast/useToast'
 
 const retrying = ref(false)
 
@@ -35,6 +39,31 @@ const ticker = setInterval(() => {
   seconds.value = Math.max(1, left)
 }, 250)
 onUnmounted(() => clearInterval(ticker))
+
+// The four toasts from the board; "Показать тост" sends them one by one
+const samples: ToastInput[] = [
+  {
+    icon: 'check',
+    tone: 'ok',
+    title: 'Сценарий сохранён',
+    text: 'Он появится в профиле → Симуляции',
+  },
+  { icon: 'ball', tone: 'accent', title: 'Гол! Фоден, 58′', text: 'Манчестер Сити 1:1 Арсенал' },
+  { icon: 'pulse', tone: 'accent', title: 'Скачок Flow +18', text: 'Сити забирает инициативу' },
+  {
+    icon: 'warning',
+    tone: 'accent',
+    title: 'Слишком много запросов',
+    text: 'Подожди пару секунд и попробуй снова · 429',
+  },
+]
+const toast = useToast()
+let sample = 0
+function showToast() {
+  toast.show(samples[sample++ % samples.length]!)
+}
+
+const sessionExpired = ref(false)
 
 // Skeleton bars of the flow wave, the same heights as on the board
 const bars = Array.from({ length: 30 }, (_, i) => 20 + ((i * 37) % 70))
@@ -132,15 +161,36 @@ const bars = Array.from({ length: 30 }, (_, i) => 20 + ((i * 37) % 70))
       </section>
     </div>
 
-    <section class="group narrow">
-      <h2 class="label">404</h2>
-      <AppCard class="fs-in" style="--fs-i: 6">
-        <NotFoundState
-          title="Такого матча нет"
-          text="Возможно, ссылка устарела или матч перенесли."
+    <div class="columns">
+      <section class="group">
+        <h2 class="label">ТОСТЫ</h2>
+        <AppToast v-for="t in samples" :key="t.title" v-bind="t" />
+        <AppButton variant="secondary" @click="showToast">Показать тост</AppButton>
+      </section>
+
+      <section class="group">
+        <h2 class="label">LIVE-БАННЕР</h2>
+        <LiveBanner
+          icon="ball"
+          title="ГОЛ! Фоден · 58′"
+          text="Манчестер Сити 1:1 Арсенал · Flow +22"
+          time="сейчас"
         />
-      </AppCard>
-    </section>
+        <h2 class="label">401 · СЕССИЯ ИСТЕКЛА</h2>
+        <AppButton variant="secondary" @click="sessionExpired = true">Открыть модалку</AppButton>
+        <SessionExpiredDialog v-model:open="sessionExpired" />
+      </section>
+
+      <section class="group">
+        <h2 class="label">404</h2>
+        <AppCard class="fs-in" style="--fs-i: 6">
+          <NotFoundState
+            title="Такого матча нет"
+            text="Возможно, ссылка устарела или матч перенесли."
+          />
+        </AppCard>
+      </section>
+    </div>
   </div>
 </template>
 

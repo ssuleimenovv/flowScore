@@ -14,4 +14,7 @@ import '@/styles/base.css'
 import { motion } from '@/shared/motion'
 import '@/shared/theme/useTheme' // applies the saved theme and follows the system one
 
+//iOS Safari applies :active only when the page listens for touches
+document.addEventListener('touchstart', () => {}, { passive: true })
+
 createApp(App).use(createPinia()).use(router).use(motion).mount('#app')

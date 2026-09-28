@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Development page: shows the raw match data. Not a screen from the mockup.
-import { computed } from 'vue'
+import { computed, onUnmounted, watchEffect } from 'vue'
+import { useNavTitle } from '@/app/layout/navigation'
 import { useRoute } from 'vue-router'
 import { useMatchLive } from '@/features/match/useMatchLive'
 import { useNetwork } from '@/shared/state/useNetwork'
@@ -15,6 +16,22 @@ const { state, request, error, socketStatus, secondsToRetry, reconnectNow, retry
   useMatchLive(matchId)
 const { online } = useNetwork()
 const { preference, setPreference } = useTheme()
+
+const { setTitle } = useNavTitle()
+
+// Mobile nav bar: "Premier League" / "37-й тур · Etihad Stadium", as on MobileMatch
+watchEffect(() => {
+  const m = state.value?.match
+  setTitle(
+    m
+      ? {
+          title: m.competition.name,
+          subtitle: [`${m.competition.round}-й тур`, m.venue?.name].filter(Boolean).join(' · '),
+        }
+      : null,
+  )
+})
+onUnmounted(() => setTitle(null))
 
 const themes: Array<[ThemePreference, string]> = [
   ['dark', 'Темная'],

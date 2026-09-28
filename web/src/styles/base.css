@@ -81,3 +81,31 @@ p {
   animation-timing-function: var(--fs-ease);
 }
 /* Dynamic Type - the main focus raw,  */
+
+.fs-press {
+  transition:
+    transform var(--fs-duration-press) ease,
+    filter var(--fs-duration-color),
+    background-color var(--fs-duration-color);
+}
+
+.fs-press:active {
+  transform: scale(0.96);
+}
+
+.fs-link {
+  transition:
+    opacity var(--fs-duration-fade),
+    background-color var(--fs-duration-color);
+}
+
+.fs-link:active {
+  opacity: 0.6;
+}
+
+/* Hover onle where there is a mouse: on touch screens it would stick after a tap */
+@media (hover: hover) {
+  .fs-press:hover {
+    filter: brightness(1.08);
+  }
+}

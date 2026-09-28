@@ -12,6 +12,7 @@ import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
 import MatchTabs, { type MatchTab } from '@/features/match/ui/MatchTabs.vue'
 import SimulatorCta from '@/features/match/ui/SimulatorCta.vue'
+import StatsCard from '@/features/match/ui/StatsCard.vue'
 import { useMatchClock } from '@/features/match/useMatchClock'
 import { useMatchLive } from '@/features/match/useMatchLive'
 import { ApiError } from '@/shared/api/http'
@@ -112,20 +113,21 @@ onUnmounted(() => setTitle(null))
         <div class="narrow"><MatchHeroCompact :live="state" :seconds /></div>
         <div class="narrow"><MatchTabs v-model="tab" /></div>
         <div class="panel" v-bind="panel('flow')"><FlowWaveCard :live="state" :seconds /></div>
+        <div class="panel" v-bind="panel('stats')">
+          <StatsCard v-if="state.match.stats.length" :live="state" />
+          <AppCard v-else class="fs-in">
+            <StateMessage
+              icon="pulse"
+              title="Статистики пока нет"
+              text="Удары, xG и владение появятся здесь с первых минут матча."
+            />
+          </AppCard>
+        </div>
       </div>
       <aside class="side">
         <div class="panel" v-bind="panel('events')"><ChronicleCard :live="state" /></div>
         <div class="panel" :class="{ active: tab === 'flow' }"><SimulatorCta /></div>
-        <!-- Stats and AI have no data yet; only the phone has a tab to fill -->
-        <div class="panel narrow-only" v-bind="panel('stats')">
-          <AppCard class="fs-in">
-            <StateMessage
-              icon="pulse"
-              title="Статистики пока нет"
-              text="Удары, xG и владение появятся здесь по ходу матча."
-            />
-          </AppCard>
-        </div>
+        <!-- AI has no data yet; only the phone has a tab to fill -->
         <div class="panel narrow-only" v-bind="panel('ai')">
           <AppCard class="fs-in">
             <StateMessage

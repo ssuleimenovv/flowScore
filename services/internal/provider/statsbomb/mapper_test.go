@@ -66,6 +66,30 @@ func TestMapEvent(t *testing.T) {
 	}
 }
 
+func TestMapEventStatsOnly(t *testing.T) {
+	corner := rawEvent{ID: "p1", Type: ref{Name: "Pass"}, Team: ref{ID: homeID}}
+	corner.Pass = &struct {
+		Type       *ref `json:"type"`
+		ShotAssist bool `json:"shot_assist"`
+		GoalAssist bool `json:"goal_assist"`
+	}{Type: &ref{Name: "Corner"}, ShotAssist: true}
+
+	got := mapEvent(corner, "m1", homeID, nil)
+	if len(got) != 2 || got[0].Type != event.Corner || got[1].Type != event.KeyPass || got[1].ID != "p1:key" {
+		t.Errorf("corner that set up a shot = %+v, want a corner and a key pass", got)
+	}
+
+	tackle := rawEvent{Type: ref{Name: "Duel"}, Team: ref{ID: 1}}
+	tackle.Duel = &struct {
+		Type ref `json:"type"`
+	}{Type: ref{Name: "Tackle"}}
+
+	got = mapEvent(tackle, "m1", homeID, nil)
+	if len(got) != 1 || got[0].Type != event.Tackle || got[0].Side != event.Away {
+		t.Errorf("tackle = %+v, want one away tackle", got)
+	}
+}
+
 func TestMapEventScalesPosition(t *testing.T) {
 	r := shot(homeID, "Saved", 0.1)
 	r.Location = []float64{120, 40}

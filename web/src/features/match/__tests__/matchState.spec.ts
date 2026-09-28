@@ -124,6 +124,30 @@ describe('matchState', () => {
     expect(kickoff.match.status).toBe('live')
   })
 
+  it('replaces the stats with the ones in the message', () => {
+    const stats = [{ key: 'shots', home: 3, away: 1 }]
+    const message: WsMessage = {
+      type: 'match.stats',
+      matchId: 'm1',
+      seq: 11,
+      sentAt: '',
+      data: { stats },
+    }
+    expect(applyMessage(snapshot(), message).match.stats).toEqual(stats)
+  })
+
+  it('skips stats the snapshot already has', () => {
+    const state = snapshot()
+    const old: WsMessage = {
+      type: 'match.stats',
+      matchId: 'm1',
+      seq: 9,
+      sentAt: '',
+      data: { stats: [] },
+    }
+    expect(applyMessage(state, old)).toBe(state)
+  })
+
   it('finishes the match on the final whistle', () => {
     const next = applyMessage(snapshot(), whistle(11, 'fulltime'))
     expect(next.match.status).toBe('finished')

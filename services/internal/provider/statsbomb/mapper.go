@@ -49,8 +49,24 @@ func mapEvent(r rawEvent, matchID string, homeTeamID int, names map[int]string) 
 		return []event.Event{e}
 
 	case "Pass":
-		if r.Pass != nil && r.Pass.Type != nil && r.Pass.Type.Name == "Corner" {
-			return []event.Event{with(base, event.Corner)}
+		if r.Pass == nil {
+			return nil
+		}
+		var out []event.Event
+		if r.Pass.Type != nil && r.Pass.Type.Name == "Corner" {
+			out = append(out, with(base, event.Corner))
+		}
+		// A corner that finds a head is a key pass too, so both can come out
+		if r.Pass.ShotAssist || r.Pass.GoalAssist {
+			key := with(base, event.KeyPass)
+			key.ID = base.ID + ":key"
+			out = append(out, key)
+		}
+		return out
+
+	case "Duel":
+		if r.Duel != nil && r.Duel.Type.Name == "Tackle" {
+			return []event.Event{with(base, event.Tackle)}
 		}
 
 	case "Dribble":

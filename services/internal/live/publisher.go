@@ -19,7 +19,8 @@ type Publisher struct {
 	params  flow.Params
 	seq     int64
 	period  int
-	at      time.Duration      // match time of the last update
+	at      time.Duration // match time of the last update
+	stats   *Stats
 	history map[int]FlowValues // Flow at the end of each match minute
 }
 
@@ -33,6 +34,7 @@ func (p *Publisher) Start(match event.Match) {
 	clear(p.history) // minutes of the previous replay
 	p.period = 1
 	p.at = 0
+	p.stats = NewStats()
 	p.store.Start(match, p.seq)
 }
 
@@ -46,7 +48,7 @@ func (p *Publisher) Run(updates <-chan flow.Update) {
 			p.period = u.Cause.Period
 		}
 
-		if u.Cause != nil && u.Cause.Type != event.Possession {
+		if u.Cause != nil && !u.Cause.Type.Internal() {
 			me := p.matchEvent(*u.Cause)
 			p.emit("match.event", me, func(s *Snapshot) {
 				s.Events = append(s.Events, me)
@@ -54,6 +56,11 @@ func (p *Publisher) Run(updates <-chan flow.Update) {
 					addGoal(&s.Score, *me.Side)
 				}
 			})
+		}
+
+		if u.Cause != nil && p.stats.Add(*u.Cause) {
+			ms := MatchStats{Stats: p.stats.Rows()}
+			p.emit("match.stats", ms, func(s *Snapshot) { s.Stats = ms.Stats })
 		}
 
 		fu := p.flowUpdate(u)

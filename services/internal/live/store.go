@@ -21,6 +21,7 @@ type Snapshot struct {
 	Delta10   FlowValues
 	Points    []FlowPoint  // one per match minute, in order
 	Events    []MatchEvent // oldest first
+	Stats     []StatRow    // empty before kick-off
 	Seq       int64        // last stream message already included
 	UpdatedAt time.Time
 }
@@ -71,6 +72,8 @@ func (s *Store) Get(matchID string) (Snapshot, bool) {
 	c := *snap
 	c.Points = slices.Clone(snap.Points)
 	c.Events = slices.Clone(snap.Events)
+	c.Stats = slices.Clone(snap.Stats)
+
 	return c, true
 }
 

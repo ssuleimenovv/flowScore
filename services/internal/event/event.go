@@ -21,8 +21,16 @@ const (
 	TakeOn        Type = "take_on"
 	Halftime      Type = "halftime" // the whistles have no side and no flow weight
 	Fulltime      Type = "fulltime"
-	Possession    Type = "possession" // Possession is internal: one per match minute, never shown in the timelines
+	// Internal events feed the match stats and are never shown in the timelines
+	Possession Type = "possession" // one per match minute, with HomeShare
+	KeyPass    Type = "key_pass"   // a pass that set up a shot
+	Tackle     Type = "tackle"
 )
+
+// Internal reports whether the event only feeds the stats.
+func (t Type) Internal() bool {
+	return t == Possession || t == KeyPass || t == Tackle
+}
 
 type Side string
 

@@ -155,7 +155,7 @@ export interface components {
             observedAt: string;
         };
         StatRow: {
-            /** @description possession, shots, shots_on_target, xg, key_passes, pressure_tackles */
+            /** @description possession (percent), shots, shots_on_target, xg, key_passes, pressure_tackles (tackles won or lost), in the order of the Match board */
             key: string;
             home: number;
             away: number;
@@ -254,7 +254,7 @@ export interface components {
             /** @example эйфория */
             mood: string;
         };
-        WsMessage: components["schemas"]["WsMatchEvent"] | components["schemas"]["WsFlowUpdate"] | components["schemas"]["WsPredictionUpdate"] | components["schemas"]["WsInsightUpdate"];
+        WsMessage: components["schemas"]["WsMatchEvent"] | components["schemas"]["WsFlowUpdate"] | components["schemas"]["WsMatchStats"] | components["schemas"]["WsPredictionUpdate"] | components["schemas"]["WsInsightUpdate"];
         WsEnvelope: {
             type: string;
             matchId: string;
@@ -290,6 +290,20 @@ export interface components {
              * @enum {string}
              */
             type: "flow.update";
+        };
+        WsMatchStats: components["schemas"]["WsEnvelope"] & {
+            /** @constant */
+            type?: "match.stats";
+            /** @description Every row, not a diff; the client replaces what it has */
+            data: {
+                stats: components["schemas"]["StatRow"][];
+            };
+        } & {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "match.stats";
         };
         WsPredictionUpdate: components["schemas"]["WsEnvelope"] & {
             /** @constant */

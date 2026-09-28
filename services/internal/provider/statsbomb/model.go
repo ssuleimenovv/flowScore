@@ -22,8 +22,14 @@ type rawEvent struct {
 	} `json:"shot"`
 
 	Pass *struct {
-		Type *ref `json:"type"`
+		Type       *ref `json:"type"`
+		ShotAssist bool `json:"shot_assist"`
+		GoalAssist bool `json:"goal_assist"`
 	} `json:"pass"`
+
+	Duel *struct {
+		Type ref `json:"type"`
+	} `json:"duel"`
 
 	Dribble *struct {
 		Outcome *ref `json:"outcome"`

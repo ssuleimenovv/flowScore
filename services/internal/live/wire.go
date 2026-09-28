@@ -63,6 +63,19 @@ func periodName(period int) string {
 	}
 }
 
+// StatRow is one row of the match stats (StatRow in the contract).
+type StatRow struct {
+	Key  string  `json:"key"`
+	Home float64 `json:"home"`
+	Away float64 `json:"away"`
+}
+
+// MatchStats is the data of a match.stats message: every row, not a diff,
+// so a client can simply replace what it has.
+type MatchStats struct {
+	Stats []StatRow `json:"stats"`
+}
+
 type PersonRef struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

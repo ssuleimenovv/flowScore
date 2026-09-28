@@ -42,8 +42,9 @@ func main() {
 	for u := range updates {
 		minute := int(u.At.Minutes())
 
-		// Ticks and possession updates are printed once per match minute.
-		quiet := u.Cause == nil || u.Cause.Type == event.Possession
+		// Ticks and stats-only updates are printed once per match minute.
+		quiet := u.Cause == nil || u.Cause.Type.Internal()
+
 		if quiet && minute == lastMinute {
 			continue
 		}

@@ -77,6 +77,15 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
       return next
     }
 
+    case 'match.stats': {
+      if (message.seq <= state.seq.match) return state
+      return {
+        ...state,
+        match: { ...state.match, stats: message.data.stats },
+        seq: { ...state.seq, match: message.seq },
+      }
+    }
+
     default:
       return state // prediction.update and insight.update come with the AI step
   }

@@ -46,25 +46,19 @@ type venue struct {
 	Name string `json:"name"`
 }
 
-type statRow struct {
-	Key  string  `json:"key"`
-	Home float64 `json:"home"`
-	Away float64 `json:"away"`
-}
-
 type match struct {
-	ID            string      `json:"id"`
-	Status        string      `json:"status"`
-	KickoffAt     time.Time   `json:"kickoffAt"`
-	Competition   competition `json:"competition"`
-	Venue         venue       `json:"venue"`
-	Home          team        `json:"home"`
-	Away          team        `json:"away"`
-	Score         live.Score  `json:"score"`
-	HalftimeScore *live.Score `json:"halftimeScore"`
-	Clock         live.Clock  `json:"clock"`
-	Stats         []statRow   `json:"stats"`
-	Seq           int64       `json:"seq"`
+	ID            string         `json:"id"`
+	Status        string         `json:"status"`
+	KickoffAt     time.Time      `json:"kickoffAt"`
+	Competition   competition    `json:"competition"`
+	Venue         venue          `json:"venue"`
+	Home          team           `json:"home"`
+	Away          team           `json:"away"`
+	Score         live.Score     `json:"score"`
+	HalftimeScore *live.Score    `json:"halftimeScore"`
+	Clock         live.Clock     `json:"clock"`
+	Stats         []live.StatRow `json:"stats"`
+	Seq           int64          `json:"seq"`
 }
 
 func matchResponse(s live.Snapshot) any {
@@ -80,7 +74,7 @@ func matchResponse(s live.Snapshot) any {
 		Score:         s.Score,
 		HalftimeScore: s.Halftime,
 		Clock:         live.ClockOf(s.Period, s.At, s.UpdatedAt),
-		Stats:         []statRow{}, // not computed yet; an empty list, not null
+		Stats:         orEmpty(s.Stats),
 		Seq:           s.Seq,
 	}
 }

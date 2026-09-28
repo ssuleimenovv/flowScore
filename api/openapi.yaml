@@ -303,7 +303,9 @@ components:
       properties:
         key:
           type: string
-          description: possession, shots, shots_on_target, xg, key_passes, pressure_tackles
+          description: >-
+            possession (percent), shots, shots_on_target, xg, key_passes, pressure_tackles
+            (tackles won or lost), in the order of the Match board
         home:
           type: number
         away:
@@ -517,6 +519,7 @@ components:
       oneOf:
         - $ref: '#/components/schemas/WsMatchEvent'
         - $ref: '#/components/schemas/WsFlowUpdate'
+        - $ref: '#/components/schemas/WsMatchStats'
         - $ref: '#/components/schemas/WsPredictionUpdate'
         - $ref: '#/components/schemas/WsInsightUpdate'
       discriminator:
@@ -524,6 +527,7 @@ components:
         mapping:
           match.event: '#/components/schemas/WsMatchEvent'
           flow.update: '#/components/schemas/WsFlowUpdate'
+          match.stats: '#/components/schemas/WsMatchStats'
           prediction.update: '#/components/schemas/WsPredictionUpdate'
           insight.update: '#/components/schemas/WsInsightUpdate'
 
@@ -575,6 +579,24 @@ components:
                   $ref: '#/components/schemas/Clock'
                   description: Match time at this update; the client resyncs its ticking clock to it
 
+    WsMatchStats:
+      allOf:
+        - $ref: '#/components/schemas/WsEnvelope'
+        - type: object
+          required: [data]
+          properties:
+            type:
+              const: match.stats
+            data:
+              type: object
+              required: [stats]
+              description: Every row, not a diff; the client replaces what it has
+              properties:
+                stats:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StatRow'
+
     WsPredictionUpdate:
       allOf:
         - $ref: '#/components/schemas/WsEnvelope'
@@ -595,4 +617,4 @@ components:
             type:
               const: insight.update
             data:
-              $ref: '#/components/schemas/Explanation'
+              $ref: '#/components/schemas/Explanation'

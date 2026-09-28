@@ -54,9 +54,12 @@ func TestPublisherKeepsSnapshot(t *testing.T) {
 	if len(snap.Events) != 2 || snap.Events[0].Minute != 7 || snap.Events[1].Type != event.Fulltime {
 		t.Errorf("events = %+v, want a goal at 7' and the final whistle", snap.Events)
 	}
-	// goal: match.event + flow.update, tick: flow.update, fulltime: match.event
-	if snap.Seq != 4 {
-		t.Errorf("seq = %d, want 4", snap.Seq)
+	// goal: match.event + match.stats + flow.update, tick: flow.update, fulltime: match.event
+	if snap.Seq != 5 {
+		t.Errorf("seq = %d, want 5", snap.Seq)
+	}
+	if len(snap.Stats) == 0 || snap.Stats[1] != (StatRow{Key: "shots", Home: 1}) {
+		t.Errorf("stats = %+v, want one home shot", snap.Stats)
 	}
 	if snap.Status != "finished" {
 		t.Errorf("status = %q, want finished", snap.Status)

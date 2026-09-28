@@ -74,4 +74,10 @@ p {
   --fs-safe-left: env(safe-area-inset-left, 0px);
 }
 
+/* Theme switch: the whole page cross-fades (see shared/theme/useTheme.ts) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--fs-duration-lift);
+  animation-timing-function: var(--fs-ease);
+}
 /* Dynamic Type - the main focus raw,  */

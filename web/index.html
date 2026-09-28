@@ -5,6 +5,21 @@
   <meta charset="UTF-8">
   <link rel="icon" href="/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0B0909" />
+  <title>FlowScore</title>
+  <script>
+    // Set the theme before the first paint so the page never flashes the wrong colors.
+    // Same rules as src/shared/theme/theme.ts; the app takes over once it loads.
+    try {
+      var preference = localStorage.getItem('fs-theme') || 'dark'
+      var dark =
+        preference === 'system'
+          ? matchMedia('(prefers-color-scheme: dark)').matches
+          : preference !== 'light'
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+    } catch (e) {}
+  </script>
+
   <title>FlowScore</title>
 </head>
 

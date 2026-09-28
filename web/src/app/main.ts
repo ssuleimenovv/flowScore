@@ -12,5 +12,6 @@ import '@/styles/tokens.css'
 import '@/styles/base.css'
 
 import { motion } from '@/shared/motion'
+import '@/shared/theme/useTheme' // applies the saved theme and follows the system one
 
 createApp(App).use(createPinia()).use(router).use(motion).mount('#app')

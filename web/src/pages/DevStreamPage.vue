@@ -5,6 +5,8 @@ import { useRoute } from 'vue-router'
 import { useMatchLive } from '@/features/match/useMatchLive'
 import { useNetwork } from '@/shared/state/useNetwork'
 import { resolveScreenState } from '@/shared/state/screenState'
+import { useTheme } from '@/shared/theme/useTheme'
+import type { ThemePreference } from '@/shared/theme/theme'
 
 const route = useRoute()
 const matchId = String(route.params.matchId ?? '3754314')
@@ -12,6 +14,13 @@ const matchId = String(route.params.matchId ?? '3754314')
 const { state, request, error, socketStatus, secondsToRetry, reconnectNow, retry } =
   useMatchLive(matchId)
 const { online } = useNetwork()
+const { preference, setPreference } = useTheme()
+
+const themes: Array<[ThemePreference, string]> = [
+  ['dark', 'Темная'],
+  ['light', 'Светлая'],
+  ['system', 'Как в системе'],
+]
 
 const screen = computed(() =>
   resolveScreenState({
@@ -30,6 +39,18 @@ function signed(n: number): string {
 
 <template>
   <main class="dev">
+    <div class="themes" role="group" aria-label="Оформление">
+      <button
+        v-for="[value, label] in themes"
+        :key="value"
+        type="button"
+        :aria-pressed="preference === value"
+        @click="setPreference(value)"
+      >
+        {{ label }}
+      </button>
+    </div>
+
     <p v-if="screen.banner === 'reconnecting'" class="banner">
       Live-поток прервался.
       <span v-if="secondsToRetry !== null">Переподключение через {{ secondsToRetry }} с…</span>
@@ -106,6 +127,15 @@ function signed(n: number): string {
 
 .meta {
   color: var(--fs-muted);
+}
+
+.themes {
+  display: flex;
+  gap: var(--fs-space-8);
+}
+
+.themes [aria-pressed='true'] {
+  font-weight: 700;
 }
 
 .score {

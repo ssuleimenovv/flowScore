@@ -88,12 +88,12 @@ function describe(e: MatchEvent, match: Match, score: string) {
   }
 }
 
-// The event's Flow weight, credited to the side it helped: a card helps the
-// opponent of the player who got it (docs/FLOW.md, section 4).
+// The event's Flow weight, on the side whose Flow it moved (docs/FLOW.md,
+// section 4): a yellow card helps the opponent, a red card costs the team
+// that lost a player.
 function impact(e: MatchEvent): ChronicleItem['impact'] {
   const n = Math.round(e.flowImpact ?? 0)
   if (n === 0 || !e.side) return null
-  const card = e.type === 'yellow_card' || e.type === 'red_card'
-  const side: Side = card ? (e.side === 'home' ? 'away' : 'home') : e.side
+  const side: Side = e.type === 'yellow_card' ? (e.side === 'home' ? 'away' : 'home') : e.side
   return { text: n > 0 ? `+${n}` : `−${Math.abs(n)}`, side }
 }

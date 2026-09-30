@@ -43,7 +43,16 @@ describe('chronicle', () => {
     })
   })
 
-  it('credits a card to the opponent', () => {
+  it('credits a yellow card to the opponent', () => {
     expect(items[0]!.impact).toEqual({ text: '+5', side: 'home' })
+  })
+
+
+  it('charges a red card to the team that lost a player', () => {
+    const [red] = chronicle(
+      [event({ id: 'r1', type: 'red_card', side: 'away', flowImpact: -18 })],
+      match,
+    )
+    expect(red!.impact).toEqual({ text: '−18', side: 'away' })
   })
 })

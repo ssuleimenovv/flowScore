@@ -45,6 +45,19 @@ func LoadMatch(matchesPath, eventsPath, lineupsPath string, matchID int) ([]even
 	return out, nil
 }
 
+// MatchIDs lists every match of a season file.
+func MatchIDs(matchesPath string) ([]int, error) {
+	var matches []rawMatch
+	if err := readJSON(matchesPath, &matches); err != nil {
+		return nil, fmt.Errorf("read matches: %w", err)
+	}
+	ids := make([]int, len(matches))
+	for i, m := range matches {
+		ids[i] = m.MatchID
+	}
+	return ids, nil
+}
+
 // findMatch looks the fixture up in the season's matches file.
 func findMatch(matchesPath string, matchID int) (rawMatch, error) {
 	var matches []rawMatch

@@ -41,6 +41,13 @@ func TestMapEvent(t *testing.T) {
 			side:  event.Home,
 		},
 		{
+			name:  "own goal counts for the other team",
+			raw:   rawEvent{Type: ref{Name: "Own Goal For"}, Team: ref{ID: homeID}},
+			types: []event.Type{event.Goal},
+			side:  event.Home,
+		},
+
+		{
 			name:  "ordinary pass is ignored",
 			raw:   rawEvent{Type: ref{Name: "Pass"}, Team: ref{ID: homeID}},
 			types: nil,

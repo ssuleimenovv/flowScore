@@ -40,6 +40,9 @@ func TestStatsIgnoresTimelineOnlyEvents(t *testing.T) {
 	if s.Add(event.Event{Type: event.Foul, Side: event.Home}) {
 		t.Error("a foul changed the stats")
 	}
+	if s.Add(event.Event{Type: event.Goal, Side: event.Home, OwnGoal: true}) {
+		t.Error("an own goal counted as a shot")
+	}
 	if row := s.Rows()[0]; row.Home != 50 || row.Away != 50 {
 		t.Errorf("possession before any minute = %+v, want 50:50", row)
 	}

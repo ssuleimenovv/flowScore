@@ -86,6 +86,13 @@ func mapEvent(r rawEvent, matchID string, homeTeamID int, names map[int]string) 
 			return []event.Event{cardEvent(base, r.BadBehaviour.Card.Name)}
 		}
 
+	// StatsBomb gives an own goal to the team it counts for as "Own Goal For",
+	// with no shot and no player
+	case "Own Goal For":
+		e := with(base, event.Goal)
+		e.OwnGoal = true
+		return []event.Event{e}
+
 	case "Substitution":
 		return []event.Event{with(base, event.Substitution)}
 

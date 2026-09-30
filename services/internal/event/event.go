@@ -56,6 +56,7 @@ type Event struct {
 	PlayerID  string
 	Pos       *Position
 	XG        *float64
+	OwnGoal   bool     // a goal the other team put in its own net: counts, but was no shot
 	HomeShare *float64 // homeshare is set on possession events: the home team's share of the ball
 	// during the minute, from 0 to 1
 }

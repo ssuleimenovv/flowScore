@@ -36,7 +36,7 @@ func (s *Stats) Add(e event.Event) bool {
 	}
 
 	t, ok := s.teams[e.Side]
-	if !ok {
+	if !ok || e.OwnGoal { // an own goal is on the scoreboard, but it was no shot
 		return false
 	}
 	switch e.Type {

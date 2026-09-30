@@ -1,7 +1,10 @@
-// Command export writes a season of StatsBomb matches as one CSV of normalized
-// events: the dataset Flow is calibrated on (ai/calibration). It goes through
-// the same mapper as the live replay, so the model learns from exactly the
-// events the Flow Engine sees.
+// Command export writes a season of StatsBomb matches for Flow calibration
+// (ai/calibration):
+//
+//   - events.csv: every normalized event. It goes through the same mapper as the
+//     live replay, so the model learns from exactly the events the Flow Engine sees.
+//   - flow.csv: Flow of both teams at every whole minute with the current
+//     params, the reference the Python port of Flow is checked against.
 package main
 
 import (
@@ -17,10 +20,9 @@ import (
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
+	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
 )
-
-var header = []string{"match_id", "date", "period", "second", "side", "type", "xg", "home_share"}
 
 // match is one loaded match, or the reason it could not be loaded.
 type match struct {
@@ -32,7 +34,7 @@ type match struct {
 func main() {
 	dir := flag.String("dir", "data/statsbomb", "files from ai/calibration/download.py")
 	season := flag.String("season", "2-27", "competition-season of the matches file")
-	out := flag.String("out", "../ai/data/events.csv", "CSV to write")
+	out := flag.String("out", "../ai/data", "folder for events.csv and flow.csv")
 	flag.Parse()
 
 	matchesPath := filepath.Join(*dir, "matches-"+*season+".json")
@@ -44,11 +46,32 @@ func main() {
 	start := time.Now()
 	matches := loadAll(*dir, matchesPath, ids)
 
-	rows, err := write(*out, matches)
-	if err != nil {
-		log.Fatal(err)
+	events := [][]string{{"match_id", "date", "period", "second", "side", "type", "xg", "home_share"}}
+	samples := [][]string{{"match_id", "period", "second", "home", "away"}}
+	params := flow.DefaultParams()
+
+	for _, m := range matches {
+		if m.err != nil {
+			log.Fatal(m.err)
+		}
+		date := m.info.KickoffAt.Format(time.DateOnly)
+		for _, e := range m.events {
+			events = append(events, eventRow(m.info.ID, date, e))
+		}
+		for _, s := range flow.Trace(m.events, params) {
+			samples = append(samples, []string{
+				m.info.ID, strconv.Itoa(s.Period), seconds(s.At), exact(s.Home), exact(s.Away),
+			})
+		}
 	}
-	log.Printf("%d matches, %d events → %s in %v", len(matches), rows, *out, time.Since(start).Round(time.Millisecond))
+
+	for name, rows := range map[string][][]string{"events.csv": events, "flow.csv": samples} {
+		if err := writeCSV(filepath.Join(*out, name), rows); err != nil {
+			log.Fatal(err)
+		}
+	}
+	log.Printf("%d matches: %d events, %d Flow samples → %s in %v",
+		len(matches), len(events)-1, len(samples)-1, *out, time.Since(start).Round(time.Millisecond))
 }
 
 // loadAll parses the matches on every CPU. Each worker writes only its own
@@ -89,42 +112,26 @@ func load(dir, matchesPath string, id int) match {
 	return match{info: info, events: events}
 }
 
-func write(path string, matches []match) (rows int, err error) {
+func writeCSV(path string, rows [][]string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return 0, err
+		return err
 	}
 	f, err := os.Create(path)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer f.Close()
 
-	w := csv.NewWriter(f)
-	if err := w.Write(header); err != nil {
-		return 0, err
-	}
-	for _, m := range matches {
-		if m.err != nil {
-			return rows, m.err
-		}
-		date := m.info.KickoffAt.Format(time.DateOnly)
-		for _, e := range m.events {
-			if err := w.Write(row(m.info.ID, date, e)); err != nil {
-				return rows, err
-			}
-			rows++
-		}
-	}
-	w.Flush()
-	return rows, w.Error()
+	// WriteAll flushes and reports the first error, so nothing is lost silently
+	return csv.NewWriter(f).WriteAll(rows)
 }
 
-func row(matchID, date string, e event.Event) []string {
+func eventRow(matchID, date string, e event.Event) []string {
 	return []string{
 		matchID,
 		date,
 		strconv.Itoa(e.Period),
-		strconv.Itoa(int(e.Elapsed.Seconds())),
+		seconds(e.Elapsed),
 		string(e.Side),
 		string(e.Type),
 		optional(e.XG),
@@ -132,10 +139,20 @@ func row(matchID, date string, e event.Event) []string {
 	}
 }
 
+func seconds(d time.Duration) string {
+	return strconv.Itoa(int(d.Seconds()))
+}
+
 // optional writes a missing number as an empty cell, which pandas reads as NaN.
 func optional(v *float64) string {
 	if v == nil {
 		return ""
 	}
-	return strconv.FormatFloat(*v, 'f', 4, 64)
+	return exact(*v)
+}
+
+// exact writes the shortest text that reads back as the same float64, so the
+// Python side works with the very numbers Go had.
+func exact(v float64) string {
+	return strconv.FormatFloat(v, 'g', -1, 64)
 }

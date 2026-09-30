@@ -21,15 +21,23 @@ func NewState(p Params) *State {
 	return &State{p: p, impulse: map[event.Side]float64{}}
 }
 
-// Apply moves match time to the event and adds its weight.
-func (s *State) Apply(e event.Event) {
-	if s.period != 0 && e.Period > s.period {
+// StartPeriod moves on to the next period, which kicks off at match time at.
+// Part of the impulse is lost over the break (docs/FLOW.md, section 3.1).
+// Calling it again for the period already under way changes nothing.
+func (s *State) StartPeriod(period int, at time.Duration) {
+	if s.period != 0 && period > s.period {
 		for side := range s.impulse {
 			s.impulse[side] *= s.p.HalftimeKeep
 		}
-		s.at = e.Elapsed // the second half clock restarts at 45:00
+		s.at = at // the second half clock restarts at 45:00
 	}
-	s.period = e.Period
+	s.period = period
+}
+
+// Apply moves match time to the event and adds its weight.
+// Apply moves match time to the event and adds its weight.
+func (s *State) Apply(e event.Event) {
+	s.StartPeriod(e.Period, e.Elapsed)
 	s.Advance(e.Elapsed)
 
 	if e.Type == event.Possession && e.HomeShare != nil {

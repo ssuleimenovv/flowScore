@@ -25,9 +25,12 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
 - **Explainable by construction.** Flow is a sum of decaying event contributions,
   so every value can be broken down into the events that caused it ("4 shots in
   7 minutes: +14").
-- **Calibrated, not hand-tuned** *(next step)*: weights fitted on 380 StatsBomb
-  matches so that Flow predicts shots and goals in the next 10 minutes, with
-  log loss reported against a naive baseline.
+- **Validated on a season.** On 380 Premier League matches (time-blocked
+  cross-validation, every match predicted by a model that never saw it), Flow
+  predicts whether a team shoots in the next 10 minutes better than the base
+  rate: AUC 0.566, log-loss gain 95% CI [0.003, 0.007]. The signal is modest and
+  reported as such. The same check fixed three weights, including one with the
+  wrong sign ([docs/FLOW.md, section 8](docs/FLOW.md)).
 - **Own xG model** *(planned)* for sources that do not provide xG.
 
 ---
@@ -101,20 +104,23 @@ orchestrator in Python, push notifications) is described in
 | Motion | GSAP, Lenis, Rive, Three.js (lazy) |
 | Contract | OpenAPI 3.1, `openapi-typescript` |
 | Quality | Go tests, Vitest, Playwright, ESLint, Oxlint, Prettier, `vue-tsc` |
-| Data | StatsBomb Open Data (demo and training) |
-| Planned | Python (FastAPI) for ML, PostgreSQL, Redis, Capacitor for iOS/Android |
+| ML | Python, numpy, pandas, SciPy, scikit-learn |
+| Data | StatsBomb Open Data (demo and validation) |
+| Planned | FastAPI for AI agents, PostgreSQL, Redis, Capacitor for iOS/Android |
 
 ---
 
 ## Repository layout
 
 ```
+ai/calibration  Flow validation on a StatsBomb season (Python)
 api/            OpenAPI contract (REST + WebSocket messages)
 docs/           Architecture and the Flow Momentum spec
 design/         Mockups the UI follows
 services/       Go backend
   cmd/gateway   HTTP + WebSocket server with a looping demo replay
   cmd/replay    Terminal replay: prints Flow minute by minute
+  cmd/export    A StatsBomb season as CSV for ai/calibration
   internal/
     event/      Normalized event model
     flow/       Flow Engine (state, decay, weights)
@@ -181,7 +187,7 @@ npm run api:types    # regenerate types after changing api/openapi.yaml
 - [x] Event model, StatsBomb replay, Flow Engine
 - [x] WebSocket hub, REST snapshot, seq-based consistency
 - [x] Match screen: scoreboard, flow wave, chronicle, stats, phone tabs
-- [ ] Flow calibration on 380 matches (log loss vs baseline)
+- [x] Flow validation on 380 matches: time-blocked CV, bootstrap intervals
 - [ ] Explainability: top contributing factors per moment
 - [ ] Outcome prediction and AI match analysis (Python service)
 - [ ] "What if?" simulator

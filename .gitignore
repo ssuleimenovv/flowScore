@@ -16,3 +16,4 @@ Thumbs.db
 # Downloaded datasets
 services/data/
 ai/data
+__pycache__/

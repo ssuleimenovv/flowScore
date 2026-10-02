@@ -78,7 +78,7 @@ func TestHalftimeKeepsPartOfImpulse(t *testing.T) {
 
 func TestNegativeWeightStopsAtFloor(t *testing.T) {
 	s := NewState(DefaultParams())
-	s.Apply(ev(event.Substitution, event.Home, 1, 60))
+	s.Apply(ev(event.RedCard, event.Home, 1, 60))
 
 	home, _ := s.Flow()
 	near(t, "home", home, floor)

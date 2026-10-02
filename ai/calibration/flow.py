@@ -33,8 +33,16 @@ class Params:
     default_xg: float = 0.1
     possession: float = 9.0
     weights: dict[str, float] = field(
-        default_factory=lambda: {"goal": 23.0, "yellow_card": 5.0, "corner": 4.0, "substitution": -3.0}
+        default_factory=lambda: {
+            "goal": 23.0,
+            "yellow_card": 5.0,
+            "corner": 4.0,
+            "substitution": 5.0,
+            "key_pass": 10.0,
+            "red_card": -18.0,
+        }
     )
+
 
     def weight(self, type_: str, side: str, xg: float) -> tuple[str, float]:
         """Which team the event benefits and by how much, as Params.Weight."""

@@ -167,9 +167,13 @@ def main() -> None:
 
     current = Params()
     started = time.perf_counter()
-    # The blocks are independent, so they can run in separate processes
-    with ProcessPoolExecutor(max_workers=args.jobs) as pool:
-        folds = list(pool.map(validate, [blocks] * FOLDS, range(FOLDS), [current] * FOLDS))
+    if args.jobs == 1:
+        # One block at a time in this process: the least memory
+        folds = [validate(blocks, k, current) for k in range(FOLDS)]
+    else:
+        # The blocks are independent, so they can run in separate processes
+        with ProcessPoolExecutor(max_workers=args.jobs) as pool:
+            folds = list(pool.map(validate, [blocks] * FOLDS, range(FOLDS), [current] * FOLDS))
     print(f"  {FOLDS} blocks validated in {time.perf_counter() - started:.0f}s")
 
     ll = {model: np.concatenate([f[model] for f in folds]) for model in ("constant", "current", "fitted")}

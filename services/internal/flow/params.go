@@ -2,7 +2,8 @@ package flow
 
 import "github.com/ssuleimenovv/flowscore/services/internal/event"
 
-// Params are the v0 values from docs/FLOW.md, section 4.
+// Params are the v1 values from docs/FLOW.md, section 4: the mockup's v0 with
+// the three weights that season validation found stable (section 8).
 type Params struct {
 	Tau          float64 // impulse memory, match minutes
 	K            float64 // scale of the 0–100 curve
@@ -26,10 +27,12 @@ func DefaultParams() Params {
 		DefaultXG:    0.1,
 		Possession:   9,
 		Weights: map[event.Type]float64{
-			event.Goal:         23,
+			event.Goal:         23, // kept by design, see docs/FLOW.md, section 8
 			event.YellowCard:   5,
 			event.Corner:       4,
-			event.Substitution: -3,
+			event.Substitution: 5,
+			event.KeyPass:      10,
+			event.RedCard:      -18, // to the team that lost a player
 		},
 	}
 }

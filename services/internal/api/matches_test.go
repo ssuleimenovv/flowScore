@@ -68,6 +68,9 @@ func TestEmptyListsAreNotNull(t *testing.T) {
 	if _, ok := flow["points"].([]any); !ok {
 		t.Errorf("points = %v, want []", flow["points"])
 	}
+	if _, ok := flow["factors"].([]any); !ok {
+		t.Errorf("factors = %v, want []", flow["factors"])
+	}
 	if _, ok := events["items"].([]any); !ok {
 		t.Errorf("items = %v, want []", events["items"])
 	}

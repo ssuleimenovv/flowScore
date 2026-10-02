@@ -15,6 +15,7 @@ const flow = {
   matchId: 'm1',
   current: { home: 60, away: 20 },
   delta10: { home: 5, away: -3 },
+  factors: [{ side: 'home', key: 'shots', value: 14, count: 4, minutes: 7 }],
   points: [
     { minute: 2, home: 30, away: 10 },
     { minute: 1, home: 20, away: 10 },
@@ -42,6 +43,7 @@ function flowUpdate(
     data: {
       current: { home, away: 0 },
       delta10: { home: 0, away: 0 },
+      factors: [{ side: 'away', key: 'corners', value: 4, count: 1, minutes: 1 }],
       point: { minute, home, away: 0 },
       clock: { elapsedSeconds, period, observedAt: '2026-09-28T10:00:05Z' },
     },
@@ -89,6 +91,12 @@ describe('matchState', () => {
     const next = applyMessage(state, flowUpdate(11, 3, 70, 150))
     expect(next.flow.home).toBe(70)
     expect(next.match.clock.elapsedSeconds).toBe(120)
+  })
+
+  it('replaces the factors with the ones in the flow update', () => {
+    expect(snapshot().factors[0]!.key).toBe('shots')
+    const next = applyMessage(snapshot(), flowUpdate(11, 3, 70))
+    expect(next.factors).toEqual([{ side: 'away', key: 'corners', value: 4, count: 1, minutes: 1 }])
   })
 
   it('replaces the point of the same minute', () => {

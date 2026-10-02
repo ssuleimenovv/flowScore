@@ -15,10 +15,20 @@ type State struct {
 	impulse map[event.Side]float64
 	at      time.Duration
 	period  int
+
+	// The same impulse split by group of events, for the explanation (section 6).
+	// Every change of the impulse goes to its group too, so the parts of a
+	// team always add up to its impulse.
+	parts  map[event.Side]map[Group]float64
+	recent []mark
 }
 
 func NewState(p Params) *State {
-	return &State{p: p, impulse: map[event.Side]float64{}}
+	return &State{
+		p:       p,
+		impulse: map[event.Side]float64{},
+		parts:   map[event.Side]map[Group]float64{event.Home: {}, event.Away: {}},
+	}
 }
 
 // StartPeriod moves on to the next period, which kicks off at match time at.
@@ -26,15 +36,13 @@ func NewState(p Params) *State {
 // Calling it again for the period already under way changes nothing.
 func (s *State) StartPeriod(period int, at time.Duration) {
 	if s.period != 0 && period > s.period {
-		for side := range s.impulse {
-			s.impulse[side] *= s.p.HalftimeKeep
-		}
+		s.scale(s.p.HalftimeKeep)
 		s.at = at // the second half clock restarts at 45:00
+		s.recent = nil
 	}
 	s.period = period
 }
 
-// Apply moves match time to the event and adds its weight.
 // Apply moves match time to the event and adds its weight.
 func (s *State) Apply(e event.Event) {
 	s.StartPeriod(e.Period, e.Elapsed)
@@ -42,19 +50,30 @@ func (s *State) Apply(e event.Event) {
 
 	if e.Type == event.Possession && e.HomeShare != nil {
 		lead := *e.HomeShare - 0.5 // +0.2 means home had the ball 70% of the minute
-		s.add(event.Home, s.p.Possession*lead)
-		s.add(event.Away, -s.p.Possession*lead)
+		s.add(event.Home, Possession, s.p.Possession*lead)
+		s.add(event.Away, Possession, -s.p.Possession*lead)
+		s.remember(mark{side: event.Home, group: Possession, at: e.Elapsed, share: *e.HomeShare})
+		s.remember(mark{side: event.Away, group: Possession, at: e.Elapsed, share: 1 - *e.HomeShare})
 		return
 	}
 
-	s.add(s.p.Weight(e))
+	side, w := s.p.Weight(e)
+	if w == 0 {
+		return // fouls, tackles: nothing to add and nothing to explain
+	}
+	g := groupOf(e.Type)
+	s.add(side, g, w)
+	s.remember(mark{side: side, group: g, at: e.Elapsed})
 }
 
 // add puts a weight into the team's impulse. A negative weight only dampens
 // what the team has built up and never leaves a debt: otherwise a long spell
 // without the ball would hide the team's next shots until the debt is paid off.
-func (s *State) add(side event.Side, w float64) {
-	s.impulse[side] = math.Max(0, s.impulse[side]+w)
+// The group gets the change that really happened, the weight after the floor.
+func (s *State) add(side event.Side, g Group, w float64) {
+	before := s.impulse[side]
+	s.impulse[side] = math.Max(0, before+w)
+	s.parts[side][g] += s.impulse[side] - before
 }
 
 // Advance lets the impulse decay up to match time t. Time never goes back.
@@ -62,11 +81,20 @@ func (s *State) Advance(t time.Duration) {
 	if t <= s.at {
 		return
 	}
-	decay := math.Exp(-(t - s.at).Minutes() / s.p.Tau)
-	for side := range s.impulse {
-		s.impulse[side] *= decay
-	}
+	s.scale(math.Exp(-(t - s.at).Minutes() / s.p.Tau))
 	s.at = t
+}
+
+// scale shrinks the impulse and every part of it by the same factor.
+func (s *State) scale(f float64) {
+	for side := range s.impulse {
+		s.impulse[side] *= f
+	}
+	for _, parts := range s.parts {
+		for g := range parts {
+			parts[g] *= f
+		}
+	}
 }
 
 // At returns the match time the state has been advanced to

@@ -338,7 +338,7 @@ components:
 
     FlowSeries:
       type: object
-      required: [matchId, current, delta10, points, updatedAt, seq]
+      required: [matchId, current, delta10, points, factors, updatedAt, seq]
       properties:
         matchId:
           type: string
@@ -358,11 +358,45 @@ components:
           description: One point per played minute. The client derives the wave and 1/5/15 windows.
           items:
             $ref: '#/components/schemas/FlowPoint'
+        factors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowFactor'
         updatedAt:
           type: string
           format: date-time
         seq:
           $ref: '#/components/schemas/SnapshotSeq'
+
+    FlowFactor:
+      type: object
+      description: >-
+        What one group of events adds to a team's impulse right now (docs/FLOW.md,
+        section 6). The factors of a team add up to its impulse, so they explain
+        its Flow exactly; groups under half a point are left out.
+      required: [side, key, value, count, minutes]
+      properties:
+        side:
+          $ref: '#/components/schemas/Side'
+        key:
+          type: string
+          enum: [shots, goals, key_passes, possession, corners, cards, red_cards, substitutions, other]
+          description: cards are the opponent's yellow cards, red_cards the team's own
+        value:
+          type: number
+          description: Impulse points, the scale of the Flow-эффект in the chronicle; negative when it holds the team back
+        count:
+          type: integer
+          description: Events of the group in the last 10 minutes of the period; for possession, minutes
+        minutes:
+          type: integer
+          description: Minutes since the first of them, rounded up; 0 when count is 0
+        share:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Possession only, the team's share of the ball over those minutes
+
     MatchEvent:
       type: object
       required: [id, type, side, minute]
@@ -567,7 +601,7 @@ components:
               const: flow.update
             data:
               type: object
-              required: [current, delta10, point, clock]
+              required: [current, delta10, point, clock, factors]
               properties:
                 current:
                   $ref: '#/components/schemas/FlowValues'
@@ -578,6 +612,11 @@ components:
                 clock:
                   $ref: '#/components/schemas/Clock'
                   description: Match time at this update; the client resyncs its ticking clock to it
+                factors: 
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/FlowFactor'
+
 
     WsMatchStats:
       allOf:
@@ -617,4 +656,4 @@ components:
             type:
               const: insight.update
             data:
-              $ref: '#/components/schemas/Explanation'
+              $ref: '#/components/schemas/Explanation'

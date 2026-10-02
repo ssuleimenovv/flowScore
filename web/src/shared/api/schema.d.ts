@@ -179,9 +179,27 @@ export interface components {
             };
             /** @description One point per played minute. The client derives the wave and 1/5/15 windows. */
             points: components["schemas"]["FlowPoint"][];
+            factors: components["schemas"]["FlowFactor"][];
             /** Format: date-time */
             updatedAt: string;
             seq: components["schemas"]["SnapshotSeq"];
+        };
+        /** @description What one group of events adds to a team's impulse right now (docs/FLOW.md, section 6). The factors of a team add up to its impulse, so they explain its Flow exactly; groups under half a point are left out. */
+        FlowFactor: {
+            side: components["schemas"]["Side"];
+            /**
+             * @description cards are the opponent's yellow cards, red_cards the team's own
+             * @enum {string}
+             */
+            key: "shots" | "goals" | "key_passes" | "possession" | "corners" | "cards" | "red_cards" | "substitutions" | "other";
+            /** @description Impulse points, the scale of the Flow-эффект in the chronicle; negative when it holds the team back */
+            value: number;
+            /** @description Events of the group in the last 10 minutes of the period; for possession, minutes */
+            count: number;
+            /** @description Minutes since the first of them, rounded up; 0 when count is 0 */
+            minutes: number;
+            /** @description Possession only, the team's share of the ball over those minutes */
+            share?: number;
         };
         MatchEvent: {
             id: string;
@@ -283,6 +301,7 @@ export interface components {
                 point: components["schemas"]["FlowPoint"];
                 /** @description Match time at this update; the client resyncs its ticking clock to it */
                 clock: components["schemas"]["Clock"];
+                factors: components["schemas"]["FlowFactor"][];
             };
         } & {
             /**

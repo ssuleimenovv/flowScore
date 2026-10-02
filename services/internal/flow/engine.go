@@ -13,6 +13,7 @@ type Update struct {
 	At      time.Duration // match time
 	Home    float64
 	Away    float64
+	Factors []Factor     // what the impulse of each team is made of
 	Cause   *event.Event // nil when the update comes from a tick
 }
 
@@ -70,7 +71,7 @@ func (en Engine) Run(ctx context.Context, matchID string, events <-chan event.Ev
 
 func snapshot(matchID string, s *State, cause *event.Event) Update {
 	home, away := s.Flow()
-	return Update{MatchID: matchID, At: s.At(), Home: home, Away: away, Cause: cause}
+	return Update{MatchID: matchID, At: s.At(), Home: home, Away: away, Factors: s.Factors(), Cause: cause}
 }
 
 // matchClock estimates match time between events:

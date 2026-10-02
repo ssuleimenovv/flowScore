@@ -1,5 +1,6 @@
 import type {
   EventList,
+  FlowFactor,
   FlowPoint,
   FlowSeries,
   FlowValues,
@@ -19,6 +20,7 @@ export interface MatchLive {
   score: Score
   flow: FlowValues
   delta10: FlowValues
+  factors: FlowFactor[] // what each team's Flow is made of right now
   points: FlowPoint[] // by minute, ascending
   events: MatchEvent[] // newest first
   // Seq of each part of the snapshot. The three requests are answered at
@@ -32,6 +34,7 @@ export function fromSnapshot(match: Match, flow: FlowSeries, events: EventList):
     score: match.score,
     flow: flow.current,
     delta10: flow.delta10,
+    factors: flow.factors,
     points: [...flow.points].sort((a, b) => a.minute - b.minute),
     events: events.items.slice(0, MAX_EVENTS),
     seq: { match: match.seq, flow: flow.seq, events: events.seq },
@@ -44,13 +47,14 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
   switch (message.type) {
     case 'flow.update': {
       if (message.seq <= state.seq.flow) return state
-      const { current, delta10, point, clock } = message.data
+      const { current, delta10, point, clock, factors } = message.data
       return {
         ...state,
         // The match part may be newer than the flow part, so only move it forward
         match: message.seq > state.seq.match ? resync(state.match, clock) : state.match,
         flow: current,
         delta10,
+        factors,
         points: upsertPoint(state.points, point),
         seq: { ...state.seq, flow: message.seq },
       }

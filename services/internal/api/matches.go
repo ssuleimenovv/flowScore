@@ -80,12 +80,13 @@ func matchResponse(s live.Snapshot) any {
 }
 
 type flowSeries struct {
-	MatchID   string           `json:"matchId"`
-	Current   live.FlowValues  `json:"current"`
-	Delta10   live.FlowValues  `json:"delta10"`
-	Points    []live.FlowPoint `json:"points"`
-	UpdatedAt time.Time        `json:"updatedAt"`
-	Seq       int64            `json:"seq"`
+	MatchID   string            `json:"matchId"`
+	Current   live.FlowValues   `json:"current"`
+	Delta10   live.FlowValues   `json:"delta10"`
+	Factors   []live.FlowFactor `json:"factors"`
+	Points    []live.FlowPoint  `json:"points"`
+	UpdatedAt time.Time         `json:"updatedAt"`
+	Seq       int64             `json:"seq"`
 }
 
 func flowResponse(s live.Snapshot) any {
@@ -93,6 +94,7 @@ func flowResponse(s live.Snapshot) any {
 		MatchID:   s.Match.ID,
 		Current:   s.Flow,
 		Delta10:   s.Delta10,
+		Factors:   orEmpty(s.Factors),
 		Points:    orEmpty(s.Points),
 		UpdatedAt: s.UpdatedAt,
 		Seq:       s.Seq,

@@ -67,6 +67,7 @@ func (p *Publisher) Run(updates <-chan flow.Update) {
 		p.emit("flow.update", fu, func(s *Snapshot) {
 			s.Flow = fu.Current
 			s.Delta10 = fu.Delta10
+			s.Factors = fu.Factors
 			s.Points = upsertPoint(s.Points, fu.Point)
 			s.At = u.At
 			s.Period = p.period
@@ -106,6 +107,7 @@ func (p *Publisher) flowUpdate(u flow.Update) FlowUpdate {
 		Delta10: FlowValues{Home: current.Home - before.Home, Away: current.Away - before.Away},
 		Point:   FlowPoint{Minute: minute, Home: current.Home, Away: current.Away},
 		Clock:   ClockOf(p.period, u.At, time.Now().UTC()),
+		Factors: toFactors(u.Factors),
 	}
 }
 

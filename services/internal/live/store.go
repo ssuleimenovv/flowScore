@@ -19,6 +19,7 @@ type Snapshot struct {
 	At        time.Duration // match time of the last update
 	Flow      FlowValues
 	Delta10   FlowValues
+	Factors   []FlowFactor
 	Points    []FlowPoint  // one per match minute, in order
 	Events    []MatchEvent // oldest first
 	Stats     []StatRow    // empty before kick-off
@@ -73,6 +74,7 @@ func (s *Store) Get(matchID string) (Snapshot, bool) {
 	c.Points = slices.Clone(snap.Points)
 	c.Events = slices.Clone(snap.Events)
 	c.Stats = slices.Clone(snap.Stats)
+	c.Factors = slices.Clone(snap.Factors)
 
 	return c, true
 }

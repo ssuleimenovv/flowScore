@@ -1,9 +1,11 @@
 package live
 
 import (
+	"math"
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
+	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 )
 
 // Message is the WebSocket envelope from api/openapi.yaml (WsEnvelope).
@@ -28,10 +30,40 @@ type FlowPoint struct {
 
 // FlowUpdate is the data of a flow.update message.
 type FlowUpdate struct {
-	Current FlowValues `json:"current"`
-	Delta10 FlowValues `json:"delta10"`
-	Point   FlowPoint  `json:"point"`
-	Clock   Clock      `json:"clock"`
+	Current FlowValues   `json:"current"`
+	Delta10 FlowValues   `json:"delta10"`
+	Point   FlowPoint    `json:"point"`
+	Clock   Clock        `json:"clock"`
+	Factors []FlowFactor `json:"factors"`
+}
+
+// FlowFactor is one line of "why Flow is what it is" (FlowFactor in the contract):
+// how much a group of events adds to a team's impulse right now.
+type FlowFactor struct {
+	Side    event.Side `json:"side"`
+	Key     string     `json:"key"`
+	Value   float64    `json:"value"`
+	Count   int        `json:"count"`   // events of the group in the last 10 minutes
+	Minutes int        `json:"minutes"` // since the first of them, rounded up
+	Share   *float64   `json:"share,omitempty"`
+}
+
+func toFactors(fs []flow.Factor) []FlowFactor {
+	out := make([]FlowFactor, 0, len(fs)) // [] rather than null when there are none
+	for _, f := range fs {
+		ff := FlowFactor{
+			Side:  f.Side,
+			Key:   string(f.Group),
+			Value: math.Round(f.Value*10) / 10,
+			Count: f.Count,
+			Share: f.Share,
+		}
+		if f.Count > 0 {
+			ff.Minutes = max(1, int(math.Ceil(f.Since.Minutes())))
+		}
+		out = append(out, ff)
+	}
+	return out
 }
 
 // Clock is the match time as the contract sends it, in the REST match and in

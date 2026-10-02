@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useNavTitle } from '@/app/layout/navigation'
 import ChronicleCard from '@/features/match/ui/ChronicleCard.vue'
 import ChronicleSkeleton from '@/features/match/ui/ChronicleSkeleton.vue'
+import ExplainCard from '@/features/match/ui/ExplainCard.vue'
 import FlowWaveCard from '@/features/match/ui/FlowWaveCard.vue'
 import FlowWaveSkeleton from '@/features/match/ui/FlowWaveSkeleton.vue'
 import MatchHero from '@/features/match/ui/MatchHero.vue'
@@ -113,6 +114,11 @@ onUnmounted(() => setTitle(null))
         <div class="narrow"><MatchHeroCompact :live="state" :seconds /></div>
         <div class="narrow"><MatchTabs v-model="tab" /></div>
         <div class="panel" v-bind="panel('flow')"><FlowWaveCard :live="state" :seconds /></div>
+        <!-- Why Flow is what it is: the full card on the desktop, the top three on the phone -->
+        <div class="wide"><ExplainCard :live="state" :updated-at="updatedAt" /></div>
+        <div class="panel narrow" :class="{ active: tab === 'flow' }">
+          <ExplainCard :live="state" :updated-at="updatedAt" variant="brief" />
+        </div>
         <div class="panel" v-bind="panel('stats')">
           <StatsCard v-if="state.match.stats.length" :live="state" />
           <AppCard v-else class="fs-in">
@@ -127,15 +133,9 @@ onUnmounted(() => setTitle(null))
       <aside class="side">
         <div class="panel" v-bind="panel('events')"><ChronicleCard :live="state" /></div>
         <div class="panel" :class="{ active: tab === 'flow' }"><SimulatorCta /></div>
-        <!-- AI has no data yet; only the phone has a tab to fill -->
+        <!-- The phone's AI tab: every factor; the desktop shows them under the wave -->
         <div class="panel narrow-only" v-bind="panel('ai')">
-          <AppCard class="fs-in">
-            <StateMessage
-              icon="star"
-              title="AI-разбор готовится"
-              text="Объясним, что двигает поток, когда наберётся достаточно событий."
-            />
-          </AppCard>
+          <ExplainCard :live="state" :updated-at="updatedAt" variant="factors" />
         </div>
       </aside>
     </div>

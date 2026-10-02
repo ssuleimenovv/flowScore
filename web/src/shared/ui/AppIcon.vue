@@ -17,6 +17,7 @@ export type IconName =
   | 'retry'
   | 'ball'
   | 'star'
+  | 'sparkle'
   | 'warning'
   | 'offline'
   | 'lock'
@@ -54,10 +55,11 @@ const icons: Record<IconName, Shape> = {
   },
   moon: { paths: ['M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z'] },
   back: { paths: ['M15 5l-7 7 7 7'] },
-  arrow: { paths: ['M5 12h14M13 616 6-6 6'] },
+  arrow: { paths: ['M5 12h14M13 6l6 6-6 6'] },
   check: { paths: ['M5 12.5l4.5 4.5L19 7.5'] },
   close: { paths: ['M6 6l12 12M18 6L6 18'] },
   retry: { paths: ['M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4'] },
+  sparkle: { paths: ['M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z'] },
   ball: { paths: ['M12 7l4 3-1.5 4.5h-5L8 10z'], circles: [[12, 12, 9]] },
   star: { paths: ['M12 3l2.8 5.8 6.2.8-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.8z'] },
   warning: { paths: ['M12 3l9.5 17h-19z', 'M12 10v4M12 17h.01'] },

@@ -16,6 +16,8 @@ func Register(mux *http.ServeMux, store *live.Store) {
 	mux.HandleFunc("GET /api/v1/matches/{matchId}", withSnapshot(store, matchResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/flow", withSnapshot(store, flowResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/events", withSnapshot(store, eventsResponse))
+	mux.HandleFunc("GET /api/v1/matches/{matchId}/insight", insightHandler(store))
+
 }
 
 // withSnapshot loads the match once for every route and answers 404 if it is unknown.
@@ -110,6 +112,27 @@ func eventsResponse(s live.Snapshot) any {
 	items := orEmpty(s.Events)
 	slices.Reverse(items) // the contract returns newest first
 	return eventList{Items: items, Seq: s.Seq}
+}
+
+type insight struct {
+	MatchID     string           `json:"matchId"`
+	Explanation *struct{}        `json:"explanation"` // the Explainability agent comes later
+	Prediction  *live.Prediction `json:"prediction"`
+	Sentiment   *struct{}        `json:"sentiment"`
+	Seq         int64            `json:"seq"`
+}
+
+// insightHandler answers 404 for a match without a prediction as well: the
+// contract has no insight without one, and the gateway may run without a model.
+func insightHandler(store *live.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		snap, ok := store.Get(r.PathValue("matchId"))
+		if !ok || snap.Prediction == nil {
+			writeProblem(w, http.StatusNotFound, "No insight for this match")
+			return
+		}
+		writeJSON(w, http.StatusOK, insight{MatchID: snap.Match.ID, Prediction: snap.Prediction, Seq: snap.Seq})
+	}
 }
 
 func toTeam(t event.Team) team {

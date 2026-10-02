@@ -235,6 +235,7 @@ export interface components {
          *     Apply only stream messages with a greater seq.
          */
         SnapshotSeq: number;
+        /** @description Whole percents of a home win, a draw and an away win; they add up to 100 */
         Probabilities: {
             home: number;
             draw: number;
@@ -244,13 +245,19 @@ export interface components {
             matchId: string;
             /** @description Null until the Explainability agent answers */
             explanation?: components["schemas"]["Explanation"] | null;
-            prediction: {
-                current: components["schemas"]["Probabilities"];
-                preMatch: components["schemas"]["Probabilities"];
-                /** @example LightGBM v0.3 */
-                model: string;
-            };
+            prediction: components["schemas"]["Prediction"];
             sentiment?: components["schemas"]["Sentiment"] | null;
+            seq: components["schemas"]["SnapshotSeq"];
+        };
+        /**
+         * @description Chances of the result from the outcome model (docs/PREDICTION.md).
+         *     current changes with prediction.update; preMatch is fixed at kick-off.
+         */
+        Prediction: {
+            current: components["schemas"]["Probabilities"];
+            preMatch: components["schemas"]["Probabilities"];
+            /** @example Poisson v1 */
+            model: string;
         };
         Explanation: {
             title: string;

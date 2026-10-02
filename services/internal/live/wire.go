@@ -1,11 +1,14 @@
 package live
 
 import (
+	"cmp"
 	"math"
+	"slices"
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
+	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 )
 
 // Message is the WebSocket envelope from api/openapi.yaml (WsEnvelope).
@@ -124,6 +127,43 @@ type MatchEvent struct {
 	XG         *float64        `json:"xG"`
 	Position   *event.Position `json:"position,omitempty"`
 	FlowImpact *float64        `json:"flowImpact"`
+}
+
+// Probabilities are the chances of a home win, a draw and an away win in
+// whole percents that add up to 100 (Probabilities in the contract). They are
+// also the data of a prediction.update message.
+type Probabilities struct {
+	Home int `json:"home"`
+	Draw int `json:"draw"`
+	Away int `json:"away"`
+}
+
+// Prediction is the outcome card of the match (Prediction in the contract).
+type Prediction struct {
+	Current  Probabilities `json:"current"`
+	PreMatch Probabilities `json:"preMatch"`
+	Model    string        `json:"model"`
+}
+
+// toPercents rounds the chances so that they still add up to 100: each gets
+// its whole part, and the points left over go to the largest remainders.
+// Rounding each on its own could show 33 · 33 · 33 or 34 · 33 · 34.
+func toPercents(o predict.Outcome) Probabilities {
+	shares := [3]float64{o.Home * 100, o.Draw * 100, o.Away * 100}
+	var whole [3]int
+	left := 100
+	for i, s := range shares {
+		whole[i] = int(s)
+		left -= whole[i]
+	}
+	order := []int{0, 1, 2}
+	slices.SortStableFunc(order, func(a, b int) int {
+		return cmp.Compare(shares[b]-float64(whole[b]), shares[a]-float64(whole[a]))
+	})
+	for _, i := range order[:left] {
+		whole[i]++
+	}
+	return Probabilities{Home: whole[0], Draw: whole[1], Away: whole[2]}
 }
 
 // periodEnd is the regular last minute of each period.

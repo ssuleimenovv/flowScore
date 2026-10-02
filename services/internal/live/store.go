@@ -11,20 +11,21 @@ import (
 // Snapshot is the state of one match that the REST API returns.
 // A client loads it first and then applies stream messages with a greater Seq.
 type Snapshot struct {
-	Match     event.Match
-	Status    string // scheduled, live, halftime, finished
-	Score     Score
-	Halftime  *Score // score at the break, nil before it
-	Period    int
-	At        time.Duration // match time of the last update
-	Flow      FlowValues
-	Delta10   FlowValues
-	Factors   []FlowFactor
-	Points    []FlowPoint  // one per match minute, in order
-	Events    []MatchEvent // oldest first
-	Stats     []StatRow    // empty before kick-off
-	Seq       int64        // last stream message already included
-	UpdatedAt time.Time
+	Match      event.Match
+	Status     string // scheduled, live, halftime, finished
+	Score      Score
+	Halftime   *Score // score at the break, nil before it
+	Period     int
+	At         time.Duration // match time of the last update
+	Flow       FlowValues
+	Delta10    FlowValues
+	Factors    []FlowFactor
+	Points     []FlowPoint  // one per match minute, in order
+	Events     []MatchEvent // oldest first
+	Stats      []StatRow    // empty before kick-off
+	Prediction *Prediction  // nil when no outcome model is loaded
+	Seq        int64        // last stream message already included
+	UpdatedAt  time.Time
 }
 
 type Score struct {
@@ -75,6 +76,11 @@ func (s *Store) Get(matchID string) (Snapshot, bool) {
 	c.Events = slices.Clone(snap.Events)
 	c.Stats = slices.Clone(snap.Stats)
 	c.Factors = slices.Clone(snap.Factors)
+
+	if snap.Prediction != nil {
+		p := *snap.Prediction // the Publisher updates it in place
+		c.Prediction = &p
+	}
 
 	return c, true
 }

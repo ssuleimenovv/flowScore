@@ -7,6 +7,7 @@ import (
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
+	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 )
 
 // Publisher turns Flow updates of one match into contract messages for the hub
@@ -22,10 +23,29 @@ type Publisher struct {
 	at      time.Duration // match time of the last update
 	stats   *Stats
 	history map[int]FlowValues // Flow at the end of each match minute
+
+	// The outcome model, nil without one, and what it knows about the match
+	model     *predict.Model
+	rating    float64
+	situation predict.Situation
+	sent      Probabilities // the chances viewers have, to send only a change
+
 }
 
 func NewPublisher(hub *Hub, store *Store, matchID string, params flow.Params) *Publisher {
 	return &Publisher{hub: hub, store: store, matchID: matchID, params: params, history: map[int]FlowValues{}}
+}
+
+// UseModel makes the Publisher predict the outcome with m (docs/PREDICTION.md).
+func (p *Publisher) UseModel(m *predict.Model) {
+	p.model = m
+}
+
+// Schedule registers the match before kick-off, with the pre-match chances,
+// so the page can load it before anyone starts the replay.
+func (p *Publisher) Schedule(match event.Match) {
+	p.store.Schedule(match)
+	p.preMatch(match)
 }
 
 // Start puts the match at kick-off. seq keeps growing across replays, so a
@@ -36,6 +56,20 @@ func (p *Publisher) Start(match event.Match) {
 	p.at = 0
 	p.stats = NewStats()
 	p.store.Start(match, p.seq)
+	p.preMatch(match)
+}
+
+// preMatch puts the chances before kick-off into the snapshot: they are both
+// the current chances and the "before the match" line of the card.
+func (p *Publisher) preMatch(match event.Match) {
+	if p.model == nil {
+		return
+	}
+	p.rating = p.model.Rating(match.Home.Name, match.Away.Name)
+	p.situation = predict.Situation{Period: 1}
+	p.sent = toPercents(p.model.Predict(p.rating, p.situation))
+	prediction := Prediction{Current: p.sent, PreMatch: p.sent, Model: p.model.Name}
+	p.store.update(p.matchID, func(s *Snapshot) { s.Prediction = &prediction })
 }
 
 // Run publishes the match started with Start until updates is closed.
@@ -63,6 +97,13 @@ func (p *Publisher) Run(updates <-chan flow.Update) {
 			p.emit("match.stats", ms, func(s *Snapshot) { s.Stats = ms.Stats })
 		}
 
+		if u.Cause != nil {
+			p.count(*u.Cause)
+		}
+		p.situation.Period = p.period
+		p.situation.At = u.At
+		p.predict()
+
 		fu := p.flowUpdate(u)
 		p.emit("flow.update", fu, func(s *Snapshot) {
 			s.Flow = fu.Current
@@ -79,6 +120,41 @@ func (p *Publisher) Run(updates <-chan flow.Update) {
 	}
 
 	p.whistle(event.Fulltime, "finished")
+	p.situation.Finished = true // the result is known: 100% for it
+	p.predict()
+}
+
+// count keeps the goals and red cards the outcome model needs.
+func (p *Publisher) count(e event.Event) {
+	s := &p.situation
+	switch {
+	case e.Type == event.Goal && e.Side == event.Home:
+		s.HomeGoals++
+	case e.Type == event.Goal && e.Side == event.Away:
+		s.AwayGoals++
+	case e.Type == event.RedCard && e.Side == event.Home:
+		s.HomeReds++
+	case e.Type == event.RedCard && e.Side == event.Away:
+		s.AwayReds++
+	}
+}
+
+// predict sends the chances when a whole percent of them has changed. The
+// model is cheap, but a message every tick with the same numbers is not.
+func (p *Publisher) predict() {
+	if p.model == nil {
+		return
+	}
+	now := toPercents(p.model.Predict(p.rating, p.situation))
+	if now == p.sent {
+		return
+	}
+	p.sent = now
+	p.emit("prediction.update", now, func(s *Snapshot) {
+		if s.Prediction != nil {
+			s.Prediction.Current = now
+		}
+	})
 }
 
 // whistle ends a half or the match: a timeline event without a side that

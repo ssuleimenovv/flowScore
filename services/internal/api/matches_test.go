@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
+	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
+	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 )
 
 func server(t *testing.T) *httptest.Server {
@@ -90,5 +92,46 @@ func TestUnknownMatchIsProblem(t *testing.T) {
 	}
 	if body["status"] != float64(404) {
 		t.Errorf("body = %v", body)
+	}
+}
+
+func TestInsight(t *testing.T) {
+	model, err := predict.Load("../../../ai/prediction/model.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	store := live.NewStore()
+	p := live.NewPublisher(live.NewHub(), store, "m1", flow.DefaultParams())
+	p.UseModel(&model)
+	p.Schedule(event.Match{ID: "m1", Home: event.Team{Name: "Manchester City"}, Away: event.Team{Name: "Arsenal"}})
+
+	mux := http.NewServeMux()
+	Register(mux, store)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	var body struct {
+		Prediction  live.Prediction
+		Explanation any
+		Seq         int64
+	}
+	res := get(t, srv.URL+"/api/v1/matches/m1/insight", &body)
+	pr := body.Prediction
+	if res.StatusCode != http.StatusOK || pr.Model != model.Name || pr.Current != pr.PreMatch {
+		t.Errorf("status %d, prediction %+v", res.StatusCode, pr)
+	}
+	if sum := pr.Current.Home + pr.Current.Draw + pr.Current.Away; sum != 100 {
+		t.Errorf("chances add up to %d", sum)
+	}
+}
+
+// Without a model there is no prediction, and the contract has no insight without one
+func TestInsightWithoutModel(t *testing.T) {
+	srv := server(t)
+
+	var body map[string]any
+	res := get(t, srv.URL+"/api/v1/matches/m1/insight", &body)
+	if res.StatusCode != http.StatusNotFound {
+		t.Errorf("status = %d, want 404", res.StatusCode)
 	}
 }

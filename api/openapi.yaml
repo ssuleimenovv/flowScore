@@ -468,6 +468,7 @@ components:
 
     Probabilities:
       type: object
+      description: Whole percents of a home win, a draw and an away win; they add up to 100
       required: [home, draw, away]
       properties:
         home:
@@ -479,7 +480,7 @@ components:
 
     Insight:
       type: object
-      required: [matchId, prediction]
+      required: [matchId, prediction, seq]
       properties:
         matchId:
           type: string
@@ -489,20 +490,28 @@ components:
             - $ref: '#/components/schemas/Explanation'
             - type: 'null'
         prediction:
-          type: object
-          required: [current, preMatch, model]
-          properties:
-            current:
-              $ref: '#/components/schemas/Probabilities'
-            preMatch:
-              $ref: '#/components/schemas/Probabilities'
-            model:
-              type: string
-              example: LightGBM v0.3
+          $ref: '#/components/schemas/Prediction'
         sentiment:
           oneOf:
             - $ref: '#/components/schemas/Sentiment'
             - type: 'null'
+        seq:
+          $ref: '#/components/schemas/SnapshotSeq'
+
+    Prediction:
+      type: object
+      description: |
+        Chances of the result from the outcome model (docs/PREDICTION.md).
+        current changes with prediction.update; preMatch is fixed at kick-off.
+      required: [current, preMatch, model]
+      properties:
+        current:
+          $ref: '#/components/schemas/Probabilities'
+        preMatch:
+          $ref: '#/components/schemas/Probabilities'
+        model:
+          type: string
+          example: Poisson v1
 
     Explanation:
       type: object

@@ -15,6 +15,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
+	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
 )
 
@@ -24,6 +25,7 @@ func main() {
 	addr := flag.String("addr", ":8080", "listen address")
 	matchID := flag.String("match", "3754314", "StatsBomb match ID to replay")
 	speed := flag.Float64("speed", 60, "1 = real time, 60 = one match minute per second")
+	modelPath := flag.String("model", "../ai/prediction/model.json", "outcome model from ai/prediction/fit.py")
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -38,9 +40,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	model, err := predict.Load(*modelPath)
+	if err != nil {
+		log.Fatalf("outcome model: %v", err)
+	}
+
 	hub := live.NewHub()
 	store := live.NewStore()
-	store.Schedule(info) // the page can load the match before anyone starts the replay
+	params := flow.DefaultParams()
+	publisher := live.NewPublisher(hub, store, info.ID, params)
+	publisher.UseModel(&model)
+	publisher.Schedule(info) // the page can load the match before anyone starts the replay
 
 	mux := http.NewServeMux()
 	live.Register(mux, hub, []string{"localhost:5173"})
@@ -54,7 +64,7 @@ func main() {
 		}
 	}()
 
-	go loopReplay(ctx, hub, store, info, *speed)
+	go loopReplay(ctx, hub, publisher, params, info, *speed)
 
 	<-ctx.Done()
 	log.Print("shutting down")
@@ -68,11 +78,8 @@ func main() {
 }
 
 // loopReplay plays the match again and again while anyone watches it.
-func loopReplay(ctx context.Context, hub *live.Hub, store *live.Store, info event.Match, speed float64) {
+func loopReplay(ctx context.Context, hub *live.Hub, publisher *live.Publisher, params flow.Params, info event.Match, speed float64) {
 	matchID := info.ID
-	params := flow.DefaultParams()
-	publisher := live.NewPublisher(hub, store, matchID, params)
-
 	for round := 0; ctx.Err() == nil; round++ {
 		for hub.Count(matchID) == 0 {
 			select {

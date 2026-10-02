@@ -31,6 +31,12 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   rate: AUC 0.566, log-loss gain 95% CI [0.003, 0.007]. The signal is modest and
   reported as such. The same check fixed three weights, including one with the
   wrong sign ([docs/FLOW.md, section 8](docs/FLOW.md)).
+- **An outcome model that says what it can't do.** In-play win/draw/loss
+  probabilities from a Poisson goal model (score, time left, team rating, red
+  cards, a draw fix): log loss 0.746 vs 1.091 for the base rates, calibrated
+  within 3 points. Adding Flow or xG does not improve it (95% CI of the gain
+  includes zero), so Flow stays a "who is pressing now" signal and is not sold
+  as a predictor ([docs/PREDICTION.md](docs/PREDICTION.md)).
 - **Own xG model** *(planned)* for sources that do not provide xG.
 
 ---
@@ -114,6 +120,7 @@ orchestrator in Python, push notifications) is described in
 
 ```
 ai/calibration  Flow validation on a StatsBomb season (Python)
+ai/prediction   Outcome model: dataset, fit, validation, model.json (Python)
 api/            OpenAPI contract (REST + WebSocket messages)
 docs/           Architecture and the Flow Momentum spec
 design/         Mockups the UI follows
@@ -188,8 +195,10 @@ npm run api:types    # regenerate types after changing api/openapi.yaml
 - [x] WebSocket hub, REST snapshot, seq-based consistency
 - [x] Match screen: scoreboard, flow wave, chronicle, stats, phone tabs
 - [x] Flow validation on 380 matches: time-blocked CV, bootstrap intervals
-- [ ] Explainability: top contributing factors per moment
-- [ ] Outcome prediction and AI match analysis (Python service)
+- [x] Explainability: top contributing factors per moment
+- [x] Outcome model: Poisson in-play, validated on 380 matches
+- [ ] Outcome probabilities live on the Match screen
+- [ ] AI match analysis
 - [ ] "What if?" simulator
 - [ ] Home, league, team and player screens
 - [ ] Auth, favorites, Flow spike notifications

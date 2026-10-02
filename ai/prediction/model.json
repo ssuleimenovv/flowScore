@@ -1,0 +1,35 @@
+{
+  "model": "Poisson v1",
+  "intercept": -4.31601,
+  "weights": {
+    "home": 0.2132,
+    "rating": 0.41685,
+    "red": 0.72702,
+    "lead": -0.02393
+  },
+  "draw": 0.22327,
+  "leadCap": 2,
+  "maxGoals": 10,
+  "ratings": {
+    "AFC Bournemouth": -0.1477,
+    "Arsenal": 0.7329,
+    "Aston Villa": -0.698,
+    "Chelsea": 0.1305,
+    "Crystal Palace": -0.2423,
+    "Everton": -0.0882,
+    "Leicester City": 0.4686,
+    "Liverpool": 0.4732,
+    "Manchester City": 0.5929,
+    "Manchester United": 0.0856,
+    "Newcastle United": -0.3637,
+    "Norwich City": -0.4771,
+    "Southampton": 0.3366,
+    "Stoke City": -0.3458,
+    "Sunderland": -0.4355,
+    "Swansea City": -0.1999,
+    "Tottenham Hotspur": 0.6231,
+    "Watford": -0.217,
+    "West Bromwich Albion": -0.2342,
+    "West Ham United": 0.006
+  }
+}

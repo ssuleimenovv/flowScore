@@ -87,7 +87,7 @@ describe('matchState', () => {
   })
 
   it('keeps the clock of a newer match part', () => {
-    const state = { ...snapshot(), seq: { match: 12, flow: 10, events: 10 } }
+    const state = { ...snapshot(), seq: { match: 12, flow: 10, events: 10, insight: 0 } }
     const next = applyMessage(state, flowUpdate(11, 3, 70, 150))
     expect(next.flow.home).toBe(70)
     expect(next.match.clock.elapsedSeconds).toBe(120)

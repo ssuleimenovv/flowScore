@@ -4,8 +4,10 @@ import type {
   FlowPoint,
   FlowSeries,
   FlowValues,
+  Insight,
   Match,
   MatchEvent,
+  Prediction,
   Score,
   Side,
   WsMessage,
@@ -23,12 +25,18 @@ export interface MatchLive {
   factors: FlowFactor[] // what each team's Flow is made of right now
   points: FlowPoint[] // by minute, ascending
   events: MatchEvent[] // newest first
-  // Seq of each part of the snapshot. The three requests are answered at
-  // slightly different moments, so each part skips the messages it already has.
-  seq: { match: number; flow: number; events: number }
+  prediction: Prediction | null // null when the gateway runs without an outcome model
+  // Seq of each part of the snapshot. The requests are answered at slightly
+  // different moments, so each part skips the messages it already has.
+  seq: { match: number; flow: number; events: number; insight: number }
 }
 
-export function fromSnapshot(match: Match, flow: FlowSeries, events: EventList): MatchLive {
+export function fromSnapshot(
+  match: Match,
+  flow: FlowSeries,
+  events: EventList,
+  insight: Insight | null = null,
+): MatchLive {
   return {
     match,
     score: match.score,
@@ -37,7 +45,8 @@ export function fromSnapshot(match: Match, flow: FlowSeries, events: EventList):
     factors: flow.factors,
     points: [...flow.points].sort((a, b) => a.minute - b.minute),
     events: events.items.slice(0, MAX_EVENTS),
-    seq: { match: match.seq, flow: flow.seq, events: events.seq },
+    prediction: insight?.prediction ?? null,
+    seq: { match: match.seq, flow: flow.seq, events: events.seq, insight: insight?.seq ?? 0 },
   }
 }
 
@@ -90,8 +99,17 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
       }
     }
 
+    case 'prediction.update': {
+      if (!state.prediction || message.seq <= state.seq.insight) return state
+      return {
+        ...state,
+        prediction: { ...state.prediction, current: message.data },
+        seq: { ...state.seq, insight: message.seq },
+      }
+    }
+
     default:
-      return state // prediction.update and insight.update come with the AI step
+      return state // insight.update comes with the AI explanation
   }
 }
 

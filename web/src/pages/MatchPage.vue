@@ -12,6 +12,7 @@ import MatchHero from '@/features/match/ui/MatchHero.vue'
 import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
 import MatchTabs, { type MatchTab } from '@/features/match/ui/MatchTabs.vue'
+import OutcomeCard from '@/features/match/ui/OutcomeCard.vue'
 import SimulatorCta from '@/features/match/ui/SimulatorCta.vue'
 import StatsCard from '@/features/match/ui/StatsCard.vue'
 import { useMatchClock } from '@/features/match/useMatchClock'
@@ -114,10 +115,22 @@ onUnmounted(() => setTitle(null))
         <div class="narrow"><MatchHeroCompact :live="state" :seconds /></div>
         <div class="narrow"><MatchTabs v-model="tab" /></div>
         <div class="panel" v-bind="panel('flow')"><FlowWaveCard :live="state" :seconds /></div>
-        <!-- Why Flow is what it is: the full card on the desktop, the top three on the phone -->
-        <div class="wide"><ExplainCard :live="state" :updated-at="updatedAt" /></div>
+        <!-- Why Flow is what it is and who wins from here: side by side on the
+             desktop, one under the other on the phone's flow tab -->
+        <div class="wide">
+          <div class="insights" :class="{ pair: state.prediction }">
+            <ExplainCard :live="state" :updated-at="updatedAt" />
+            <OutcomeCard v-if="state.prediction" :live="state" :prediction="state.prediction" />
+          </div>
+        </div>
         <div class="panel narrow" :class="{ active: tab === 'flow' }">
           <ExplainCard :live="state" :updated-at="updatedAt" variant="brief" />
+          <OutcomeCard
+            v-if="state.prediction"
+            :live="state"
+            :prediction="state.prediction"
+            variant="brief"
+          />
         </div>
         <div class="panel" v-bind="panel('stats')">
           <StatsCard v-if="state.match.stats.length" :live="state" />
@@ -233,6 +246,20 @@ onUnmounted(() => setTitle(null))
 
   .message {
     margin-top: 0;
+  }
+
+  .insights {
+    display: flex;
+    flex-direction: column;
+    gap: var(--fs-space-24);
+  }
+}
+
+/* The explanation and the outcome side by side, as on the Match board */
+@media (min-width: 1024px) {
+  .insights.pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   }
 }
 

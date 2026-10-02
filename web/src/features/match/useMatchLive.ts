@@ -1,4 +1,5 @@
 import { computed, onScopeDispose, ref, shallowRef } from 'vue'
+import { ApiError } from '@/shared/api/http'
 import type { WsMessage } from '@/shared/api/types'
 import { openMatchSocket } from '@/shared/live/matchSocket'
 import type { RequestStatus, SocketStatus } from '@/shared/state/screenState'
@@ -36,12 +37,13 @@ export function useMatchLive(matchId: string) {
     request.value = 'pending'
 
     try {
-      const [match, flow, events] = await Promise.all([
+      const [match, flow, events, insight] = await Promise.all([
         matchApi.get(matchId, ctrl.signal),
         matchApi.flow(matchId, ctrl.signal),
         matchApi.events(matchId, ctrl.signal),
+        matchApi.insight(matchId, ctrl.signal).catch(withoutInsight),
       ])
-      let next = fromSnapshot(match, flow, events)
+      let next = fromSnapshot(match, flow, events, insight)
       for (const message of buffer) next = applyMessage(next, message)
       buffer = []
 
@@ -104,6 +106,13 @@ export function useMatchLive(matchId: string) {
     reconnectNow: socket.reconnectNow,
     retry: loadSnapshot,
   }
+}
+
+// A match without a prediction answers 404 (the gateway runs without an
+// outcome model): the screen works without the card. Any other error is real.
+function withoutInsight(err: unknown): null {
+  if (err instanceof ApiError && err.status === 404) return null
+  throw err
 }
 
 // The stream goes through the same host as the page; in development

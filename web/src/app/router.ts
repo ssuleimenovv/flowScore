@@ -34,6 +34,14 @@ export const router = createRouter({
       meta: { tab: 'home', inner: true },
     },
 
+    {
+      path: '/matches/:matchId/simulator',
+      name: 'simulator',
+      component: () => import('@/pages/SimulatorPage.vue'),
+      meta: { tab: 'simulator', inner: true },
+    },
+
+
     // Screens from the mockup that are not built yet
     { path: '/leagues', component: stub, meta: { tab: 'leagues', stubTitle: 'Лиги' } },
     { path: '/simulator', component: stub, meta: { tab: 'simulator', stubTitle: 'Симулятор' } },

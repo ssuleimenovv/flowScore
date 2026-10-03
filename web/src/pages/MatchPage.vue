@@ -145,7 +145,7 @@ onUnmounted(() => setTitle(null))
       </div>
       <aside class="side">
         <div class="panel" v-bind="panel('events')"><ChronicleCard :live="state" /></div>
-        <div class="panel" :class="{ active: tab === 'flow' }"><SimulatorCta /></div>
+        <div class="panel" :class="{ active: tab === 'flow' }"><SimulatorCta :match-id="state.match.id"/></div>
         <!-- The phone's AI tab: every factor; the desktop shows them under the wave -->
         <div class="panel narrow-only" v-bind="panel('ai')">
           <ExplainCard :live="state" :updated-at="updatedAt" variant="factors" />

@@ -16,11 +16,26 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+export function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+  return request<T>(path, { signal, headers: { Accept: 'application/json' } })
+}
+
+// POST with a JSON body, for questions too big for a URL ("what if…")
+export function apiPost<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
+  return request<T>(path, {
+    method: 'POST',
+    signal,
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
+async function request<T>(path: string, init: RequestInit): Promise<T> {
+  const { signal } = init
   let res: Response
   try {
-    res = await fetch(BASE + path, { signal, headers: { Accept: 'application/json' } })
-  } catch (err) {
+    res = await fetch(BASE + path, init)
+    } catch (err) {
     if (signal?.aborted) throw err // cancelled on purpose, not a network failure
     throw new ApiError(0, null)
   }
@@ -30,6 +45,7 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> 
   }
   return (await res.json()) as T
 }
+
 
 async function readProblem(res: Response): Promise<Problem | null> {
   if (!res.headers.get('Content-Type')?.includes('application/problem+json')) {

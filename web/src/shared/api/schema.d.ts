@@ -72,6 +72,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/matches/{matchId}/simulate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * "What if?": the outcome chances with changes later in the match
+         * @description Predicts the rest of the match from the current moment, once as it
+         *     stands and once with the changes (docs/PREDICTION.md). Nothing is stored.
+         */
+        post: operations["simulateMatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ws/matches/{matchId}/stream": {
         parameters: {
             query?: never;
@@ -258,6 +279,20 @@ export interface components {
             preMatch: components["schemas"]["Probabilities"];
             /** @example Poisson v1 */
             model: string;
+        };
+        SimulationRequest: {
+            reds: components["schemas"]["SimulatedRed"][];
+        };
+        /** @description A red card later in the match; a minute already past counts from now */
+        SimulatedRed: {
+            side: components["schemas"]["Side"];
+            minute: number;
+        };
+        Simulation: {
+            /** @description Match minute on the clock the simulation starts from */
+            minute: number;
+            current: components["schemas"]["Probabilities"];
+            scenario: components["schemas"]["Probabilities"];
         };
         Explanation: {
             title: string;
@@ -519,6 +554,44 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["TooManyRequests"];
+            default: components["responses"]["Error"];
+        };
+    };
+    simulateMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example m_01J8ZQ4T7K */
+                matchId: components["parameters"]["MatchId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Simulation"];
+                };
+            };
+            /** @description A change the model cannot take */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            404: components["responses"]["NotFound"];
             default: components["responses"]["Error"];
         };
     };

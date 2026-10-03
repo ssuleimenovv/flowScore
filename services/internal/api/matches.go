@@ -9,6 +9,7 @@ import (
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
+	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 )
 
 // Register adds the match routes of api/openapi.yaml.
@@ -17,6 +18,7 @@ func Register(mux *http.ServeMux, store *live.Store) {
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/flow", withSnapshot(store, flowResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/events", withSnapshot(store, eventsResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/insight", insightHandler(store))
+	mux.HandleFunc("POST /api/v1/matches/{matchId}/simulate", simulateHandler(store))
 
 }
 
@@ -132,6 +134,52 @@ func insightHandler(store *live.Store) http.HandlerFunc {
 			return
 		}
 		writeJSON(w, http.StatusOK, insight{MatchID: snap.Match.ID, Prediction: snap.Prediction, Seq: snap.Seq})
+	}
+}
+
+type simulationRequest struct {
+	Reds []struct {
+		Side   event.Side `json:"side"`
+		Minute int        `json:"minute"`
+	} `json:"reds"`
+}
+
+type simulation struct {
+	Minute   int                `json:"minute"`
+	Current  live.Probabilities `json:"current"`
+	Scenario live.Probabilities `json:"scenario"`
+}
+
+// A match has two teams of 11, and a team with fewer than 7 is abandoned
+const maxReds = 8
+
+// simulateHandler answers "what if": the chances with reds added later in the
+// match, next to the chances as it stands, both from the same moment.
+func simulateHandler(store *live.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		snap, ok := store.Get(r.PathValue("matchId"))
+		if !ok || snap.Outlook == nil {
+			writeProblem(w, http.StatusNotFound, "No outcome model for this match")
+			return
+		}
+
+		var req simulationRequest
+		body := http.MaxBytesReader(w, r.Body, 4<<10)
+		if err := json.NewDecoder(body).Decode(&req); err != nil || len(req.Reds) > maxReds {
+			writeProblem(w, http.StatusBadRequest, "Invalid simulation")
+			return
+		}
+		reds := make([]predict.Red, 0, len(req.Reds))
+		for _, red := range req.Reds {
+			if (red.Side != event.Home && red.Side != event.Away) || red.Minute < 1 || red.Minute > 120 {
+				writeProblem(w, http.StatusBadRequest, "Invalid red card")
+				return
+			}
+			reds = append(reds, predict.Red{Home: red.Side == event.Home, Minute: red.Minute})
+		}
+
+		now, scenario := snap.Outlook.Simulate(reds)
+		writeJSON(w, http.StatusOK, simulation{Minute: snap.Outlook.Minute(), Current: now, Scenario: scenario})
 	}
 }
 

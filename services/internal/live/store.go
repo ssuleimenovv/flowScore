@@ -24,6 +24,7 @@ type Snapshot struct {
 	Events     []MatchEvent // oldest first
 	Stats      []StatRow    // empty before kick-off
 	Prediction *Prediction  // nil when no outcome model is loaded
+	Outlook    *Outlook     // the same, for the simulator
 	Seq        int64        // last stream message already included
 	UpdatedAt  time.Time
 }
@@ -80,6 +81,10 @@ func (s *Store) Get(matchID string) (Snapshot, bool) {
 	if snap.Prediction != nil {
 		p := *snap.Prediction // the Publisher updates it in place
 		c.Prediction = &p
+	}
+	if snap.Outlook != nil {
+		o := *snap.Outlook
+		c.Outlook = &o
 	}
 
 	return c, true

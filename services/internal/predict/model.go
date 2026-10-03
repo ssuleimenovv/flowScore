@@ -74,16 +74,15 @@ func (m Model) Rating(home, away string) float64 {
 	return m.Ratings[home] - m.Ratings[away]
 }
 
-// Predict returns the chances of each result from this moment on. rating is
-// Rating of the two teams.
 func (m Model) Predict(rating float64, s Situation) Outcome {
-	left := remaining(s)
-	lead := s.HomeGoals - s.AwayGoals
-	home := m.rate(1, rating, s.AwayReds-s.HomeReds, lead) * left
-	away := m.rate(0, -rating, s.HomeReds-s.AwayReds, -lead) * left
+	return m.Simulate(rating, s, nil)
+}
 
+// chances turns the further goals both teams are expected to score into the
+// three results.
+func (m Model) chances(homeMean, awayMean float64, lead int) Outcome {
 	// Two independent counts give too few draws: the draw is weighted by e^Draw
-	o := m.outcome(home, away, lead)
+	o := m.outcome(homeMean, awayMean, lead)
 	o.Draw *= math.Exp(m.Draw)
 	return o.normalized()
 }

@@ -110,6 +110,40 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /matches/{matchId}/simulate:
+    post:
+      tags: [matches]
+      operationId: simulateMatch
+      summary: '"What if?": the outcome chances with changes later in the match'
+      description: |
+        Predicts the rest of the match from the current moment, once as it
+        stands and once with the changes (docs/PREDICTION.md). Nothing is stored.
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+        '400':
+          description: A change the model cannot take
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/Error'
+
   /ws/matches/{matchId}/stream:
     servers:
       - url: ws://localhost:8080
@@ -512,6 +546,40 @@ components:
         model:
           type: string
           example: Poisson v1
+
+    SimulationRequest:
+      type: object
+      required: [reds]
+      properties:
+        reds:
+          type: array
+          maxItems: 8
+          items:
+            $ref: '#/components/schemas/SimulatedRed'
+
+    SimulatedRed:
+      type: object
+      description: A red card later in the match; a minute already past counts from now
+      required: [side, minute]
+      properties:
+        side:
+          $ref: '#/components/schemas/Side'
+        minute:
+          type: integer
+          minimum: 1
+          maximum: 120
+
+    Simulation:
+      type: object
+      required: [minute, current, scenario]
+      properties:
+        minute:
+          type: integer
+          description: Match minute on the clock the simulation starts from
+        current:
+          $ref: '#/components/schemas/Probabilities'
+        scenario:
+          $ref: '#/components/schemas/Probabilities'
 
     Explanation:
       type: object

@@ -69,7 +69,15 @@ func (p *Publisher) preMatch(match event.Match) {
 	p.situation = predict.Situation{Period: 1}
 	p.sent = toPercents(p.model.Predict(p.rating, p.situation))
 	prediction := Prediction{Current: p.sent, PreMatch: p.sent, Model: p.model.Name}
-	p.store.update(p.matchID, func(s *Snapshot) { s.Prediction = &prediction })
+	outlook := p.outlook()
+	p.store.update(p.matchID, func(s *Snapshot) {
+		s.Prediction = &prediction
+		s.Outlook = &outlook
+	})
+}
+
+func (p *Publisher) outlook() Outlook {
+	return Outlook{model: p.model, rating: p.rating, situation: p.situation}
 }
 
 // Run publishes the match started with Start until updates is closed.
@@ -145,6 +153,10 @@ func (p *Publisher) predict() {
 	if p.model == nil {
 		return
 	}
+
+	// The simulator starts from this moment, so it moves on every update
+	outlook := p.outlook()
+	p.store.update(p.matchID, func(s *Snapshot) { s.Outlook = &outlook })
 	now := toPercents(p.model.Predict(p.rating, p.situation))
 	if now == p.sent {
 		return

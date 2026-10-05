@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/matches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every match for the home screen, by kick-off time */
+        get: operations["listMatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/matches/{matchId}": {
         parameters: {
             query?: never;
@@ -163,6 +180,20 @@ export interface components {
             clock: components["schemas"]["Clock"];
             stats: components["schemas"]["StatRow"][];
             seq: components["schemas"]["SnapshotSeq"];
+        };
+        MatchList: {
+            items: components["schemas"]["MatchSummary"][];
+        };
+        /**
+         * @description One card of the home screen: the match plus what the card draws. The
+         *     list is polled, so seq here does not count as a stream position.
+         */
+        MatchSummary: components["schemas"]["Match"] & {
+            flow: components["schemas"]["FlowValues"];
+            delta10: components["schemas"]["FlowValues"];
+            factors: components["schemas"]["FlowFactor"][];
+            points: components["schemas"]["FlowPoint"][];
+            prediction: components["schemas"]["Prediction"] | null;
         };
         Clock: {
             /** @description Match time in seconds (72:14 → 4334) */
@@ -441,6 +472,27 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listMatches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getMatch: {
         parameters: {
             query?: never;

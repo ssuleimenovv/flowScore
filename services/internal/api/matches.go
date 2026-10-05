@@ -14,6 +14,7 @@ import (
 
 // Register adds the match routes of api/openapi.yaml.
 func Register(mux *http.ServeMux, store *live.Store) {
+	mux.HandleFunc("GET /api/v1/matches", listHandler(store))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}", withSnapshot(store, matchResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/flow", withSnapshot(store, flowResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/events", withSnapshot(store, eventsResponse))
@@ -66,6 +67,10 @@ type match struct {
 }
 
 func matchResponse(s live.Snapshot) any {
+	return toMatch(s)
+}
+
+func toMatch(s live.Snapshot) match {
 	m := s.Match
 	return match{
 		ID:            m.ID,
@@ -80,6 +85,40 @@ func matchResponse(s live.Snapshot) any {
 		Clock:         live.ClockOf(s.Period, s.At, s.UpdatedAt),
 		Stats:         orEmpty(s.Stats),
 		Seq:           s.Seq,
+	}
+}
+
+// matchSummary is one card of the home screen: the match header plus what the
+// card draws, the flow wave, its explanation and the chances.
+type matchSummary struct {
+	match
+	Flow       live.FlowValues   `json:"flow"`
+	Delta10    live.FlowValues   `json:"delta10"`
+	Factors    []live.FlowFactor `json:"factors"`
+	Points     []live.FlowPoint  `json:"points"`
+	Prediction *live.Prediction  `json:"prediction"`
+}
+
+type matchList struct {
+	Items []matchSummary `json:"items"`
+}
+
+// listHandler answers the home screen: every match, by kick-off time.
+func listHandler(store *live.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		snaps := store.List()
+		items := make([]matchSummary, 0, len(snaps))
+		for _, s := range snaps {
+			items = append(items, matchSummary{
+				match:      toMatch(s),
+				Flow:       s.Flow,
+				Delta10:    s.Delta10,
+				Factors:    orEmpty(s.Factors),
+				Points:     orEmpty(s.Points),
+				Prediction: s.Prediction,
+			})
+		}
+		writeJSON(w, http.StatusOK, matchList{Items: items})
 	}
 }
 

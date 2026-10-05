@@ -13,6 +13,22 @@ tags:
   - name: matches
 
 paths:
+  /matches:
+    get:
+      tags: [matches]
+      operationId: listMatches
+      summary: Every match for the home screen, by kick-off time
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchList'
+        default:
+          $ref: '#/components/responses/Error'
+
+
   /matches/{matchId}:
     get:
       tags: [matches]
@@ -315,6 +331,46 @@ components:
             $ref: '#/components/schemas/StatRow'
         seq: 
           $ref : '#/components/schemas/SnapshotSeq'
+
+
+    MatchList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchSummary'
+
+    MatchSummary:
+      description: |
+        One card of the home screen: the match plus what the card draws. The
+        list is polled, so seq here does not count as a stream position.
+      allOf:
+        - $ref: '#/components/schemas/Match'
+        - type: object
+          required: [flow, delta10, factors, points, prediction]
+          properties:
+            flow:
+              $ref: '#/components/schemas/FlowValues'
+            delta10:
+              $ref: '#/components/schemas/FlowValues'
+            factors:
+              type: array
+              items:
+                $ref: '#/components/schemas/FlowFactor'
+            points:
+              type: array
+              items:
+                $ref: '#/components/schemas/FlowPoint'
+            prediction:
+              oneOf:
+                - $ref: '#/components/schemas/Prediction'
+                - type: 'null'
+
+
+
+
 
     Clock:
       type: object

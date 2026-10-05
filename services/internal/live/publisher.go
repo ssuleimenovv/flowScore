@@ -44,7 +44,7 @@ func (p *Publisher) UseModel(m *predict.Model) {
 // Schedule registers the match before kick-off, with the pre-match chances,
 // so the page can load it before anyone starts the replay.
 func (p *Publisher) Schedule(match event.Match) {
-	p.store.Schedule(match)
+	p.store.Schedule(match, p.seq)
 	p.preMatch(match)
 }
 

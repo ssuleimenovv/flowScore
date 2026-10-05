@@ -45,9 +45,10 @@ func NewStore() *Store {
 	return &Store{matches: map[string]*Snapshot{}}
 }
 
-// Schedule registers a match that has not started yet.
-func (s *Store) Schedule(m event.Match) {
-	s.reset(m, "scheduled", 0)
+// Schedule registers a match that has not started yet. seq works as in Start:
+// a demo match is announced again after every round, and seq keeps growing.
+func (s *Store) Schedule(m event.Match, seq int64) {
+	s.reset(m, "scheduled", seq)
 }
 
 // Start resets the match to kick-off. seq is the last message already sent:
@@ -72,6 +73,27 @@ func (s *Store) Get(matchID string) (Snapshot, bool) {
 	if !ok {
 		return Snapshot{}, false
 	}
+	return snap.clone(), true
+}
+
+// List returns a copy of every match, by kick-off time.
+func (s *Store) List() []Snapshot {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	out := make([]Snapshot, 0, len(s.matches))
+	for _, snap := range s.matches {
+		out = append(out, snap.clone())
+	}
+	slices.SortFunc(out, func(a, b Snapshot) int {
+		return a.Match.KickoffAt.Compare(b.Match.KickoffAt)
+	})
+	return out
+}
+
+// clone copies the snapshot deep enough that the Publisher can go on
+// appending to the original. Call it under the store's lock.
+func (snap *Snapshot) clone() Snapshot {
 	c := *snap
 	c.Points = slices.Clone(snap.Points)
 	c.Events = slices.Clone(snap.Events)
@@ -86,8 +108,7 @@ func (s *Store) Get(matchID string) (Snapshot, bool) {
 		o := *snap.Outlook
 		c.Outlook = &o
 	}
-
-	return c, true
+	return c
 }
 
 func (s *Store) update(matchID string, fn func(*Snapshot)) {

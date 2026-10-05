@@ -22,12 +22,17 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
 )
 
+// The demo matches: Premier League 2015/16 games with goals for both sides
+const demoMatches = "3754314,3754348,3754305,3754239,3754208,3754174"
+
 // Every setting is a flag with a default for local development. A host such
 // as Render sets the environment instead, so each default reads it first.
 func main() {
 	addr := flag.String("addr", ":"+env("PORT", "8080"), "listen address")
-	matchID := flag.String("match", env("FLOWSCORE_MATCH", "3754314"), "StatsBomb match ID to replay")
-	speed := flag.Float64("speed", 60, "1 = real time, 60 = one match minute per second")
+	matchList := flag.String("match", env("FLOWSCORE_MATCH", demoMatches), "StatsBomb match IDs to replay, comma-separated")
+	speed := flag.Float64("speed", 40, "1 = real time, 60 = one match minute per second")
+	wait := flag.Duration("wait", 3*time.Minute, "how long a match is announced before kick-off")
+	rest := flag.Duration("rest", 2*time.Minute, "how long a finished match stays on the list")
 	dataDir := flag.String("data", env("FLOWSCORE_DATA", "data/statsbomb"), "folder with the matches, events-<id> and lineups-<id> files")
 	matchesFile := flag.String("matches", env("FLOWSCORE_MATCHES", "matches-2-27.json"), "matches file in the data folder")
 	modelPath := flag.String("model", env("FLOWSCORE_MODEL", "../ai/prediction/model.json"), "outcome model from ai/prediction/fit.py")
@@ -38,20 +43,11 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	id, err := strconv.Atoi(*matchID)
-	if err != nil {
-		log.Fatalf("match ID: %v", err)
-	}
 	replay := statsbomb.Replay{
 		MatchesPath: filepath.Join(*dataDir, *matchesFile),
 		EventsDir:   *dataDir,
 		Speed:       *speed,
 	}
-	info, err := statsbomb.LoadMatchInfo(replay.MatchesPath, id)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	model, err := predict.Load(*modelPath)
 	if err != nil {
 		log.Fatalf("outcome model: %v", err)
@@ -60,9 +56,26 @@ func main() {
 	hub := live.NewHub()
 	store := live.NewStore()
 	params := flow.DefaultParams()
-	publisher := live.NewPublisher(hub, store, info.ID, params)
-	publisher.UseModel(&model)
-	publisher.Schedule(info) // the page can load the match before anyone starts the replay
+
+	ids := strings.Split(*matchList, ",")
+	// A match takes 95 minutes of match time; the rounds of the matches are
+	// spread evenly over one cycle, so some are always live and some are next
+	round := *wait + time.Duration(float64(95*time.Minute) / *speed) + *rest
+	for i, raw := range ids {
+		id, err := strconv.Atoi(strings.TrimSpace(raw))
+		if err != nil {
+			log.Fatalf("match ID %q: %v", raw, err)
+		}
+		info, err := statsbomb.LoadMatchInfo(replay.MatchesPath, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+		publisher := live.NewPublisher(hub, store, info.ID, params)
+		publisher.UseModel(&model)
+
+		show := schedule{wait: *wait, rest: *rest, first: 20*time.Second + time.Duration(i)*round/time.Duration(len(ids))}
+		go show.run(ctx, hub, publisher, params, info, &replay)
+	}
 
 	origins := strings.Split(*originList, ",")
 	mux := http.NewServeMux()
@@ -79,13 +92,11 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("listening on %s, replay starts when the first client connects", *addr)
+		log.Printf("listening on %s, %d matches on the schedule", *addr, len(ids))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)
 		}
 	}()
-
-	go loopReplay(ctx, hub, publisher, params, info, &replay)
 
 	<-ctx.Done()
 	log.Print("shutting down")
@@ -106,28 +117,49 @@ func env(key, fallback string) string {
 	return fallback
 }
 
-// loopReplay plays the match again and again while anyone watches it.
-func loopReplay(ctx context.Context, hub *live.Hub, publisher *live.Publisher, params flow.Params, info event.Match, replay *statsbomb.Replay) {
-	matchID := info.ID
-	for round := 0; ctx.Err() == nil; round++ {
-		for hub.Count(matchID) == 0 {
-			select {
-			case <-hub.Joined():
-			case <-ctx.Done():
-				return
-			}
-		}
+// schedule plays one demo match round and round, the way a day of football
+// looks on the home screen: announced with a kick-off time, live, finished.
+type schedule struct {
+	first time.Duration // the wait before the first kick-off, to stagger the matches
+	wait  time.Duration
+	rest  time.Duration
+}
 
-		// Kick-off goes into the store before the viewers of the last replay are
-		// dropped, so the snapshot they reload is already the new match
-		publisher.Start(info)
-		if round > 0 {
-			hub.CloseMatch(matchID)
-		}
-		if err := replayOnce(ctx, publisher, params, info, replay); err != nil {
-			log.Printf("replay: %v", err)
+func (s schedule) run(ctx context.Context, hub *live.Hub, publisher *live.Publisher, params flow.Params, info event.Match, replay *statsbomb.Replay) {
+	wait := s.first
+	for {
+		info.KickoffAt = time.Now().Add(wait).UTC()
+		publisher.Schedule(info)
+		// Viewers of the last round reload, so they see the new kick-off
+		hub.CloseMatch(info.ID)
+		if !sleep(ctx, wait) {
 			return
 		}
+
+		// Kick-off goes into the store before the viewers are dropped, so the
+		// snapshot they reload is already the live match
+		publisher.Start(info)
+		hub.CloseMatch(info.ID)
+		if err := replayOnce(ctx, publisher, params, info, replay); err != nil {
+			log.Printf("replay %s: %v", info.ID, err)
+			return
+		}
+		if !sleep(ctx, s.rest) {
+			return
+		}
+		wait = s.wait
+	}
+}
+
+// sleep waits for d and reports false if the server is shutting down instead.
+func sleep(ctx context.Context, d time.Duration) bool {
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-t.C:
+		return true
+	case <-ctx.Done():
+		return false
 	}
 }
 
@@ -141,6 +173,6 @@ func replayOnce(ctx context.Context, publisher *live.Publisher, params flow.Para
 	engine := flow.Engine{Params: params, Speed: replay.Speed, Tick: 5 * time.Second}
 	log.Printf("replaying match %s at x%.0f", matchID, replay.Speed)
 	publisher.Run(engine.Run(ctx, matchID, events))
-	log.Print("replay finished")
+	log.Printf("match %s finished", matchID)
 	return nil
 }

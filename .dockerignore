@@ -1,0 +1,7 @@
+# The image needs only the Go code, the model and the demo match: everything
+# else (node_modules, the full season, git history) stays out of the build
+*
+!services/
+!ai/prediction/model.json
+services/data/
+services/**/*_test.go

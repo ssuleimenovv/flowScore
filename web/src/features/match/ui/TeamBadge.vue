@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import type { Side } from '@/shared/api/types'
 
-// The team tile with its three-letter code, tinted with the side's color.
-// "lg" is the desktop scoreboard, "md" the phone one.
-const { code, side, size = 'lg' } = defineProps<{ code: string; side: Side; size?: 'lg' | 'md' }>()
+// "lg" is the desktop scoreboard, "md" the phone one, "sm" a card on the home screen.
+const {
+  code,
+  side,
+  size = 'lg',
+} = defineProps<{ code: string; side: Side; size?: 'lg' | 'md' | 'sm' }>()
+
 </script>
 
 <template>
@@ -33,6 +37,13 @@ const { code, side, size = 'lg' } = defineProps<{ code: string; side: Side; size
   height: 52px;
   border-radius: 15px;
   font-size: var(--fs-text-headline);
+}
+
+.sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  font-size: 10px;
 }
 
 .home {

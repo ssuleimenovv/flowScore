@@ -20,3 +20,6 @@ export type Probabilities = Schemas['Probabilities']
 export type Simulation = Schemas['Simulation']
 export type SimulationRequest = Schemas['SimulationRequest']
 export type SimulatedRed = Schemas['SimulatedRed']
+export type MatchList = Schemas['MatchList']
+export type MatchSummary = Schemas['MatchSummary']
+

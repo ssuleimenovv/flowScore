@@ -27,7 +27,10 @@ const other = (side: Side): Side => (side === 'home' ? 'away' : 'home')
 // What Flow says right now, for the "Explainability" card. Every number comes
 // from the factors the engine sent: a factor is a real part of the team's Flow
 // (docs/FLOW.md, section 6), so the card explains it rather than guesses.
-export function explain(live: MatchLive, limit: number): Explanation {
+export function explain(
+  live: Pick<MatchLive, 'match' | 'flow' | 'delta10' | 'factors'>,
+  limit: number,
+): Explanation {
   const { flow, delta10, match } = live
   const leader: Side = flow.home >= flow.away ? 'home' : 'away'
   const name = match[leader].name

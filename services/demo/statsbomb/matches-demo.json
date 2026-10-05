@@ -1,0 +1,92 @@
+[
+ {
+  "match_id": 3754314,
+  "match_date": "2016-05-08",
+  "kick_off": "17:00:00.000",
+  "competition": {
+   "competition_id": 2,
+   "country_name": "England",
+   "competition_name": "Premier League"
+  },
+  "season": {
+   "season_id": 27,
+   "season_name": "2015/2016"
+  },
+  "home_team": {
+   "home_team_id": 36,
+   "home_team_name": "Manchester City",
+   "home_team_gender": "male",
+   "home_team_group": null,
+   "country": {
+    "id": 68,
+    "name": "England"
+   },
+   "managers": [
+    {
+     "id": 733,
+     "name": "Manuel Luis Pellegrini Ripamonti",
+     "nickname": "Manuel Pellegrini",
+     "dob": "1953-09-16",
+     "country": {
+      "id": 45,
+      "name": "Chile"
+     }
+    }
+   ]
+  },
+  "away_team": {
+   "away_team_id": 1,
+   "away_team_name": "Arsenal",
+   "away_team_gender": "male",
+   "away_team_group": null,
+   "country": {
+    "id": 68,
+    "name": "England"
+   },
+   "managers": [
+    {
+     "id": 577,
+     "name": "Arsène Wenger",
+     "nickname": null,
+     "dob": "1949-10-22",
+     "country": {
+      "id": 78,
+      "name": "France"
+     }
+    }
+   ]
+  },
+  "home_score": 2,
+  "away_score": 2,
+  "match_status": "available",
+  "match_status_360": "processing",
+  "last_updated": "2022-12-01T14:43:33.572040",
+  "last_updated_360": "2021-06-12T16:17:31.694",
+  "metadata": {
+   "data_version": "1.1.0",
+   "shot_fidelity_version": "2",
+   "xy_fidelity_version": "2"
+  },
+  "match_week": 37,
+  "competition_stage": {
+   "id": 1,
+   "name": "Regular Season"
+  },
+  "stadium": {
+   "id": 4715,
+   "name": "Etihad Stadium",
+   "country": {
+    "id": 68,
+    "name": "England"
+   }
+  },
+  "referee": {
+   "id": 8,
+   "name": "Anthony Taylor",
+   "country": {
+    "id": 68,
+    "name": "England"
+   }
+  }
+ }
+]

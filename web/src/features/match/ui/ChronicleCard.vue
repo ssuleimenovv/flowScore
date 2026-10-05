@@ -23,28 +23,35 @@ const visible = computed(() => (expanded.value ? items.value : items.value.slice
       <span class="hint">Flow-эффект события</span>
     </div>
 
-    <p v-if="items.length === 0" class="empty">Первые события появятся здесь</p>
+    <!-- On the desktop the list is a window of fixed height: new events and rows
+         of one or two lines do not move the cards under it -->
+    <div class="viewport" :class="{ open: expanded }">
+      <p v-if="items.length === 0" class="empty">Первые события появятся здесь</p>
 
-    <!-- A new event slides in on top and pushes the others down -->
-    <TransitionGroup v-else tag="ol" name="row" class="list">
-      <li v-for="item in visible" :key="item.id" class="row" :class="{ goal: item.goal }">
-        <span class="minute">{{ item.minute }}</span>
-        <span class="code" :class="item.goal" aria-hidden="true">{{ item.code }}</span>
-        <div class="body">
-          <span class="event">{{ item.title }}</span>
-          <span v-if="item.detail" class="detail">{{ item.detail }}</span>
-        </div>
-        <span v-if="item.impact" class="impact" :class="item.impact.side">
-          <span class="fs-sr-only">Flow </span>{{ item.impact.text }}
-        </span>
-      </li>
-    </TransitionGroup>
+      <!-- A new event slides in on top and pushes the others down -->
+      <TransitionGroup v-else tag="ol" name="row" class="list">
+        <li v-for="item in visible" :key="item.id" class="row" :class="{ goal: item.goal }">
+          <span class="minute">{{ item.minute }}</span>
+          <span class="code" :class="item.goal" aria-hidden="true">{{ item.code }}</span>
+          <div class="body">
+            <span class="event">{{ item.title }}</span>
+            <span v-if="item.detail" class="detail">{{ item.detail }}</span>
+          </div>
+          <span v-if="item.impact" class="impact" :class="item.impact.side">
+            <span class="fs-sr-only">Flow </span>{{ item.impact.text }}
+          </span>
+        </li>
+      </TransitionGroup>
+    </div>
 
+    <!-- The button keeps its place while there is nothing more to show -->
     <AppButton
-      v-if="items.length > LIMIT"
       variant="secondary"
       size="small"
       class="more"
+      :class="{ idle: items.length <= LIMIT }"
+      :disabled="items.length <= LIMIT"
+      :aria-hidden="items.length <= LIMIT || undefined"
       :aria-expanded="expanded"
       @click="expanded = !expanded"
     >
@@ -184,6 +191,19 @@ const visible = computed(() => (expanded.value ? items.value : items.value.slice
   align-self: center;
 }
 
+.more.idle {
+  visibility: hidden;
+}
+
+/* Desktop: ten rows fit, the eleventh fades out under the edge */
+@media (min-width: 768px) {
+  .viewport:not(.open) {
+    height: 540px;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 88%, transparent);
+  }
+}
+
 .row-enter-active,
 .row-move {
   transition:
@@ -203,6 +223,11 @@ const visible = computed(() => (expanded.value ? items.value : items.value.slice
   }
 
   .head {
+    display: none;
+  }
+
+  /* The tab has nothing under the list, so nothing to keep in place */
+  .more.idle {
     display: none;
   }
 

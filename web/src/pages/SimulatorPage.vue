@@ -21,6 +21,7 @@ import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
 import ErrorState from '@/shared/ui/ErrorState.vue'
 import NotFoundState from '@/shared/ui/NotFoundState.vue'
 import StateMessage from '@/shared/ui/StateMessage.vue'
+import WakingNote from '@/shared/ui/WakingNote.vue'
 
 const route = useRoute()
 const matchId = String(route.params.matchId)
@@ -147,13 +148,14 @@ onUnmounted(() => setTitle(null))
     </div>
 
     <div v-else-if="!error" class="layout" aria-busy="true" aria-label="Загрузка симулятора">
-      <AppCard class="skeleton controls">
+      <WakingNote class="waking" />
+      <AppCard class="loading controls">
         <AppSkeleton width="40%" :height="20" />
         <AppSkeleton :height="44" />
         <AppSkeleton :height="20" />
       </AppCard>
       <div class="results">
-        <AppCard class="skeleton outcome">
+        <AppCard class="loading outcome">
           <AppSkeleton width="30%" :height="24" />
           <AppSkeleton :height="14" />
           <AppSkeleton :height="44" />
@@ -245,7 +247,7 @@ onUnmounted(() => setTitle(null))
   order: 3;
 }
 
-.skeleton {
+.loading {
   display: flex;
   flex-direction: column;
   gap: var(--fs-space-16);
@@ -265,7 +267,8 @@ onUnmounted(() => setTitle(null))
     align-items: start;
   }
 
-  .top {
+  .top,
+  .waking {
     grid-column: 1 / -1;
   }
 

@@ -4,7 +4,7 @@ import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
 </script>
 
 <template>
-  <AppCard class="skeleton" aria-busy="true" aria-label="Загрузка хроники">
+  <AppCard class="loading" aria-busy="true" aria-label="Загрузка хроники">
     <AppSkeleton width="110px" :height="20" />
     <div v-for="i in 6" :key="i" class="row">
       <AppSkeleton width="28px" :height="14" />
@@ -18,7 +18,7 @@ import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
 </template>
 
 <style scoped>
-.skeleton {
+.loading {
   display: flex;
   flex-direction: column;
   gap: 18px;

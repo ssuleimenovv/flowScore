@@ -7,7 +7,7 @@ const bars = Array.from({ length: 30 }, (_, i) => 20 + ((i * 37) % 70))
 </script>
 
 <template>
-  <AppCard class="skeleton" aria-busy="true" aria-label="Загрузка волны">
+  <AppCard class="loading" aria-busy="true" aria-label="Загрузка волны">
     <AppSkeleton width="140px" :height="18" />
     <div class="bars">
       <AppSkeleton v-for="(h, i) in bars" :key="i" class="bar" :height="h" />
@@ -16,7 +16,7 @@ const bars = Array.from({ length: 30 }, (_, i) => 20 + ((i * 37) % 70))
 </template>
 
 <style scoped>
-.skeleton {
+.loading {
   display: flex;
   flex-direction: column;
   gap: var(--fs-space-12);

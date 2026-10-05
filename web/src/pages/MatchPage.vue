@@ -27,6 +27,7 @@ import NotFoundState from '@/shared/ui/NotFoundState.vue'
 import OfflineBanner from '@/shared/ui/OfflineBanner.vue'
 import ReconnectBanner from '@/shared/ui/ReconnectBanner.vue'
 import StateMessage from '@/shared/ui/StateMessage.vue'
+import WakingNote from '@/shared/ui/WakingNote.vue'
 
 const route = useRoute()
 const {
@@ -155,6 +156,7 @@ onUnmounted(() => setTitle(null))
 
     <div v-else-if="screen.view === 'loading'" class="layout">
       <div class="main">
+        <WakingNote />
         <div class="wide"><MatchHeroSkeleton /></div>
         <div class="narrow"><MatchHeroSkeleton compact /></div>
         <FlowWaveSkeleton />

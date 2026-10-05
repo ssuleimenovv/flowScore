@@ -1,5 +1,6 @@
 import { computed, onScopeDispose, ref, shallowRef } from 'vue'
 import { ApiError } from '@/shared/api/http'
+import { streamUrl } from '@/shared/api/origin'
 import type { WsMessage } from '@/shared/api/types'
 import { openMatchSocket } from '@/shared/live/matchSocket'
 import type { RequestStatus, SocketStatus } from '@/shared/state/screenState'
@@ -60,7 +61,7 @@ export function useMatchLive(matchId: string) {
     }
   }
 
-  const socket = openMatchSocket(streamUrl(matchId), {
+  const socket = openMatchSocket(streamUrl(`/ws/matches/${encodeURIComponent(matchId)}/stream`), {
     onMessage(message) {
       if (loading || !state.value) {
         buffer.push(message)
@@ -115,9 +116,4 @@ function withoutInsight(err: unknown): null {
   throw err
 }
 
-// The stream goes through the same host as the page; in development
-// Vite proxies /ws to the Go gateway.
-function streamUrl(matchId: string): string {
-  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-  return `${protocol}//${location.host}/ws/matches/${encodeURIComponent(matchId)}/stream`
-}
+

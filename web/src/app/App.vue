@@ -23,6 +23,16 @@ const inner = computed(() => route.meta.inner === true)
   <main class="content">
     <!-- The key remounts the page when only the id changes (/matches/1 → /matches/2) -->
     <RouterView :key="route.path" />
+
+    <!-- The StatsBomb Open Data licence asks for this credit wherever the data is shown -->
+    <p class="credit">
+      Данные матчей:
+      <a href="https://github.com/statsbomb/open-data" target="_blank" rel="noopener">
+        StatsBomb Open Data
+      </a>
+    </p>
+
+
   </main>
 
   <div class="mobile-only">
@@ -36,6 +46,18 @@ const inner = computed(() => route.meta.inner === true)
   /* Room for the fixed tab bar, so the last row is not hidden under it */
   padding-bottom: calc(var(--fs-tab-height) + var(--fs-safe-bottom));
 }
+
+.credit {
+  padding: var(--fs-space-16) var(--fs-screen-padding) var(--fs-space-24);
+  color: var(--fs-faint);
+  font-size: var(--fs-text-caption);
+  text-align: center;
+}
+
+.credit a {
+  color: inherit;
+}
+
 
 .desktop-only {
   display: none;

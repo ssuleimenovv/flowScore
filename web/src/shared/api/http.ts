@@ -1,6 +1,7 @@
+import { apiUrl } from './origin'
 import type { Problem } from './types'
 
-const BASE = '/api/v1'
+const BASE = apiUrl('/api/v1')
 
 // ApiError carries the RFC 9457 problem the server sent. status is 0 when
 // the request never reached the server (offline, DNS, server down).

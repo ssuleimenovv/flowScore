@@ -1,16 +1,21 @@
 # FlowScore
 
+[![CI](https://github.com/ssuleimenovv/flowScore/actions/workflows/ci.yml/badge.svg)](https://github.com/ssuleimenovv/flowScore/actions/workflows/ci.yml)
+
 **Live football analytics that shows *who is controlling the game right now* — and why.**
+
+**Live demo:** <https://flowscore-pi.vercel.app/matches/3754314> ·
+[“What if?” simulator](https://flowscore-pi.vercel.app/matches/3754314/simulator)
 
 FlowScore turns the raw event stream of a football match (shots, corners, cards,
 possession) into **Flow Momentum**: a 0–100 score per team that rises with pressure
 and decays when it fades. On top of it: a minute-by-minute flow wave, a chronicle
-that shows how much each event moved the flow, live match stats, and (in progress)
-an AI layer that explains the numbers, predicts the outcome and runs "what if?"
-scenarios.
+that shows how much each event moved the flow, live match stats, an explanation of
+what drives the flow, in-play win/draw/loss probabilities and a "what if?" simulator.
 
-> Status: **early, actively developed.** The Match screen works end to end on a
-> replayed Premier League match (Man City 2–2 Arsenal, 2016). See the roadmap below.
+> Status: **early, actively developed, deployed.** The demo replays a Premier League
+> match (Man City 2–2 Arsenal, 2016) as if it were live. The free backend sleeps when
+> idle, so the first visit can take up to a minute to wake it. See the roadmap below.
 
 ---
 
@@ -52,7 +57,11 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   snapshot; every message carries a `seq`.
 - WebSocket hub (`coder/websocket`): fan-out per match, slow clients are dropped
   instead of blocking others.
-- REST snapshot: `/api/v1/matches/{id}`, `/flow`, `/events`.
+- REST snapshot: `/api/v1/matches/{id}`, `/flow`, `/events`, `/insight`.
+- Outcome model in Go, matching the Python fit to 1e-15 on 306 checked cases;
+  chances go out on the stream when a whole percent changes.
+- `POST /simulate`: the chances with red cards added later in the match; the rest
+  of the match is split at each red, every piece with its own goal rates.
 - Match stats computed from events: possession, shots, on target, xG, key passes,
   tackles.
 - Halftime and full-time whistles, first-half score, a clock resynced with every
@@ -61,7 +70,10 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
 **Frontend (Vue 3 + TypeScript)**
 - Match screen per the design mockup: scoreboard with live clock, Flow share bar,
   flow wave (1/5/15-minute smoothing, hover readout, goal markers), chronicle with
-  Flow impact per event, match stats, "What if?" call to action.
+  Flow impact per event, match stats, "why Flow is what it is" factors, outcome
+  probabilities with the change since kick-off.
+- Simulator screen: pick a red card and a minute, see the scenario against the
+  match as it stands and why it moved.
 - Two layouts from one DOM: two-column desktop, tabbed phone view
   (`Поток / События / Стат. / AI`) with the tab kept in the URL.
 - **Snapshot + stream merge:** the client loads a REST snapshot, buffers stream
@@ -112,7 +124,8 @@ orchestrator in Python, push notifications) is described in
 | Quality | Go tests, Vitest, Playwright, ESLint, Oxlint, Prettier, `vue-tsc` |
 | ML | Python, numpy, pandas, SciPy, scikit-learn |
 | Data | StatsBomb Open Data (demo and validation) |
-| Planned | FastAPI for AI agents, PostgreSQL, Redis, Capacitor for iOS/Android |
+| Deploy | Docker (distroless, 19 MB), Render, Vercel, GitHub Actions |
+| Planned | LLM match analysis, PostgreSQL, Redis, Capacitor for iOS/Android |
 
 ---
 
@@ -132,10 +145,14 @@ services/       Go backend
     event/      Normalized event model
     flow/       Flow Engine (state, decay, weights)
     live/       Publisher, snapshot store, hub, stats
-    api/        REST handlers
+    api/        REST handlers, CORS
+    predict/    Outcome model and "what if" simulation
     provider/   Data sources (StatsBomb replay)
+  demo/         The demo match the deployed gateway replays
+  Dockerfile    The gateway image for Render
 web/            Vue client
-  src/features/match   Match screen logic and components
+  src/features/match       Match screen logic and components
+  src/features/simulator   "What if?" screen
   src/shared           API client, live socket, UI kit, theme, motion
 ```
 
@@ -145,26 +162,18 @@ web/            Vue client
 
 **Requirements:** Go 1.24+, Node 22.18+ or 24.12+.
 
-**1. Demo data** (StatsBomb Open Data, not committed). From `services/`:
+**1. Backend.** The demo match is committed in `services/demo`. From `services/`:
 
 ```bash
-mkdir -p data/statsbomb
-BASE=https://raw.githubusercontent.com/statsbomb/open-data/master/data
-curl -L -o data/statsbomb/matches-2-27.json      $BASE/matches/2/27.json
-curl -L -o data/statsbomb/events-3754314.json    $BASE/events/3754314.json
-curl -L -o data/statsbomb/lineups-3754314.json   $BASE/lineups/3754314.json
-```
-
-**2. Backend.** From `services/`:
-
-```bash
-go run ./cmd/gateway              # :8080, replay at ×60
-go run ./cmd/gateway -speed 600   # a full match in about 10 seconds
+go run ./cmd/gateway -data demo/statsbomb -matches matches-demo.json
+go run ./cmd/gateway -data demo/statsbomb -matches matches-demo.json -speed 600   # a match in ~10 s
 ```
 
 The replay starts when the first viewer connects and loops while anyone watches.
+For the whole 2015/16 season (needed by `ai/`), run
+`python ai/calibration/download.py` and start the gateway without `-data`.
 
-**3. Frontend.** From `web/`:
+**2. Frontend.** From `web/`:
 
 ```bash
 npm install
@@ -173,6 +182,29 @@ npm run dev
 
 Open <http://localhost:5173/matches/3754314>. Vite proxies `/api` and `/ws` to the
 gateway.
+
+**Docker** (the image Render runs). From the repo root:
+
+```bash
+docker build -f services/Dockerfile -t flowscore-gateway .
+docker run --rm -p 8080:8080 flowscore-gateway
+```
+
+---
+
+## Deploy
+
+Every push to `main` runs [CI](.github/workflows/ci.yml): Go format, vet and tests;
+type-check, lint, unit tests and build of the web app; the Docker image build.
+
+| Part | Host | Settings |
+|---|---|---|
+| Gateway | Render, Docker, free | `services/Dockerfile`, context `.`, health check `/healthz`, auto-deploy after CI passes, `FLOWSCORE_ORIGINS=flowscore.vercel.app,flowscore-*.vercel.app` |
+| Web | Vercel | root `web`, `VITE_API_URL=https://flowscore-api-7nwl.onrender.com` |
+
+The gateway reads its settings from flags or the environment: `PORT`,
+`FLOWSCORE_DATA`, `FLOWSCORE_MATCHES`, `FLOWSCORE_MODEL`, `FLOWSCORE_MATCH`,
+`FLOWSCORE_ORIGINS` (host patterns allowed to call the API and the stream).
 
 ### Checks
 
@@ -197,12 +229,13 @@ npm run api:types    # regenerate types after changing api/openapi.yaml
 - [x] Flow validation on 380 matches: time-blocked CV, bootstrap intervals
 - [x] Explainability: top contributing factors per moment
 - [x] Outcome model: Poisson in-play, validated on 380 matches
-- [ ] Outcome probabilities live on the Match screen
-- [ ] AI match analysis
-- [ ] "What if?" simulator
+- [x] Outcome probabilities live on the Match screen
+- [x] "What if?" simulator: red cards (players and Flow forecast to come)
+- [x] Deploy: Docker, Render, Vercel, CI on every push
+- [ ] AI match analysis (LLM)
 - [ ] Home, league, team and player screens
 - [ ] Auth, favorites, Flow spike notifications
-- [ ] Live data source, deploy, iOS and Android builds
+- [ ] Live data source, iOS and Android builds
 
 ---
 
@@ -218,4 +251,5 @@ read and understood by the author, and design decisions are documented in
 ## Data attribution
 
 Demo and training data: **[StatsBomb Open Data](https://github.com/statsbomb/open-data)**.
-Used under the StatsBomb public data user agreement, which requires attribution.
+Used under the StatsBomb public data user agreement, which requires attribution;
+the app credits it on every page.

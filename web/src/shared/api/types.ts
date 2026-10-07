@@ -22,4 +22,4 @@ export type SimulationRequest = Schemas['SimulationRequest']
 export type SimulatedRed = Schemas['SimulatedRed']
 export type MatchList = Schemas['MatchList']
 export type MatchSummary = Schemas['MatchSummary']
-
+export type Analysis = Schemas['Explanation'] // the AI agent's text; explain ts builds the one from Flow

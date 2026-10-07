@@ -32,10 +32,13 @@ export function liveMinute(m: MatchSummary, now: number): string {
   return formatMinute(elapsedSeconds + running, period)
 }
 
-// The card's one line of "AI": the same explanation as on the match screen
+// The card's one line of "AI": the agent's headline once it has written one,
+// until then the headline the match screen builds from Flow
 export function insightLine(m: MatchSummary): string {
+  if (m.explanation) return m.explanation.title
   return explain({ match: m, flow: m.flow, delta10: m.delta10, factors: m.factors }, 0).title
 }
+
 
 // Each side's share of the flow bar in percent; even before anything happened
 export function flowShare(m: MatchSummary): number {

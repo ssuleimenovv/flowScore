@@ -194,6 +194,7 @@ export interface components {
             factors: components["schemas"]["FlowFactor"][];
             points: components["schemas"]["FlowPoint"][];
             prediction: components["schemas"]["Prediction"] | null;
+            explanation: components["schemas"]["Explanation"] | null;
         };
         Clock: {
             /** @description Match time in seconds (72:14 → 4334) */
@@ -325,13 +326,17 @@ export interface components {
             current: components["schemas"]["Probabilities"];
             scenario: components["schemas"]["Probabilities"];
         };
+        /**
+         * @description The analysis the AI agent wrote for one moment of the match: a goal, a
+         *     red card or every tenth minute. The factors on the card come from the
+         *     flow, so the analysis itself is text only.
+         */
         Explanation: {
+            /** @example Арсенал забирает инициативу */
             title: string;
             text: string;
-            factors: {
-                label: string;
-                impact: number;
-            }[];
+            /** @description The match minute the analysis was written for */
+            minute: number;
             /** Format: date-time */
             generatedAt: string;
         };

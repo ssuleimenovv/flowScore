@@ -23,14 +23,21 @@ const titleId = useId()
 
 const explanation = computed(() => explain(live, variant === 'brief' ? 3 : 5))
 
+// The headline and text: the agent's once it has written them, else the ones
+// built from Flow. The factor lines always come from Flow, so they stay live.
+const summary = computed(() => live.analysis ?? explanation.value)
+// The agent's text is as old as its answer, the one from Flow as the data
+const stamp = computed(() => (live.analysis ? new Date(live.analysis.generatedAt): updatedAt))
+
 // "обновлено 12 с назад", kept current between updates
 const now = ref(Date.now())
 const timer = setInterval(() => (now.value = Date.now()), 1000)
 onScopeDispose(() => clearInterval(timer))
 
 const ago = computed(() => {
-  if (!updatedAt) return null
-  const seconds = Math.max(0, Math.round((now.value - updatedAt.getTime()) / 1000))
+  if (!stamp.value) return null
+  const seconds = Math.max(0, Math.round((now.value - stamp.value.getTime()) / 1000))
+
   const text = seconds < 3 ? 'только что' : `${seconds} с назад`
   return variant === 'full' ? `обновлено ${text}` : text
 })
@@ -53,10 +60,14 @@ const ago = computed(() => {
     </div>
 
     <h3 v-if="variant === 'factors'" :id="titleId" class="title">Что двигает поток</h3>
-    <div v-else class="summary">
-      <h3 :id="titleId" class="title">{{ explanation.title }}</h3>
-      <p class="text">{{ explanation.text }}</p>
+    <!-- Only a new answer of the agent fades in. The text built from Flow
+         changes with every update and is replaced in place, or it would
+         blink several times a second -->
+    <div v-else :key="live.analysis?.generatedAt ?? 'flow'" class="summary fs-in">
+      <h3 :id="titleId" class="title">{{ summary.title }}</h3>
+      <p class="text">{{ summary.text }}</p>
     </div>
+
 
     <ul v-if="explanation.lines.length" class="factors">
       <li v-for="line in explanation.lines" :key="line.key" class="factor">

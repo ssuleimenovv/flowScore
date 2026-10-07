@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import type { MatchSummary } from '@/shared/api/types'
-import { dayForecast, flowPeaks, liveMinute, matchDay, sparkline } from '../home'
+import { dayForecast, flowPeaks, insightLine, liveMinute, matchDay, sparkline } from '../home'
 
 function match(over: Partial<MatchSummary> & { id: string }): MatchSummary {
   return {
@@ -20,6 +20,7 @@ function match(over: Partial<MatchSummary> & { id: string }): MatchSummary {
     factors: [],
     points: [],
     prediction: null,
+    explanation: null,
     ...over,
   }
 }
@@ -85,6 +86,26 @@ describe('flowPeaks', () => {
     expect(flowPeaks([flat, young])).toEqual([])
   })
 })
+
+describe('insightLine', () => {
+  it("shows the agent's headline once it has one", () => {
+    const m = match({
+      id: 'a',
+      explanation: {
+        title: 'Арсенал забирает инициативу',
+        text: 'Четыре удара за семь минут.',
+        minute: 30,
+        generatedAt: '2026-10-05T18:31:00Z',
+      },
+    })
+    expect(insightLine(m)).toBe('Арсенал забирает инициативу')
+  })
+
+  it('falls back to the headline from Flow', () => {
+    expect(insightLine(match({ id: 'a' }))).toBe('Равная игра')
+  })
+})
+
 
 describe('sparkline', () => {
   it('maps minutes and Flow into the 300 × 60 box', () => {

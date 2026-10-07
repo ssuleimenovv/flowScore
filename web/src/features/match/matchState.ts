@@ -1,4 +1,5 @@
 import type {
+  Analysis,
   EventList,
   FlowFactor,
   FlowPoint,
@@ -28,6 +29,7 @@ export interface MatchLive {
   prediction: Prediction | null // null when the gateway runs without an outcome model
   // Seq of each part of the snapshot. The requests are answered at slightly
   // different moments, so each part skips the messages it already has.
+  analysis: Analysis | null // the AI agent's text, null until it answers or without an agent
   seq: { match: number; flow: number; events: number; insight: number }
 }
 
@@ -46,6 +48,7 @@ export function fromSnapshot(
     points: [...flow.points].sort((a, b) => a.minute - b.minute),
     events: events.items.slice(0, MAX_EVENTS),
     prediction: insight?.prediction ?? null,
+    analysis: insight?.explanation ?? null,
     seq: { match: match.seq, flow: flow.seq, events: events.seq, insight: insight?.seq ?? 0 },
   }
 }
@@ -108,8 +111,18 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
       }
     }
 
+        case 'insight.update': {
+      if (message.seq <= state.seq.insight) return state
+      return {
+        ...state,
+        analysis: message.data,
+        seq: { ...state.seq, insight: message.seq },
+      }
+    }
+
     default:
-      return state // insight.update comes with the AI explanation
+      return state // a message type this client does not know yet
+
   }
 }
 

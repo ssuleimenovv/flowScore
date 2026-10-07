@@ -57,10 +57,10 @@ const clockLine = computed(() => {
         <TeamBadge :code="match.away.code" side="away" />
         <div class="team-body end">
           <span class="name">{{ match.away.name }}</span>
-          <div class="flow-line">
-            <span class="delta away">{{ formatDelta(live.delta10.away) }} за 10′</span>
-            <span class="flow-label">FLOW</span>
+          <div class="flow-line away-line">
             <span class="flow away end">{{ flowAway }}</span>
+            <span class="flow-label">FLOW</span>
+            <span class="delta away">{{ formatDelta(live.delta10.away) }} за 10′</span>
           </div>
         </div>
       </div>
@@ -128,10 +128,18 @@ const clockLine = computed(() => {
   white-space: nowrap;
 }
 
+/* A long delta ("+47 за 10′" next to 3:3) goes under the number rather
+   than into the score in the middle */
 .flow-line {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px 10px;
   align-items: baseline;
+}
+
+/* The away side reads from the edge of the card inwards, as on the board */
+.away-line {
+  flex-direction: row-reverse;
 }
 
 .flow {

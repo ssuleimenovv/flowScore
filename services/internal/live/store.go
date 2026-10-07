@@ -25,8 +25,11 @@ type Snapshot struct {
 	Stats      []StatRow    // empty before kick-off
 	Prediction *Prediction  // nil when no outcome model is loaded
 	Outlook    *Outlook     // the same, for the simulator
-	Seq        int64        // last stream message already included
-	UpdatedAt  time.Time
+	// the Latest analysis, nil until the agent answers. A new one replaces
+	// it whole, so a copy may share it
+	Explanation *Explanation
+	Seq         int64 // last stream message already included
+	UpdatedAt   time.Time
 }
 
 type Score struct {

@@ -145,6 +145,16 @@ type Prediction struct {
 	Model    string        `json:"model"`
 }
 
+// Explanation is the analysis of the match by the AI agent (Explanation in the
+// contract), written for one moment of it. It is also the data of an
+// insight.update message.
+type Explanation struct {
+	Title       string    `json:"title"`
+	Text        string    `json:"text"`
+	Minute      int       `json:"minute"` // the moment it was written for
+	GeneratedAt time.Time `json:"generatedAt"`
+}
+
 // toPercents rounds the chances so that they still add up to 100: each gets
 // its whole part, and the points left over go to the largest remainders.
 // Rounding each on its own could show 33 · 33 · 33 or 34 · 33 · 34.

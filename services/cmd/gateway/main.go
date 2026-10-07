@@ -17,6 +17,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/api"
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
+	"github.com/ssuleimenovv/flowscore/services/internal/insight"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
 	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
@@ -37,6 +38,10 @@ func main() {
 	matchesFile := flag.String("matches", env("FLOWSCORE_MATCHES", "matches-2-27.json"), "matches file in the data folder")
 	modelPath := flag.String("model", env("FLOWSCORE_MODEL", "../ai/prediction/model.json"), "outcome model from ai/prediction/fit.py")
 	originList := flag.String("origins", env("FLOWSCORE_ORIGINS", "localhost:5173,*:5173"), "host patterns of the sites allowed to call the API, comma-separated")
+	llmModel := flag.String("llm-model", env("FLOWSCORE_LLM_MODEL", "gemini-3.1-flash-lite"), "Gemini model that writes the match analysis")
+	llmGap := flag.Duration("llm-gap", 7*time.Second, "pause after each request to the LLM, to stay under its rate limit")
+	insights := flag.String("insights", env("FLOWSCORE_INSIGHTS", "demo/insights.json"), "file that keeps the analysis texts between starts")
+
 	flag.Parse()
 
 	// Ctrl+C locally, SIGTERM when a host stops or redeploys the container
@@ -51,6 +56,11 @@ func main() {
 	model, err := predict.Load(*modelPath)
 	if err != nil {
 		log.Fatalf("outcome model: %v", err)
+	}
+
+	agent, err := newAgent(ctx, os.Getenv("GEMINI_API_KEY"), *llmModel, *llmGap, *insights)
+	if err != nil {
+		log.Fatalf("analysis agent: %v", err)
 	}
 
 	hub := live.NewHub()
@@ -72,6 +82,10 @@ func main() {
 		}
 		publisher := live.NewPublisher(hub, store, info.ID, params)
 		publisher.UseModel(&model)
+
+		if agent != nil {
+			publisher.UseAgent(agent)
+		}
 
 		show := schedule{wait: *wait, rest: *rest, first: 20*time.Second + time.Duration(i)*round/time.Duration(len(ids))}
 		go show.run(ctx, hub, publisher, params, info, &replay)
@@ -107,6 +121,36 @@ func main() {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("shutdown: %v", err)
 	}
+}
+
+// newAgent starts the agent that writes the match analysis. Without an API
+// key it only serves the texts kept in the file; with neither it returns nil,
+// and the match screen explains Flow on its own.
+func newAgent(ctx context.Context, apiKey, model string, gap time.Duration, file string) (*insight.Agent, error) {
+	var writer insight.Writer
+	if apiKey != "" {
+		g, err := insight.NewGemini(ctx, apiKey, model, "")
+		if err != nil {
+			return nil, err
+		}
+		writer = g
+	}
+	agent := insight.NewAgent(writer, gap)
+	if err := agent.UseFile(file); err != nil {
+		return nil, err
+	}
+
+	switch {
+	case writer != nil:
+		log.Printf("AI analysis: %d texts kept in %s, new ones by %s", agent.Len(), file, model)
+	case agent.Len() > 0:
+		log.Printf("AI analysis: %d texts kept in %s; GEMINI_API_KEY is not set, so no new ones", agent.Len(), file)
+	default:
+		log.Print("GEMINI_API_KEY is not set and no texts are kept: no AI analysis")
+		return nil, nil
+	}
+	go agent.Run(ctx)
+	return agent, nil
 }
 
 // env returns the environment variable, or fallback when it is not set.

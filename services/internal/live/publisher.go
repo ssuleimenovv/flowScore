@@ -2,11 +2,13 @@ package live
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
+	"github.com/ssuleimenovv/flowscore/services/internal/insight"
 	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 )
 
@@ -29,6 +31,10 @@ type Publisher struct {
 	rating    float64
 	situation predict.Situation
 	sent      Probabilities // the chances viewers have, to send only a change
+	// The analysis agent, nil without one; its answers come back on answers
+	agent   *insight.Agent
+	answers chan insight.Answer
+	tenth   int // the last tenth minute the agent was asked about
 
 }
 
@@ -39,6 +45,12 @@ func NewPublisher(hub *Hub, store *Store, matchID string, params flow.Params) *P
 // UseModel makes the Publisher predict the outcome with m (docs/PREDICTION.md).
 func (p *Publisher) UseModel(m *predict.Model) {
 	p.model = m
+}
+
+// UseAgent makes the Publisher ask the agent a for an analysis at the key moment
+func (p *Publisher) UseAgent(a *insight.Agent) {
+	p.agent = a
+	p.answers = make(chan insight.Answer, 4)
 }
 
 // Schedule registers the match before kick-off, with the pre-match chances,
@@ -54,6 +66,7 @@ func (p *Publisher) Start(match event.Match) {
 	clear(p.history) // minutes of the previous replay
 	p.period = 1
 	p.at = 0
+	p.tenth = 0
 	p.stats = NewStats()
 	p.store.Start(match, p.seq)
 	p.preMatch(match)
@@ -80,56 +93,111 @@ func (p *Publisher) outlook() Outlook {
 	return Outlook{model: p.model, rating: p.rating, situation: p.situation}
 }
 
-// Run publishes the match started with Start until updates is closed.
+// Run publishes the match started with Start until updates is closed. The
+// agent's answers come in the same loop, so seq still needs no lock. Without
+// an agent answers is nil, and a nil channel is never ready.
 func (p *Publisher) Run(updates <-chan flow.Update) {
-	for u := range updates {
-		if u.Cause != nil && u.Cause.Period != p.period {
-			if p.period == 1 {
-				p.whistle(event.Halftime, "halftime")
+	for {
+		select {
+		case u, ok := <-updates:
+			if !ok {
+				p.finish()
+				return
 			}
-			p.period = u.Cause.Period
+			p.update(u)
+		case a := <-p.answers:
+			p.explain(a)
 		}
+	}
+}
 
-		if u.Cause != nil && !u.Cause.Type.Internal() {
-			me := p.matchEvent(*u.Cause)
-			p.emit("match.event", me, func(s *Snapshot) {
-				s.Events = append(s.Events, me)
-				if me.Type == event.Goal {
-					addGoal(&s.Score, *me.Side)
-				}
-			})
+// update publishes one Flow update: the event behind it, the stats, the
+// chances and Flow itself, then asks the agent if the moment is a key one.
+func (p *Publisher) update(u flow.Update) {
+	if u.Cause != nil && u.Cause.Period != p.period {
+		if p.period == 1 {
+			p.whistle(event.Halftime, "halftime")
 		}
-
-		if u.Cause != nil && p.stats.Add(*u.Cause) {
-			ms := MatchStats{Stats: p.stats.Rows()}
-			p.emit("match.stats", ms, func(s *Snapshot) { s.Stats = ms.Stats })
-		}
-
-		if u.Cause != nil {
-			p.count(*u.Cause)
-		}
-		p.situation.Period = p.period
-		p.situation.At = u.At
-		p.predict()
-
-		fu := p.flowUpdate(u)
-		p.emit("flow.update", fu, func(s *Snapshot) {
-			s.Flow = fu.Current
-			s.Delta10 = fu.Delta10
-			s.Factors = fu.Factors
-			s.Points = upsertPoint(s.Points, fu.Point)
-			s.At = u.At
-			s.Period = p.period
-			if s.Status == "halftime" && p.period > 1 {
-				s.Status = "live" // the second half has kicked off
-			}
-		})
-		p.at = u.At
+		p.period = u.Cause.Period
 	}
 
+	if u.Cause != nil && !u.Cause.Type.Internal() {
+		me := p.matchEvent(*u.Cause)
+		p.emit("match.event", me, func(s *Snapshot) {
+			s.Events = append(s.Events, me)
+			if me.Type == event.Goal {
+				addGoal(&s.Score, *me.Side)
+			}
+		})
+	}
+
+	if u.Cause != nil && p.stats.Add(*u.Cause) {
+		ms := MatchStats{Stats: p.stats.Rows()}
+		p.emit("match.stats", ms, func(s *Snapshot) { s.Stats = ms.Stats })
+	}
+
+	if u.Cause != nil {
+		p.count(*u.Cause)
+	}
+	p.situation.Period = p.period
+	p.situation.At = u.At
+	p.predict()
+
+	fu := p.flowUpdate(u)
+	p.emit("flow.update", fu, func(s *Snapshot) {
+		s.Flow = fu.Current
+		s.Delta10 = fu.Delta10
+		s.Factors = fu.Factors
+		s.Points = upsertPoint(s.Points, fu.Point)
+		s.At = u.At
+		s.Period = p.period
+		if s.Status == "halftime" && p.period > 1 {
+			s.Status = "live" // the second half has kicked off
+		}
+	})
+	p.at = u.At
+	p.ask(u)
+}
+
+func (p *Publisher) finish() {
 	p.whistle(event.Fulltime, "finished")
 	p.situation.Finished = true // the result is known: 100% for it
 	p.predict()
+}
+
+// ask asks the agent about a key moment: a goal, a red card, every tenth
+// minute. The key names the moment the same way in every replay, so the
+// agent writes it once.
+func (p *Publisher) ask(u flow.Update) {
+	if p.agent == nil {
+		return
+	}
+	var moment string
+	if c := u.Cause; c != nil && (c.Type == event.Goal || c.Type == event.RedCard) {
+		moment = string(c.Type) + ":" + c.ID
+	} else if tenth := int(u.At.Minutes()) / 10 * 10; tenth > p.tenth {
+		p.tenth = tenth
+		moment = fmt.Sprintf("m%d", tenth)
+	} else {
+		return
+	}
+
+	snap, ok := p.store.Get(p.matchID)
+	if !ok || snap.Prediction == nil {
+		return // the brief needs the chances
+	}
+	p.agent.Ask(briefOf(snap, p.matchID+":"+moment), p.answers)
+}
+
+// explain sends the analysis to the viewers. The replays are the same match,
+// so an answer asked in the last round still tells the truth, unless it is
+// about a moment this round has not reached yet.
+func (p *Publisher) explain(a insight.Answer) {
+	if a.Minute > int(p.at.Minutes()) {
+		return
+	}
+	e := Explanation{Title: a.Text.Title, Text: a.Text.Text, Minute: a.Minute, GeneratedAt: time.Now().UTC()}
+	p.emit("insight.update", e, func(s *Snapshot) { s.Explanation = &e })
 }
 
 // count keeps the goals and red cards the outcome model needs.

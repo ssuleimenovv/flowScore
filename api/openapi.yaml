@@ -349,7 +349,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/Match'
         - type: object
-          required: [flow, delta10, factors, points, prediction]
+          required: [flow, delta10, factors, points, prediction, explanation]
           properties:
             flow:
               $ref: '#/components/schemas/FlowValues'
@@ -366,6 +366,10 @@ components:
             prediction:
               oneOf:
                 - $ref: '#/components/schemas/Prediction'
+                - type: 'null'
+            explanation:
+              oneOf:
+                - $ref: '#/components/schemas/Explanation'
                 - type: 'null'
 
 
@@ -639,25 +643,24 @@ components:
 
     Explanation:
       type: object
-      required: [title, text, factors, generatedAt]
+      description: |
+        The analysis the AI agent wrote for one moment of the match: a goal, a
+        red card or every tenth minute. The factors on the card come from the
+        flow, so the analysis itself is text only.
+      required: [title, text, minute, generatedAt]
       properties:
         title:
           type: string
+          example: Арсенал забирает инициативу
         text:
           type: string
-        factors:
-          type: array
-          items:
-            type: object
-            required: [label, impact]
-            properties:
-              label:
-                type: string
-              impact:
-                type: number
+        minute:
+          type: integer
+          description: The match minute the analysis was written for
         generatedAt:
           type: string
           format: date-time
+
 
     Sentiment:
       type: object

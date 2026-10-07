@@ -92,11 +92,12 @@ func toMatch(s live.Snapshot) match {
 // card draws, the flow wave, its explanation and the chances.
 type matchSummary struct {
 	match
-	Flow       live.FlowValues   `json:"flow"`
-	Delta10    live.FlowValues   `json:"delta10"`
-	Factors    []live.FlowFactor `json:"factors"`
-	Points     []live.FlowPoint  `json:"points"`
-	Prediction *live.Prediction  `json:"prediction"`
+	Flow        live.FlowValues   `json:"flow"`
+	Delta10     live.FlowValues   `json:"delta10"`
+	Factors     []live.FlowFactor `json:"factors"`
+	Points      []live.FlowPoint  `json:"points"`
+	Prediction  *live.Prediction  `json:"prediction"`
+	Explanation *live.Explanation `json:"explanation"`
 }
 
 type matchList struct {
@@ -110,12 +111,13 @@ func listHandler(store *live.Store) http.HandlerFunc {
 		items := make([]matchSummary, 0, len(snaps))
 		for _, s := range snaps {
 			items = append(items, matchSummary{
-				match:      toMatch(s),
-				Flow:       s.Flow,
-				Delta10:    s.Delta10,
-				Factors:    orEmpty(s.Factors),
-				Points:     orEmpty(s.Points),
-				Prediction: s.Prediction,
+				match:       toMatch(s),
+				Flow:        s.Flow,
+				Delta10:     s.Delta10,
+				Factors:     orEmpty(s.Factors),
+				Points:      orEmpty(s.Points),
+				Prediction:  s.Prediction,
+				Explanation: s.Explanation,
 			})
 		}
 		writeJSON(w, http.StatusOK, matchList{Items: items})
@@ -156,11 +158,11 @@ func eventsResponse(s live.Snapshot) any {
 }
 
 type insight struct {
-	MatchID     string           `json:"matchId"`
-	Explanation *struct{}        `json:"explanation"` // the Explainability agent comes later
-	Prediction  *live.Prediction `json:"prediction"`
-	Sentiment   *struct{}        `json:"sentiment"`
-	Seq         int64            `json:"seq"`
+	MatchID     string            `json:"matchId"`
+	Explanation *live.Explanation `json:"explanation"`
+	Prediction  *live.Prediction  `json:"prediction"`
+	Sentiment   *struct{}         `json:"sentiment"`
+	Seq         int64             `json:"seq"`
 }
 
 // insightHandler answers 404 for a match without a prediction as well: the
@@ -172,7 +174,13 @@ func insightHandler(store *live.Store) http.HandlerFunc {
 			writeProblem(w, http.StatusNotFound, "No insight for this match")
 			return
 		}
-		writeJSON(w, http.StatusOK, insight{MatchID: snap.Match.ID, Prediction: snap.Prediction, Seq: snap.Seq})
+		writeJSON(w, http.StatusOK, insight{
+			MatchID:     snap.Match.ID,
+			Explanation: snap.Explanation,
+			Prediction:  snap.Prediction,
+			Seq:         snap.Seq,
+		})
+
 	}
 }
 
@@ -235,7 +243,7 @@ func orEmpty[T any](s []T) []T {
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(v); err != nil {
 		log.Printf("write response: %v", err)

@@ -123,6 +123,10 @@ func TestInsight(t *testing.T) {
 	if sum := pr.Current.Home + pr.Current.Draw + pr.Current.Away; sum != 100 {
 		t.Errorf("chances add up to %d", sum)
 	}
+	// The agent has not answered yet: the field is there, as null
+	if body.Explanation != nil {
+		t.Errorf("explanation = %v, want null", body.Explanation)
+	}
 }
 
 // Without a model there is no prediction, and the contract has no insight without one

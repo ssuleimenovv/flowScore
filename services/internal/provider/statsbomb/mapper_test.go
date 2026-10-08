@@ -125,15 +125,39 @@ func TestMapEventUsesKnownName(t *testing.T) {
 	}
 }
 
+// The xG model needs how the shot was taken and what led to it
+func TestMapEventShotSituation(t *testing.T) {
+	tests := []struct {
+		shotType, pattern, bodyPart string
+		header                      bool
+		situation                   string
+	}{
+		{"Open Play", "Regular Play", "Right Foot", false, "open_play"},
+		{"Open Play", "From Corner", "Head", true, "set_piece"},
+		{"Open Play", "From Free Kick", "Left Foot", false, "set_piece"},
+		{"Free Kick", "From Free Kick", "Right Foot", false, "free_kick"},
+		{"Penalty", "Other", "Right Foot", false, "penalty"},
+	}
+	for _, tt := range tests {
+		r := shot(1, "Saved", 0.1)
+		r.PlayPattern = ref{Name: tt.pattern}
+		r.Shot.Type = ref{Name: tt.shotType}
+		r.Shot.BodyPart = ref{Name: tt.bodyPart}
+		got := mapEvent(r, "m1", 1, nil)[0]
+		if got.Header != tt.header || got.Situation != tt.situation {
+			t.Errorf("%s from %s: header %v, situation %q; want %v, %q",
+				tt.shotType, tt.pattern, got.Header, got.Situation, tt.header, tt.situation)
+		}
+	}
+}
+
 func shot(teamID int, outcome string, xg float64) rawEvent {
 	r := rawEvent{
 		ID:   "s1",
 		Type: ref{Name: "Shot"},
 		Team: ref{ID: teamID},
 	}
-	r.Shot = &struct {
-		XG      float64 `json:"statsbomb_xg"`
-		Outcome ref     `json:"outcome"`
-	}{XG: xg, Outcome: ref{Name: outcome}}
+	r.Shot = &rawShot{XG: xg, Outcome: ref{Name: outcome}}
+
 	return r
 }

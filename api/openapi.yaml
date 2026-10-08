@@ -519,6 +519,11 @@ components:
           $ref: '#/components/schemas/PersonRef'
         xG:
           type: [number, 'null']
+          description: StatsBomb's xG of the shot
+        modelXG:
+          type: [number, 'null']
+          description: Our own xG model's (docs/XG.md), from where and how the shot was taken
+
         position:
           type: object
           description: 0–100, attacking left to right

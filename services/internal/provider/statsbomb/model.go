@@ -5,6 +5,13 @@ type ref struct {
 	Name string `json:"name"`
 }
 
+type rawShot struct {
+	XG       float64 `json:"statsbomb_xg"`
+	Outcome  ref     `json:"outcome"`
+	BodyPart ref     `json:"body_part"` // "Head", "Right Foot"
+	Type     ref     `json:"type"`      // "Open Play", "Free Kick", "Penalty"
+}
+
 type rawEvent struct {
 	ID             string    `json:"id"`
 	Period         int       `json:"period"`
@@ -15,11 +22,9 @@ type rawEvent struct {
 	Player         *ref      `json:"player"`
 	Location       []float64 `json:"location"`
 	PossessionTeam ref       `json:"possession_team"`
+	PlayPattern    ref       `json:"play_pattern"` // what the possession started with: "From Corner"
 
-	Shot *struct {
-		XG      float64 `json:"statsbomb_xg"`
-		Outcome ref     `json:"outcome"`
-	} `json:"shot"`
+	Shot *rawShot `json:"shot"`
 
 	Pass *struct {
 		Type       *ref `json:"type"`

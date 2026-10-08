@@ -16,11 +16,13 @@ FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 COPY --from=build /gateway ./gateway
 COPY ai/prediction/model.json ./model.json
+COPY ai/xg/model.json ./xg.json 
 COPY services/demo/statsbomb ./data
 COPY services/demo/insights.json ./insights.json
 ENV FLOWSCORE_DATA=/app/data \
     FLOWSCORE_MATCHES=matches-demo.json \
     FLOWSCORE_MODEL=/app/model.json \
+    FLOWSCORE_XG_MODEL=/app/xg.json \
     FLOWSCORE_INSIGHTS=/app/insights.json
 EXPOSE 8080
 ENTRYPOINT ["/app/gateway"]

@@ -55,10 +55,19 @@ export function chronicle(events: MatchEvent[], match: Match): ChronicleItem[] {
   return items
 }
 
+// "xG 0.08 · наша 0.11": StatsBomb's xG next to our own model's (docs/XG.md)
+function xgLine(e: MatchEvent): string | null {
+  const parts: string[] = []
+  if (typeof e.xG === 'number') parts.push(`xG ${e.xG.toFixed(2)}`)
+  if (typeof e.modelXG === 'number') parts.push(`наша ${e.modelXG.toFixed(2)}`)
+  return parts.length ? parts.join(' · ') : null
+}
+
+
 function describe(e: MatchEvent, match: Match, score: string) {
   const who = e.player ? surname(e.player.name) : null
   const team = e.side ? match[e.side].name : null
-  const xg = typeof e.xG === 'number' ? `xG ${e.xG.toFixed(2)}` : null
+  const xg = xgLine(e)
   const labelled = (title: string, name: string | null) => (name ? `${title} · ${name}` : title)
 
   switch (e.type) {

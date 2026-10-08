@@ -10,6 +10,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/insight"
 	"github.com/ssuleimenovv/flowscore/services/internal/predict"
+	"github.com/ssuleimenovv/flowscore/services/internal/xg"
 )
 
 // Publisher turns Flow updates of one match into contract messages for the hub
@@ -31,6 +32,8 @@ type Publisher struct {
 	rating    float64
 	situation predict.Situation
 	sent      Probabilities // the chances viewers have, to send only a change
+	xg        *xg.Model     // our xG model, nil without one
+
 	// The analysis agent, nil without one; its answers come back on answers
 	agent   *insight.Agent
 	answers chan insight.Answer
@@ -45,6 +48,11 @@ func NewPublisher(hub *Hub, store *Store, matchID string, params flow.Params) *P
 // UseModel makes the Publisher predict the outcome with m (docs/PREDICTION.md).
 func (p *Publisher) UseModel(m *predict.Model) {
 	p.model = m
+}
+
+// UseXG makes the Publisher add our own xG to every shot it sends.
+func (p *Publisher) UseXG(m *xg.Model) {
+	p.xg = m
 }
 
 // UseAgent makes the Publisher ask the agent a for an analysis at the key moment
@@ -278,6 +286,7 @@ func (p *Publisher) matchEvent(e event.Event) MatchEvent {
 		Minute:     minute,
 		AddedTime:  added,
 		XG:         e.XG,
+		ModelXG:    p.modelXG(e),
 		Position:   e.Pos,
 		FlowImpact: &impact,
 	}
@@ -285,6 +294,29 @@ func (p *Publisher) matchEvent(e event.Event) MatchEvent {
 		me.Player = &PersonRef{ID: e.PlayerID, Name: e.Player}
 	}
 	return me
+}
+
+// The xG model measures in StatsBomb's yards; event.Position is 0–100
+const (
+	pitchLength = 120.0
+	pitchWidth  = 80.0
+)
+
+// modelXG is our model's xG of a shot, nil for other events, an own goal or
+// without the model.
+func (p *Publisher) modelXG(e event.Event) *float64 {
+	shot := e.Type == event.ShotOnTarget || e.Type == event.ShotOffTarget ||
+		e.Type == event.ShotBlocked || (e.Type == event.Goal && !e.OwnGoal)
+	if p.xg == nil || !shot || e.Pos == nil {
+		return nil
+	}
+	v := p.xg.XG(xg.Shot{
+		X:         e.Pos.X / 100 * pitchLength,
+		Y:         e.Pos.Y / 100 * pitchWidth,
+		Header:    e.Header,
+		Situation: xg.Situation(e.Situation),
+	})
+	return &v
 }
 
 // emit records the change in the store first and only then sends the message,

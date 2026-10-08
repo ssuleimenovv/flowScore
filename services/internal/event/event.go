@@ -57,6 +57,8 @@ type Event struct {
 	Pos       *Position
 	XG        *float64
 	OwnGoal   bool     // a goal the other team put in its own net: counts, but was no shot
+	Header    bool     // shots only: taken with the head
+	Situation string   // shots only: what led to it, as xg.Situation names it
 	HomeShare *float64 // homeshare is set on possession events: the home team's share of the ball
 	// during the minute, from 0 to 1
 }

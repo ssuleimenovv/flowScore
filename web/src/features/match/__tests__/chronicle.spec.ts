@@ -55,4 +55,16 @@ describe('chronicle', () => {
     )
     expect(red!.impact).toEqual({ text: '−18', side: 'away' })
   })
+  it("puts our xG next to StatsBomb's on a shot", () => {
+    const shots = chronicle(
+      [
+        event({ id: 's2', type: 'shot_on_target', xG: 0.08, modelXG: 0.114 }),
+        event({ id: 's1', type: 'shot_off_target', xG: 0.031 }),
+      ],
+      match,
+    )
+    expect(shots.map((s) => s.detail)).toEqual(['xG 0.08 · наша 0.11', 'xG 0.03'])
+  })
+
+
 })

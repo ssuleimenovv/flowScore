@@ -21,6 +21,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
 	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
+	"github.com/ssuleimenovv/flowscore/services/internal/xg"
 )
 
 // The demo matches: Premier League 2015/16 games with goals for both sides
@@ -37,6 +38,7 @@ func main() {
 	dataDir := flag.String("data", env("FLOWSCORE_DATA", "data/statsbomb"), "folder with the matches, events-<id> and lineups-<id> files")
 	matchesFile := flag.String("matches", env("FLOWSCORE_MATCHES", "matches-2-27.json"), "matches file in the data folder")
 	modelPath := flag.String("model", env("FLOWSCORE_MODEL", "../ai/prediction/model.json"), "outcome model from ai/prediction/fit.py")
+	xgPath := flag.String("xg-model", env("FLOWSCORE_XG_MODEL", "../ai/xg/model.json"), "our xG model from ai/xg/fit.py")
 	originList := flag.String("origins", env("FLOWSCORE_ORIGINS", "localhost:5173,*:5173"), "host patterns of the sites allowed to call the API, comma-separated")
 	llmModel := flag.String("llm-model", env("FLOWSCORE_LLM_MODEL", "gemini-3.1-flash-lite"), "Gemini model that writes the match analysis")
 	llmGap := flag.Duration("llm-gap", 7*time.Second, "pause after each request to the LLM, to stay under its rate limit")
@@ -56,6 +58,10 @@ func main() {
 	model, err := predict.Load(*modelPath)
 	if err != nil {
 		log.Fatalf("outcome model: %v", err)
+	}
+	xgModel, err := xg.Load(*xgPath)
+	if err != nil {
+		log.Fatalf("xG model: %v", err)
 	}
 
 	agent, err := newAgent(ctx, os.Getenv("GEMINI_API_KEY"), *llmModel, *llmGap, *insights)
@@ -82,6 +88,7 @@ func main() {
 		}
 		publisher := live.NewPublisher(hub, store, info.ID, params)
 		publisher.UseModel(&model)
+		publisher.UseXG(&xgModel)
 
 		if agent != nil {
 			publisher.UseAgent(agent)

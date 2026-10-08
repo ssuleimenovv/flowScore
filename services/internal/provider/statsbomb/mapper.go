@@ -46,6 +46,8 @@ func mapEvent(r rawEvent, matchID string, homeTeamID int, names map[int]string) 
 		xg := r.Shot.XG
 		e.XG = &xg
 		e.Type = shotType(r.Shot.Outcome.Name)
+		e.Header = r.Shot.BodyPart.Name == "Head"
+		e.Situation = situation(r)
 		return []event.Event{e}
 
 	case "Pass":
@@ -127,4 +129,20 @@ func cardEvent(base event.Event, card string) event.Event {
 func with(base event.Event, t event.Type) event.Event {
 	base.Type = t
 	return base
+}
+
+// situation is what led to the shot, the way ai/xg/shots.py names it for
+// the xG model: a penalty, a shot straight from a free kick, play that
+// started with a corner or a free kick, or open play.
+func situation(r rawEvent) string {
+	switch {
+	case r.Shot.Type.Name == "Penalty":
+		return "penalty"
+	case r.Shot.Type.Name == "Free Kick":
+		return "free_kick"
+	case r.PlayPattern.Name == "From Corner" || r.PlayPattern.Name == "From Free Kick":
+		return "set_piece"
+	default:
+		return "open_play"
+	}
 }

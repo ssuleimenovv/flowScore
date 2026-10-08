@@ -3,5 +3,6 @@
 *
 !services/
 !ai/prediction/model.json
+!ai/xg/model.json 
 services/data/
 services/**/*_test.go

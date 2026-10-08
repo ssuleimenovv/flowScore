@@ -265,7 +265,10 @@ export interface components {
             addedTime?: number | null;
             player?: components["schemas"]["PersonRef"];
             assist?: components["schemas"]["PersonRef"];
+            /** @description StatsBomb's xG of the shot */
             xG?: number | null;
+            /** @description Our own xG model's (docs/XG.md), from where and how the shot was taken */
+            modelXG?: number | null;
             /** @description 0–100, attacking left to right */
             position?: {
                 x?: number;

@@ -125,6 +125,7 @@ type MatchEvent struct {
 	AddedTime  *int            `json:"addedTime"`
 	Player     *PersonRef      `json:"player"`
 	XG         *float64        `json:"xG"`
+	ModelXG    *float64        `json:"modelXG"` // our own model's xG (docs/XG.md)
 	Position   *event.Position `json:"position,omitempty"`
 	FlowImpact *float64        `json:"flowImpact"`
 }

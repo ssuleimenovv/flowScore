@@ -1,5 +1,6 @@
-# Pings the demo backend every 10 minutes: Render's free plan puts a service to
-# sleep after 15 minutes without requests, and waking it takes up to a minute.
+# Wakes the demo backend if it ever fell asleep. The gateway keeps itself
+# awake (keepAwake in services/cmd/gateway), because GitHub runs scheduled
+# jobs hours late and this alone let Render's free plan sleep after 15 minutes.
 name: Keep the demo awake
 
 on:

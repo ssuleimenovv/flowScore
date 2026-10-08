@@ -133,6 +133,11 @@ func main() {
 		ReadHeaderTimeout: 10 * time.Second, // a client that never finishes its headers is dropped
 	}
 
+	// Render sets its public address; locally there is none and nothing to keep awake
+	if url := os.Getenv("RENDER_EXTERNAL_URL"); url != "" {
+		go keepAwake(ctx, url, 10*time.Minute)
+	}
+
 	go func() {
 		log.Printf("listening on %s, %d matches on the schedule", *addr, len(ids))
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

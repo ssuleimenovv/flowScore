@@ -1,0 +1,87 @@
+{
+  "shots": 9908,
+  "goals": 988,
+  "constant": {
+    "log_loss": 0.3245,
+    "brier": 0.0898,
+    "auc": 0.5
+  },
+  "ours": {
+    "log_loss": 0.2723,
+    "brier": 0.0768,
+    "auc": 0.7742
+  },
+  "statsbomb": {
+    "log_loss": 0.255,
+    "brier": 0.0712,
+    "auc": 0.8093
+  },
+  "ours_minus_statsbomb_log_loss_95": [
+    0.0135,
+    0.0212
+  ],
+  "calibration": [
+    {
+      "predicted": 0.014,
+      "scored": 0.019,
+      "shots": 991
+    },
+    {
+      "predicted": 0.025,
+      "scored": 0.025,
+      "shots": 991
+    },
+    {
+      "predicted": 0.035,
+      "scored": 0.029,
+      "shots": 991
+    },
+    {
+      "predicted": 0.046,
+      "scored": 0.035,
+      "shots": 990
+    },
+    {
+      "predicted": 0.059,
+      "scored": 0.053,
+      "shots": 991
+    },
+    {
+      "predicted": 0.073,
+      "scored": 0.068,
+      "shots": 991
+    },
+    {
+      "predicted": 0.092,
+      "scored": 0.116,
+      "shots": 990
+    },
+    {
+      "predicted": 0.118,
+      "scored": 0.131,
+      "shots": 991
+    },
+    {
+      "predicted": 0.165,
+      "scored": 0.156,
+      "shots": 991
+    },
+    {
+      "predicted": 0.371,
+      "scored": 0.363,
+      "shots": 991
+    }
+  ],
+  "model": {
+    "name": "xG v1",
+    "intercept": -0.771018,
+    "weights": {
+      "distance": -0.111188,
+      "angle": 1.188199,
+      "header": -0.993064,
+      "set_piece": -0.482964,
+      "free_kick": 0.852089,
+      "penalty": 2.803022
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "xG v1",
+  "intercept": -0.771018,
+  "weights": {
+    "distance": -0.111188,
+    "angle": 1.188199,
+    "header": -0.993064,
+    "set_piece": -0.482964,
+    "free_kick": 0.852089,
+    "penalty": 2.803022
+  }
+}

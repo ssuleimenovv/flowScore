@@ -11,10 +11,11 @@ FlowScore turns the raw event stream of a football match (shots, corners, cards,
 possession) into **Flow Momentum**: a 0–100 score per team that rises with pressure
 and decays when it fades. On top of it: a minute-by-minute flow wave, a chronicle
 that shows how much each event moved the flow, live match stats, an explanation of
-what drives the flow, in-play win/draw/loss probabilities and a "what if?" simulator.
+what drives the flow with a short AI analysis, in-play win/draw/loss probabilities,
+our own xG model and a "what if?" simulator.
 
-> Status: **early, actively developed, deployed.** The demo replays a Premier League
-> match (Man City 2–2 Arsenal, 2016) as if it were live. The free backend sleeps when
+> Status: **early, actively developed, deployed.** The demo replays six Premier
+> League matches of 2015/16 on a staggered schedule, as if they were live. The free backend sleeps when
 > idle, so the first visit can take up to a minute to wake it. See the roadmap below.
 
 ---
@@ -42,7 +43,16 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   within 3 points. Adding Flow or xG does not improve it (95% CI of the gain
   includes zero), so Flow stays a "who is pressing now" signal and is not sold
   as a predictor ([docs/PREDICTION.md](docs/PREDICTION.md)).
-- **Own xG model** *(planned)* for sources that do not provide xG.
+- **Our own xG model** for sources that do not provide xG: a logistic regression on
+  distance, angle, header and what led to the shot. On 9,908 shots it scores log
+  loss 0.272 against 0.325 for the base rate and 0.255 for StatsBomb's xG, which
+  also sees the keeper and the defenders: 75% of the way, calibrated within a
+  few points. Go matches the Python fit to 1e-16 ([docs/XG.md](docs/XG.md)).
+- **AI analysis that only retells facts.** At every tenth minute, a goal or a red
+  card, an LLM (Gemini) gets the score, each team's Flow and its factors, the key
+  events and the chances, and writes two or three sentences; it is told to invent
+  nothing. One request at a time, a wait on 429, and every text kept in a file, so
+  the deployed demo spends no quota at all.
 
 ---
 
@@ -57,7 +67,14 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   snapshot; every message carries a `seq`.
 - WebSocket hub (`coder/websocket`): fan-out per match, slow clients are dropped
   instead of blocking others.
-- REST snapshot: `/api/v1/matches/{id}`, `/flow`, `/events`, `/insight`.
+- REST snapshot: `/api/v1/matches`, `/api/v1/matches/{id}`, `/flow`, `/events`,
+  `/insight`.
+- A schedule of six demo matches: each is announced, played and kept on the list
+  for a while, then replayed, staggered so some are always live.
+- Analysis agent (`internal/insight`): a queue in front of the LLM with a timeout,
+  a pause under the rate limit, a wait on 429, a cache keyed by moment and kept on
+  disk; the provider sits behind a `Writer` interface.
+- Our xG model in Go (`internal/xg`) on every shot, next to StatsBomb's.
 - Outcome model in Go, matching the Python fit to 1e-15 on 306 checked cases;
   chances go out on the stream when a whole percent changes.
 - `POST /simulate`: the chances with red cards added later in the match; the rest
@@ -68,10 +85,15 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   update.
 
 **Frontend (Vue 3 + TypeScript)**
+- Home screen: live matches with score, flow sparkline, share bar and the AI
+  headline; the biggest Flow rises of the last 5 minutes; later today; the day's
+  forecast.
 - Match screen per the design mockup: scoreboard with live clock, Flow share bar,
   flow wave (1/5/15-minute smoothing, hover readout, goal markers), chronicle with
-  Flow impact per event, match stats, "why Flow is what it is" factors, outcome
-  probabilities with the change since kick-off.
+  Flow impact per event and both xG values per shot, match stats, the AI analysis
+  next to "why Flow is what it is" factors, outcome probabilities with the change
+  since kick-off, and after the final whistle the result against what the model
+  expected.
 - Simulator screen: pick a red card and a minute, see the scenario against the
   match as it stands and why it moved.
 - Two layouts from one DOM: two-column desktop, tabbed phone view
@@ -125,7 +147,8 @@ orchestrator in Python, push notifications) is described in
 | ML | Python, numpy, pandas, SciPy, scikit-learn |
 | Data | StatsBomb Open Data (demo and validation) |
 | Deploy | Docker (distroless, 19 MB), Render, Vercel, GitHub Actions |
-| Planned | LLM match analysis, PostgreSQL, Redis, Capacitor for iOS/Android |
+| AI | Gemini API (`google.golang.org/genai`), structured output |
+| Planned | PostgreSQL, Redis, Capacitor for iOS/Android |
 
 ---
 
@@ -134,6 +157,7 @@ orchestrator in Python, push notifications) is described in
 ```
 ai/calibration  Flow validation on a StatsBomb season (Python)
 ai/prediction   Outcome model: dataset, fit, validation, model.json (Python)
+ai/xg           Our xG model: shots, fit, validation, model.json (Python)
 api/            OpenAPI contract (REST + WebSocket messages)
 docs/           Architecture and the Flow Momentum spec
 design/         Mockups the UI follows
@@ -147,10 +171,13 @@ services/       Go backend
     live/       Publisher, snapshot store, hub, stats
     api/        REST handlers, CORS
     predict/    Outcome model and "what if" simulation
+    xg/         Our xG model
+    insight/    AI analysis agent: queue, cache, Gemini writer
     provider/   Data sources (StatsBomb replay)
-  demo/         The demo match the deployed gateway replays
+  demo/         The demo matches the deployed gateway replays, and their analysis
   Dockerfile    The gateway image for Render
 web/            Vue client
+  src/features/home        Home screen
   src/features/match       Match screen logic and components
   src/features/simulator   "What if?" screen
   src/shared           API client, live socket, UI kit, theme, motion
@@ -169,9 +196,11 @@ go run ./cmd/gateway -data demo/statsbomb -matches matches-demo.json
 go run ./cmd/gateway -data demo/statsbomb -matches matches-demo.json -speed 600   # a match in ~10 s
 ```
 
-The replay starts when the first viewer connects and loops while anyone watches.
-For the whole 2015/16 season (needed by `ai/`), run
-`python ai/calibration/download.py` and start the gateway without `-data`.
+The six demo matches run on their own schedule from the start. The AI analysis of
+the demo is in `demo/insights.json`; with `GEMINI_API_KEY` set, the gateway also
+asks Gemini about moments it has no text for and adds them to the file. For the
+whole 2015/16 season (needed by `ai/`), run `python ai/calibration/download.py`
+and start the gateway without `-data`.
 
 **2. Frontend.** From `web/`:
 
@@ -180,7 +209,7 @@ npm install
 npm run dev
 ```
 
-Open <http://localhost:5173/matches/3754314>. Vite proxies `/api` and `/ws` to the
+Open <http://localhost:5173/>. Vite proxies `/api` and `/ws` to the
 gateway.
 
 **Docker** (the image Render runs). From the repo root:
@@ -199,12 +228,14 @@ type-check, lint, unit tests and build of the web app; the Docker image build.
 
 | Part | Host | Settings |
 |---|---|---|
-| Gateway | Render, Docker, free | `services/Dockerfile`, context `.`, health check `/healthz`, auto-deploy after CI passes, `FLOWSCORE_ORIGINS=flowscore.vercel.app,flowscore-*.vercel.app` |
+| Gateway | Render, Docker, free | `services/Dockerfile`, context `.`, health check `/healthz`, auto-deploy on commit, `FLOWSCORE_ORIGINS=flowscore.vercel.app,flowscore-*.vercel.app`, `GEMINI_API_KEY` |
 | Web | Vercel | root `web`, `VITE_API_URL=https://flowscore-api-7nwl.onrender.com` |
 
 The gateway reads its settings from flags or the environment: `PORT`,
-`FLOWSCORE_DATA`, `FLOWSCORE_MATCHES`, `FLOWSCORE_MODEL`, `FLOWSCORE_MATCH`,
-`FLOWSCORE_ORIGINS` (host patterns allowed to call the API and the stream).
+`FLOWSCORE_DATA`, `FLOWSCORE_MATCHES`, `FLOWSCORE_MODEL`, `FLOWSCORE_XG_MODEL`,
+`FLOWSCORE_MATCH`, `FLOWSCORE_ORIGINS` (host patterns allowed to call the API and
+the stream), `FLOWSCORE_INSIGHTS`, `FLOWSCORE_LLM_MODEL`; the Gemini key comes only
+from `GEMINI_API_KEY`.
 
 ### Checks
 
@@ -232,8 +263,10 @@ npm run api:types    # regenerate types after changing api/openapi.yaml
 - [x] Outcome probabilities live on the Match screen
 - [x] "What if?" simulator: red cards (players and Flow forecast to come)
 - [x] Deploy: Docker, Render, Vercel, CI on every push
-- [ ] AI match analysis (LLM)
-- [ ] Home, league, team and player screens
+- [x] Home screen with six demo matches on a schedule
+- [x] AI match analysis (Gemini), kept per moment
+- [x] Own xG model, validated on 9,908 shots
+- [ ] League, team and player screens
 - [ ] Auth, favorites, Flow spike notifications
 - [ ] Live data source, iOS and Android builds
 

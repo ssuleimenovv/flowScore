@@ -77,6 +77,7 @@ func ParseSummary(body []byte) (Summary, error) {
 	s := Summary{
 		Match: event.Match{
 			ID:            h.ID,
+			Source:        "espn",
 			CompetitionID: h.League.ID,
 			Competition:   h.League.ShortName,
 			Venue:         raw.GameInfo.Venue.FullName,

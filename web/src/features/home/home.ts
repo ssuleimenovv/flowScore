@@ -4,20 +4,63 @@ import { formatMinute } from '../match/format'
 
 // The home screen's text and shapes. Pure functions, so they are easy to test.
 
-export interface MatchDay {
-  live: MatchSummary[] // live or at the break, by kick-off
-  upcoming: MatchSummary[] // not started yet, soonest first
+// Real matches not started yet, under the day they are played on
+export interface Day {
+  key: string // "2026-10-10", the viewer's own calendar day
+  title: string // "Сегодня", "Завтра", "Суббота, 10 октября"
+  matches: MatchSummary[]
 }
 
-// The matches of one competition, or of all when competition is null. A
-// finished match is not on the home screen: the mockup shows only what is on
-// and what is next.
-export function matchDay(items: MatchSummary[], competition: string | null): MatchDay {
+export interface MatchDay {
+  live: MatchSummary[] // real matches live or at the break, by kick-off
+  days: Day[] // real matches not started yet, soonest first
+  demo: { live: MatchSummary[]; upcoming: MatchSummary[] } // the replays of old matches
+}
+
+// The matches of one competition, or of all when competition is null. Real
+// matches come first, by day; the demo replays go apart, so a replay of 2016
+// is never taken for tonight's match. A finished match is not on the home
+// screen: the mockup shows only what is on and what is next.
+export function matchDay(
+  items: MatchSummary[],
+  competition: string | null,
+  now = new Date(),
+  timeZone?: string,
+): MatchDay {
   const shown = items.filter((m) => competition === null || m.competition.name === competition)
-  return {
-    live: shown.filter((m) => m.status === 'live' || m.status === 'halftime'),
-    upcoming: shown.filter((m) => m.status === 'scheduled'),
+  const playing = (m: MatchSummary) => m.status === 'live' || m.status === 'halftime'
+  const real = shown.filter((m) => m.source !== 'replay')
+  const demo = shown.filter((m) => m.source === 'replay')
+
+  const days: Day[] = []
+  for (const m of real.filter((m) => m.status === 'scheduled')) {
+    const key = dayKey(new Date(m.kickoffAt), timeZone)
+    let day = days.find((d) => d.key === key)
+    if (!day) {
+      day = { key, title: dayName(new Date(m.kickoffAt), now, timeZone), matches: [] }
+      days.push(day)
+    }
+    day.matches.push(m)
   }
+
+  return {
+    live: real.filter(playing),
+    days,
+    demo: { live: demo.filter(playing), upcoming: demo.filter((m) => m.status === 'scheduled') },
+  }
+}
+
+// "2026-10-10" in the viewer's time zone: a match at 00:30 is on the next day
+function dayKey(date: Date, timeZone?: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(date)
+}
+
+// "Сегодня", "Завтра", or the date for a day further on
+function dayName(date: Date, now: Date, timeZone?: string): string {
+  const key = dayKey(date, timeZone)
+  if (key === dayKey(now, timeZone)) return 'Сегодня'
+  if (key === dayKey(new Date(now.getTime() + 24 * 3600 * 1000), timeZone)) return 'Завтра'
+  return dayTitle(date, timeZone)
 }
 
 // The competitions the list has, for the chips: "Premier League"
@@ -38,7 +81,6 @@ export function insightLine(m: MatchSummary): string {
   if (m.explanation) return m.explanation.title
   return explain({ match: m, flow: m.flow, delta10: m.delta10, factors: m.factors }, 0).title
 }
-
 
 // Each side's share of the flow bar in percent; even before anything happened
 export function flowShare(m: MatchSummary): number {
@@ -88,18 +130,19 @@ export function flowPeaks(live: MatchSummary[], minutes = 5, limit = 3): Peak[] 
 }
 
 // "19:40", in the viewer's time zone
-export function kickoffTime(m: MatchSummary): string {
-  return new Intl.DateTimeFormat('ru', { hour: '2-digit', minute: '2-digit' }).format(
+export function kickoffTime(m: MatchSummary, timeZone?: string): string {
+  return new Intl.DateTimeFormat('ru', { hour: '2-digit', minute: '2-digit', timeZone }).format(
     new Date(m.kickoffAt),
   )
 }
 
 // "Понедельник, 5 октября"
-export function dayTitle(date: Date): string {
+export function dayTitle(date: Date, timeZone?: string): string {
   const text = new Intl.DateTimeFormat('ru', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    timeZone,
   }).format(date)
   return text.charAt(0).toUpperCase() + text.slice(1)
 }

@@ -37,7 +37,7 @@ func TestParseSummary(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := s.Match
-	if m.ID != "401879268" || m.Competition != "Premier League" || m.Venue != "Emirates Stadium" ||
+	if m.ID != "401879268" || m.Source != "espn" || m.Competition != "Premier League" || m.Venue != "Emirates Stadium" ||
 		m.Home != (event.Team{ID: "359", Code: "ARS", Name: "Arsenal"}) || m.Away.Code != "LEE" ||
 		!m.KickoffAt.Equal(time.Date(2026, 10, 10, 11, 30, 0, 0, time.UTC)) {
 		t.Errorf("match = %+v", m)

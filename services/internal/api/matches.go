@@ -53,6 +53,7 @@ type venue struct {
 
 type match struct {
 	ID            string         `json:"id"`
+	Source        string         `json:"source"`
 	Status        string         `json:"status"`
 	KickoffAt     time.Time      `json:"kickoffAt"`
 	Competition   competition    `json:"competition"`
@@ -74,6 +75,7 @@ func toMatch(s live.Snapshot) match {
 	m := s.Match
 	return match{
 		ID:            m.ID,
+		Source:        m.Source,
 		Status:        s.Status,
 		KickoffAt:     m.KickoffAt,
 		Competition:   competition{ID: m.CompetitionID, Name: m.Competition, Round: m.Round},

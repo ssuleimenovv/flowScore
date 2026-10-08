@@ -4,7 +4,10 @@ import { kickoffTime } from '../home'
 
 // "Позже сегодня" from the Main boards: kick-off time, the teams and the
 // model's chances before the match. The phone shows time and teams only.
-const { matches } = defineProps<{ matches: MatchSummary[] }>()
+const { matches, empty = 'Больше матчей сегодня нет' } = defineProps<{
+  matches: MatchSummary[]
+  empty?: string
+}>()
 </script>
 
 <template>
@@ -33,7 +36,7 @@ const { matches } = defineProps<{ matches: MatchSummary[] }>()
         </div>
       </div>
     </RouterLink>
-    <p v-if="matches.length === 0" class="none">Больше матчей сегодня нет</p>
+    <p v-if="matches.length === 0" class="none">{{ empty }}</p>
   </div>
 </template>
 

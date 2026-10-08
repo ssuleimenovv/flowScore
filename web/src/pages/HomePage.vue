@@ -1,5 +1,7 @@
 <script setup lang="ts">
-// The home screen (Main and MobileHome boards): what is on now and what is next.
+// The home screen (Main and MobileHome boards): what is on now and what is
+// next. Real matches come first, by day; the demo replays have a block of
+// their own at the end.
 import { computed, onScopeDispose, ref } from 'vue'
 import { competitions, dayForecast, dayTitle, flowPeaks, matchDay } from '@/features/home/home'
 import DayForecast from '@/features/home/ui/DayForecast.vue'
@@ -23,9 +25,11 @@ onScopeDispose(() => clearInterval(timer))
 const competition = ref<string | null>(null)
 const chips = computed(() => [null, ...competitions(items.value)])
 
-const day = computed(() => matchDay(items.value, competition.value))
-const peaks = computed(() => flowPeaks(day.value.live))
-const forecast = computed(() => dayForecast(day.value.upcoming))
+const day = computed(() => matchDay(items.value, competition.value, new Date(now.value)))
+const peaks = computed(() => flowPeaks([...day.value.live, ...day.value.demo.live]))
+// The day's forecast is about the nearest real day; the demo only without one
+const forecast = computed(() => dayForecast(day.value.days[0]?.matches ?? day.value.demo.upcoming))
+const hasDemo = computed(() => day.value.demo.live.length + day.value.demo.upcoming.length > 0)
 const today = dayTitle(new Date())
 </script>
 
@@ -71,8 +75,30 @@ const today = dayTitle(new Date())
         </section>
 
         <section class="later" aria-labelledby="later-title">
-          <h2 id="later-title" class="h2"><span class="index">02</span>Позже сегодня</h2>
-          <UpcomingList :matches="day.upcoming" />
+          <h2 id="later-title" class="h2"><span class="index">02</span>Ближайшие матчи</h2>
+          <div v-for="d in day.days" :key="d.key" class="day">
+            <h3 class="day-title">{{ d.title }}</h3>
+            <UpcomingList :matches="d.matches" />
+          </div>
+          <UpcomingList v-if="day.days.length === 0" :matches="[]" empty="Ближайших матчей нет" />
+        </section>
+
+        <section v-if="hasDemo" class="demo" aria-labelledby="demo-title">
+          <div class="section-head">
+            <h2 id="demo-title" class="h2"><span class="index">03</span>Демо-повторы</h2>
+            <span class="count">АПЛ 2015/16 · x40</span>
+          </div>
+          <div v-if="day.demo.live.length" class="cards">
+            <LiveMatchCard
+              v-for="(m, i) in day.demo.live"
+              :key="m.id"
+              :match="m"
+              :now
+              class="fs-in"
+              :style="{ '--fs-i': i + 1 }"
+            />
+          </div>
+          <UpcomingList v-if="day.demo.upcoming.length" :matches="day.demo.upcoming" />
         </section>
       </div>
 
@@ -179,10 +205,25 @@ const today = dayTitle(new Date())
 }
 
 .live,
-.later {
+.later,
+.demo,
+.day {
   display: flex;
   flex-direction: column;
   gap: var(--fs-space-12);
+}
+
+.later {
+  gap: var(--fs-space-16);
+}
+
+/* "Сегодня", "Завтра", "Суббота, 10 октября" over each day's matches */
+.day-title {
+  color: var(--fs-muted);
+  font-family: var(--fs-font-mono);
+  font-size: var(--fs-text-footnote);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
 
 .live {
@@ -195,6 +236,10 @@ const today = dayTitle(new Date())
 
 .later {
   order: 3;
+}
+
+.demo {
+  order: 4;
 }
 
 /* The day's forecast is a desktop card, as on the boards */

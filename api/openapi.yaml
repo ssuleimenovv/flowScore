@@ -286,10 +286,14 @@ components:
 
     Match:
       type: object
-      required: [id, status, kickoffAt, competition, home, away, score, clock, stats, seq]
+      required: [id, source, status, kickoffAt, competition, home, away, score, clock, stats, seq]
       properties:
         id:
           type: string
+        source:
+          type: string
+          enum: [espn, replay]
+          description: espn for a real match followed live, replay for a demo match played again
         status:
           type: string
           enum: [scheduled, live, halftime, finished, postponed]

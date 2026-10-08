@@ -59,6 +59,7 @@ func LoadMatchInfo(matchesPath string, matchID int) (event.Match, error) {
 
 	return event.Match{
 		ID:            strconv.Itoa(matchID),
+		Source:        "replay", // a StatsBomb match is history, played again
 		CompetitionID: strconv.Itoa(m.Competition.ID),
 		Competition:   m.Competition.Name,
 		Round:         strconv.Itoa(m.MatchWeek),

@@ -160,6 +160,11 @@ export interface components {
         };
         Match: {
             id: string;
+            /**
+             * @description espn for a real match followed live, replay for a demo match played again
+             * @enum {string}
+             */
+            source: "espn" | "replay";
             /** @enum {string} */
             status: "scheduled" | "live" | "halftime" | "finished" | "postponed";
             /** Format: date-time */

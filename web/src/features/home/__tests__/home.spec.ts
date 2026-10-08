@@ -5,6 +5,7 @@ import { dayForecast, flowPeaks, insightLine, liveMinute, matchDay, sparkline } 
 
 function match(over: Partial<MatchSummary> & { id: string }): MatchSummary {
   return {
+    source: 'espn',
     status: 'live',
     kickoffAt: '2026-10-05T18:00:00Z',
     competition: { id: '2', name: 'Premier League' },
@@ -29,18 +30,61 @@ const points = (home: number[], away: number[]) =>
   home.map((h, i) => ({ minute: i + 1, home: h, away: away[i] ?? 15 }))
 
 describe('matchDay', () => {
+  // Thursday evening in Almaty, UTC+5
+  const now = new Date('2026-10-08T15:00:00Z')
+  const tz = 'Asia/Almaty'
+  const at = (id: string, kickoffAt: string) => match({ id, status: 'scheduled', kickoffAt })
+
   it('splits live from upcoming and leaves finished matches out', () => {
     const day = matchDay(
       [
         match({ id: 'a', status: 'live' }),
         match({ id: 'b', status: 'halftime' }),
-        match({ id: 'c', status: 'scheduled' }),
+        at('c', '2026-10-08T17:00:00Z'),
         match({ id: 'd', status: 'finished' }),
       ],
       null,
+      now,
+      tz,
     )
     expect(day.live.map((m) => m.id)).toEqual(['a', 'b'])
-    expect(day.upcoming.map((m) => m.id)).toEqual(['c'])
+    expect(day.days.map((d) => d.matches.map((m) => m.id))).toEqual([['c']])
+  })
+
+  it("puts the real matches under their day, in the viewer's time zone", () => {
+    const day = matchDay(
+      [
+        at('today', '2026-10-08T17:00:00Z'),
+        at('friday', '2026-10-09T18:30:00Z'), // 23:30 on Friday in Almaty
+        at('midnight', '2026-10-09T19:00:00Z'), // 00:00 on Saturday there
+        at('saturday', '2026-10-10T11:30:00Z'),
+      ],
+      null,
+      now,
+      tz,
+    )
+    expect(day.days.map((d) => [d.title, d.matches.map((m) => m.id)])).toEqual([
+      ['Сегодня', ['today']],
+      ['Завтра', ['friday']],
+      ['Суббота, 10 октября', ['midnight', 'saturday']],
+    ])
+  })
+
+  it('keeps the demo replays apart from the real matches', () => {
+    const day = matchDay(
+      [
+        match({ id: 'real' }),
+        match({ id: 'replay', source: 'replay' }),
+        match({ id: 'next', source: 'replay', status: 'scheduled' }),
+      ],
+      null,
+      now,
+      tz,
+    )
+    expect(day.live.map((m) => m.id)).toEqual(['real'])
+    expect(day.demo.live.map((m) => m.id)).toEqual(['replay'])
+    expect(day.demo.upcoming.map((m) => m.id)).toEqual(['next'])
+    expect(day.days).toEqual([])
   })
 
   it('keeps one competition', () => {
@@ -105,7 +149,6 @@ describe('insightLine', () => {
     expect(insightLine(match({ id: 'a' }))).toBe('Равная игра')
   })
 })
-
 
 describe('sparkline', () => {
   it('maps minutes and Flow into the 300 × 60 box', () => {

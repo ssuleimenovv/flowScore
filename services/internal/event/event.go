@@ -25,11 +25,12 @@ const (
 	Possession Type = "possession" // one per match minute, with HomeShare
 	KeyPass    Type = "key_pass"   // a pass that set up a shot
 	Tackle     Type = "tackle"
+	Clock      Type = "clock" // where a live match's clock is, every poll of the source
 )
 
 // Internal reports whether the event only feeds the stats.
 func (t Type) Internal() bool {
-	return t == Possession || t == KeyPass || t == Tackle
+	return t == Possession || t == KeyPass || t == Tackle || t == Clock
 }
 
 type Side string
@@ -59,6 +60,7 @@ type Event struct {
 	OwnGoal   bool     // a goal the other team put in its own net: counts, but was no shot
 	Header    bool     // shots only: taken with the head
 	Situation string   // shots only: what led to it, as xg.Situation names it
+	Stopped   bool     // clock events only: the clock stands still, at the break
 	HomeShare *float64 // homeshare is set on possession events: the home team's share of the ball
 	// during the minute, from 0 to 1
 }

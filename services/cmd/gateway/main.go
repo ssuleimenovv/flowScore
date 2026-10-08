@@ -20,6 +20,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/insight"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
 	"github.com/ssuleimenovv/flowscore/services/internal/predict"
+	"github.com/ssuleimenovv/flowscore/services/internal/provider/espn"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
 	"github.com/ssuleimenovv/flowscore/services/internal/xg"
 )
@@ -43,6 +44,8 @@ func main() {
 	llmModel := flag.String("llm-model", env("FLOWSCORE_LLM_MODEL", "gemini-3.1-flash-lite"), "Gemini model that writes the match analysis")
 	llmGap := flag.Duration("llm-gap", 7*time.Second, "pause after each request to the LLM, to stay under its rate limit")
 	insights := flag.String("insights", env("FLOWSCORE_INSIGHTS", "demo/insights.json"), "file that keeps the analysis texts between starts")
+	espnLeagues := flag.String("espn", env("FLOWSCORE_ESPN", "eng.1"), "ESPN leagues whose real matches to follow, comma-separated; empty for none")
+	espnEvery := flag.Duration("espn-every", 30*time.Second, "how often to read ESPN")
 
 	flag.Parse()
 
@@ -73,6 +76,17 @@ func main() {
 	store := live.NewStore()
 	params := flow.DefaultParams()
 
+	// Every match gets its own Publisher with the same models
+	newPublisher := func(matchID string) *live.Publisher {
+		p := live.NewPublisher(hub, store, matchID, params)
+		p.UseModel(&model)
+		p.UseXG(&xgModel)
+		if agent != nil {
+			p.UseAgent(agent)
+		}
+		return p
+	}
+
 	ids := strings.Split(*matchList, ",")
 	// A match takes 95 minutes of match time; the rounds of the matches are
 	// spread evenly over one cycle, so some are always live and some are next
@@ -86,16 +100,23 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		publisher := live.NewPublisher(hub, store, info.ID, params)
-		publisher.UseModel(&model)
-		publisher.UseXG(&xgModel)
-
-		if agent != nil {
-			publisher.UseAgent(agent)
-		}
+		publisher := newPublisher(info.ID)
 
 		show := schedule{wait: *wait, rest: *rest, first: 20*time.Second + time.Duration(i)*round/time.Duration(len(ids))}
 		go show.run(ctx, hub, publisher, params, info, &replay)
+	}
+
+	if *espnLeagues != "" {
+		follow := liveESPN{
+			client:       espn.NewClient(),
+			leagues:      strings.Split(*espnLeagues, ","),
+			every:        *espnEvery,
+			hub:          hub,
+			store:        store,
+			params:       params,
+			newPublisher: newPublisher,
+		}
+		go follow.run(ctx)
 	}
 
 	origins := strings.Split(*originList, ",")

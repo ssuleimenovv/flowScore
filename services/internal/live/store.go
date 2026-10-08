@@ -66,6 +66,13 @@ func (s *Store) reset(m event.Match, status string, seq int64) {
 	s.matches[m.ID] = &Snapshot{Match: m, Status: status, Period: 1, Seq: seq, UpdatedAt: time.Now().UTC()}
 }
 
+// Remove takes a match off the list: a real match some time after it ended.
+func (s *Store) Remove(matchID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.matches, matchID)
+}
+
 // Get returns a copy of the snapshot. The caller may keep reading it
 // after the lock is released while the Publisher goes on appending.
 func (s *Store) Get(matchID string) (Snapshot, bool) {

@@ -23,6 +23,7 @@ type Publisher struct {
 	params  flow.Params
 	seq     int64
 	period  int
+	stopped bool          // a live source stopped the clock: the break
 	at      time.Duration // match time of the last update
 	stats   *Stats
 	history map[int]FlowValues // Flow at the end of each match minute
@@ -73,6 +74,7 @@ func (p *Publisher) Schedule(match event.Match) {
 func (p *Publisher) Start(match event.Match) {
 	clear(p.history) // minutes of the previous replay
 	p.period = 1
+	p.stopped = false
 	p.at = 0
 	p.tenth = 0
 	p.stats = NewStats()
@@ -128,6 +130,9 @@ func (p *Publisher) update(u flow.Update) {
 		}
 		p.period = u.Cause.Period
 	}
+	if u.Cause != nil && u.Cause.Type == event.Clock {
+		p.stopped = u.Cause.Stopped
+	}
 
 	if u.Cause != nil && !u.Cause.Type.Internal() {
 		me := p.matchEvent(*u.Cause)
@@ -159,7 +164,7 @@ func (p *Publisher) update(u flow.Update) {
 		s.Points = upsertPoint(s.Points, fu.Point)
 		s.At = u.At
 		s.Period = p.period
-		if s.Status == "halftime" && p.period > 1 {
+		if s.Status == "halftime" && p.period > 1 && !p.stopped {
 			s.Status = "live" // the second half has kicked off
 		}
 	})

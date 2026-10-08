@@ -4,10 +4,13 @@ import type { Prediction } from '@/shared/api/types'
 import AppCard from '@/shared/ui/AppCard.vue'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import type { MatchLive } from '../matchState'
-import { formatPreMatch, outcomeColumns } from '../outcome'
+import { finalColumns, finalVerdict, formatPreMatch, outcomeColumns, resultOf } from '../outcome'
 
 // "Вероятность исхода" from the Match boards. full: the desktop card next to
 // the explanation; brief: the phone's flow tab, without the chip and footer.
+// After the final whistle it is "Итог матча": the chances before kick-off,
+// the result marked, and whether the model expected it.
+
 const {
   live,
   prediction,
@@ -19,7 +22,15 @@ const {
 }>()
 
 const titleId = useId()
-const columns = computed(() => outcomeColumns(live.match, prediction))
+const finished = computed(() => live.match.status === 'finished')
+const result = computed(() => (finished.value ? resultOf(live.score) : null))
+const columns = computed(() =>
+  finished.value
+    ? finalColumns(live.match, prediction, live.score)
+    : outcomeColumns(live.match, prediction),
+)
+// The bar draws the same chances as the columns
+const shown = computed(() => (finished.value ? prediction.preMatch : prediction.current))
 </script>
 
 <template>
@@ -31,7 +42,7 @@ const columns = computed(() => outcomeColumns(live.match, prediction))
     :aria-labelledby="titleId"
   >
     <div class="head">
-      <h3 :id="titleId" class="title">Вероятность исхода</h3>
+      <h3 :id="titleId" class="title">{{ finished ? 'Итог матча' : 'Вероятность исхода' }}</h3>
       <span v-if="variant === 'full'" class="chip">
         <AppIcon name="sparkle" :size="14" class="spark" />
         Prediction
@@ -40,21 +51,29 @@ const columns = computed(() => outcomeColumns(live.match, prediction))
 
     <!-- The three chances as one bar: home, draw, away -->
     <div class="bar" aria-hidden="true">
-      <span class="part home" :style="{ width: `${prediction.current.home}%` }" />
-      <span class="part draw" :style="{ width: `${prediction.current.draw}%` }" />
+      <span class="part home" :style="{ width: `${shown.home}%` }" />
+      <span class="part draw" :style="{ width: `${shown.draw}%` }" />
+
       <span class="part away" />
     </div>
 
     <dl class="columns">
-      <div v-for="column in columns" :key="column.key" class="column" :class="column.key">
+      <div
+        v-for="column in columns"
+        :key="column.key"
+        class="column"
+        :class="[column.key, { missed: result && column.key !== result }]"
+      >
         <dt class="label">{{ column.label }}</dt>
         <dd class="value">{{ column.value }}%</dd>
         <dd class="change">{{ column.change }}</dd>
       </div>
     </dl>
 
+    <p v-if="finished" class="verdict">{{ finalVerdict(live.match, prediction, live.score) }}</p>
+
     <div v-if="variant === 'full'" class="foot">
-      <span>{{ formatPreMatch(prediction) }}</span>
+      <span>{{ finished ? 'Шансы до матча' : formatPreMatch(prediction) }}</span>
       <span class="model">{{ prediction.model }}</span>
     </div>
   </AppCard>
@@ -159,6 +178,17 @@ const columns = computed(() => outcomeColumns(live.match, prediction))
   font-variant-numeric: tabular-nums;
   white-space: nowrap; /* "▲ 14 с начала" on one line, even in a phone's third */
 }
+
+/* After the match the outcomes that did not happen step back */
+.column.missed {
+  opacity: 0.4;
+}
+
+.verdict {
+  font-size: var(--fs-text-subheadline);
+  line-height: 1.45;
+}
+
 
 .home .value,
 .home .change {

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Insight, Match, Prediction, WsMessage } from '@/shared/api/types'
 import { applyMessage, fromSnapshot } from '../matchState'
-import { formatPreMatch, outcomeColumns } from '../outcome'
+import { finalColumns, finalVerdict, formatPreMatch, outcomeColumns } from '../outcome'
 
 const match = {
   home: { id: '36', code: 'MCI', name: 'Сити' },
@@ -40,6 +40,33 @@ describe('outcomeColumns', () => {
     expect(formatPreMatch(prediction)).toBe('До матча: 38 · 30 · 32')
   })
 })
+
+describe('after the final whistle', () => {
+  const over = { ...prediction, current: { home: 0, draw: 0, away: 100 } }
+
+  it('shows the pre-match chances and marks the result', () => {
+    const columns = finalColumns(match, over, { home: 4, away: 5 })
+    expect(columns.map((c) => [c.value, c.change])).toEqual([
+      [38, ''],
+      [30, ''],
+      [32, '✓ итог'],
+    ])
+  })
+
+  it("says the model's favourite won", () => {
+    expect(finalVerdict(match, over, { home: 2, away: 0 })).toBe(
+      'Победа Сити 2:0. Модель это ждала: 38% до матча.',
+    )
+  })
+
+  it('says the result surprised the model', () => {
+    expect(finalVerdict(match, over, { home: 1, away: 1 })).toBe(
+      'Ничья 1:1. Неожиданно: до матча модель давала этому 30%.',
+    )
+  })
+})
+
+
 
 describe('prediction in the match state', () => {
   const flow = {

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
-	"strings"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 )
@@ -39,7 +39,6 @@ func play(id, typ string, period int, clock float64, team string) string {
 	return fmt.Sprintf(`{"play": {"id": %q, "type": {"type": %q}, "period": {"number": %d},
 		"clock": {"value": %v, "displayValue": ""}, "team": {"displayName": %q}}}`, id, typ, period, clock, team)
 }
-
 
 func TestParseSummary(t *testing.T) {
 	s, err := ParseSummary([]byte(summary("in", "STATUS_SECOND_HALF", 2, 2770, "2", "1")))
@@ -106,7 +105,6 @@ func TestTracker(t *testing.T) {
 		t.Errorf("full time: %+v, over %v", events, over)
 	}
 }
-
 
 func TestLiveStreamsUntilTheFinalWhistle(t *testing.T) {
 	goal := play("1", "goal", 1, 630, "Arsenal")

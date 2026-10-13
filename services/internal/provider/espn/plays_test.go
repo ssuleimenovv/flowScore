@@ -12,6 +12,10 @@ import (
 const commentary = `{"commentary": [
 	{"sequence": 0, "text": "Lineups are announced and players are warming up."},
 	{"play": {"id": "53551559", "type": {"type": "kickoff"}, "period": {"number": 1}, "clock": {"value": 0, "displayValue": ""}}},
+	{"play": {"id": "53551592", "type": {"type": "foul"}, "period": {"number": 1}, "text": "Jack Rudoni (Coventry City) wins a free kick in the attacking half.",
+		"clock": {"value": 63, "displayValue": "2'"}, "team": {"displayName": "Newcastle United"}, "participants": [{"athlete": {"displayName": "Yoane Wissa"}}]}},
+	{"play": {"id": "53551592", "type": {"type": "foul"}, "period": {"number": 1}, "text": "Foul by Yoane Wissa (Newcastle United).",
+		"clock": {"value": 63, "displayValue": "2'"}, "team": {"displayName": "Newcastle United"}, "participants": [{"athlete": {"displayName": "Yoane Wissa"}}]}},
 	{"play": {"id": "53551972", "type": {"type": "penalty---scored"}, "period": {"number": 1},
 		"clock": {"value": 340, "displayValue": "6'"}, "team": {"displayName": "Coventry City"},
 		"text": "Goal! Coventry City 1, Newcastle United 0. Jack Rudoni (Coventry City) converts the penalty with a left footed shot to the bottom right corner.",
@@ -35,26 +39,30 @@ func TestParsePlays(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Words without a play and the kick-off are not events of ours
-	if len(plays) != 4 {
+	// Words without a play and the kick-off are not events of ours, and a
+	// foul told twice is one play
+	if len(plays) != 5 {
 		t.Fatalf("%d plays: %+v", len(plays), plays)
 	}
 
-	pen := plays[0]
+	if f := plays[0]; f.ID != "401879267:53551592" || f.Type != event.Foul || f.Side != event.Away || f.Player != "Yoane Wissa" {
+		t.Errorf("foul: %+v", f)
+	}
+	pen := plays[1]
 	if pen.ID != "401879267:53551972" || pen.Type != event.Goal || pen.Side != event.Home ||
 		pen.Player != "Jack Rudoni" || pen.Situation != "penalty" || pen.Elapsed != 340*time.Second ||
 		pen.Pos == nil || *pen.Pos != (event.Position{X: 88.5, Y: 50}) {
 		t.Errorf("penalty: %+v", pen)
 	}
-	if h := plays[1]; h.Type != event.ShotOffTarget || h.Side != event.Away || !h.Header ||
+	if h := plays[2]; h.Type != event.ShotOffTarget || h.Side != event.Away || !h.Header ||
 		h.Situation != "open_play" || h.Player != "Joe Willock" || h.Period != 2 {
 		t.Errorf("header: %+v", h)
 	}
-	if c := plays[2]; c.Type != event.YellowCard || c.Side != event.Home || c.Pos != nil || c.Situation != "" {
+	if c := plays[3]; c.Type != event.YellowCard || c.Side != event.Home || c.Pos != nil || c.Situation != "" {
 		t.Errorf("card: %+v", c)
 	}
 	// ESPN's clock stands at 90:00; the two added minutes are only in the text
-	if b := plays[3]; b.Type != event.ShotBlocked || b.Elapsed != 92*time.Minute {
+	if b := plays[4]; b.Type != event.ShotBlocked || b.Elapsed != 92*time.Minute {
 		t.Errorf("stoppage time: %+v", b)
 	}
 }

@@ -66,12 +66,19 @@ func ParsePlays(body []byte, m event.Match) ([]event.Event, error) {
 		return nil, err
 	}
 
-	var out []event.Event
+		var out []event.Event
+	seen := map[string]bool{}
 	for _, c := range raw.Commentary {
 		p := c.Play
 		if p == nil {
 			continue // lineups, warm-up: words without a play
 		}
+		// A foul comes twice, as the free kick won and as the foul: one play
+		if seen[p.ID] {
+			continue
+		}
+		seen[p.ID] = true
+
 		t, ok := playTypes[p.Type.Type]
 		if !ok {
 			continue

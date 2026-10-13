@@ -66,7 +66,7 @@ func ParsePlays(body []byte, m event.Match) ([]event.Event, error) {
 		return nil, err
 	}
 
-		var out []event.Event
+	var out []event.Event
 	seen := map[string]bool{}
 	for _, c := range raw.Commentary {
 		p := c.Play

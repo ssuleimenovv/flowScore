@@ -88,12 +88,6 @@ func (t *tracker) next(s Summary, plays []event.Event) ([]event.Event, bool) {
 		return nil, false
 	}
 
-	period, at, stopped := s.Period, s.Clock, false
-	if s.Status == "STATUS_HALFTIME" {
-		// The break belongs to the second half, with its clock stopped at 45:00
-		period, at, stopped = 2, secondHalf, true
-	}
-
 	var out []event.Event
 	for _, p := range plays {
 		// A play of a half that is over came too late: the publisher has
@@ -103,6 +97,17 @@ func (t *tracker) next(s Summary, plays []event.Event) ([]event.Event, bool) {
 		}
 		t.sent[p.ID] = true
 		out = append(out, p)
+	}
+	// A finished match comes without a clock or a period: a clock at 0:00 of
+	// period 0 would take the match back to before kick-off
+	if s.State == "post" {
+		return out, true
+	}
+
+	period, at, stopped := s.Period, s.Clock, false
+	if s.Status == "STATUS_HALFTIME" {
+		// The break belongs to the second half, with its clock stopped at 45:00
+		period, at, stopped = 2, secondHalf, true
 	}
 	t.period = period
 
@@ -114,5 +119,5 @@ func (t *tracker) next(s Summary, plays []event.Event) ([]event.Event, bool) {
 		Elapsed: at,
 		Stopped: stopped,
 	})
-	return out, s.State == "post"
+	return out, false
 }

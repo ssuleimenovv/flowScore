@@ -99,11 +99,13 @@ func TestTracker(t *testing.T) {
 		t.Errorf("break: %+v", c)
 	}
 
-	// A first-half play written down after the break comes too late
-	events, over := tr.next(parse(t, summary("post", "STATUS_FULL_TIME", 2, 5400, "1", "0")), []event.Event{pen, late, shot})
-	if len(events) != 2 || events[0].ID != "m1:3" || events[1].Type != event.Clock || !over {
+	// A first-half play written down after the break comes too late, and a
+	// finished match has no clock to send
+	events, over := tr.next(parse(t, summary("post", "STATUS_FULL_TIME", 0, 0, "1", "0")), []event.Event{pen, late, shot})
+	if len(events) != 1 || events[0].ID != "m1:3" || !over {
 		t.Errorf("full time: %+v, over %v", events, over)
 	}
+
 }
 
 func TestLiveStreamsUntilTheFinalWhistle(t *testing.T) {
@@ -111,7 +113,7 @@ func TestLiveStreamsUntilTheFinalWhistle(t *testing.T) {
 	polls := []string{
 		summary("in", "STATUS_FIRST_HALF", 1, 600, "0", "0"),
 		summary("in", "STATUS_FIRST_HALF", 1, 630, "1", "0", goal),
-		summary("post", "STATUS_FULL_TIME", 2, 5580, "1", "0", goal),
+		summary("post", "STATUS_FULL_TIME", 0, 0, "1", "0", goal),
 	}
 
 	var n atomic.Int32
@@ -130,7 +132,7 @@ func TestLiveStreamsUntilTheFinalWhistle(t *testing.T) {
 	for e := range events { // the channel closes at the final whistle
 		types = append(types, e.Type)
 	}
-	want := []event.Type{event.Clock, event.Goal, event.Clock, event.Clock}
+	want := []event.Type{event.Clock, event.Goal, event.Clock}
 	if fmt.Sprint(types) != fmt.Sprint(want) {
 		t.Errorf("events %v, want %v", types, want)
 	}

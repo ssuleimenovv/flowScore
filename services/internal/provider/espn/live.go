@@ -22,7 +22,7 @@ func (l *Live) Stream(ctx context.Context, matchID string) (<-chan event.Event, 
 	out := make(chan event.Event)
 	go func() {
 		defer close(out)
-		t := tracker{matchID: matchID}
+		t := tracker{matchID: matchID, sent: map[string]bool{}}
 		for {
 			if over := l.poll(ctx, &t, out); over {
 				return
@@ -40,39 +40,50 @@ func (l *Live) Stream(ctx context.Context, matchID string) (<-chan event.Event, 
 // poll reads the summary once, sends its events and reports whether the
 // match is over. A failed read is only logged: the next poll tries again.
 func (l *Live) poll(ctx context.Context, t *tracker, out chan<- event.Event) bool {
-	body, err := l.Client.Summary(ctx, l.League, t.matchID)
-	if err == nil {
-		var s Summary
-		if s, err = ParseSummary(body); err == nil {
-			events, over := t.next(s)
-			for _, e := range events {
-				select {
-				case out <- e:
-				case <-ctx.Done():
-					return true
-				}
-			}
-			return over
+	s, plays, err := l.read(ctx, t.matchID)
+	if err != nil {
+		log.Printf("espn %s: %v", t.matchID, err)
+		return false
+	}
+	events, over := t.next(s, plays)
+	for _, e := range events {
+		select {
+		case out <- e:
+		case <-ctx.Done():
+			return true
 		}
 	}
-	log.Printf("espn %s: %v", t.matchID, err)
-	return false
+	return over
+}
+
+// read reads the summary once: the match as a whole and its plays
+func (l *Live) read(ctx context.Context, matchID string) (Summary, []event.Event, error) {
+	body, err := l.Client.Summary(ctx, l.League, matchID)
+	if err != nil {
+		return Summary{}, nil, err
+	}
+	s, err := ParseSummary(body)
+	if err != nil {
+		return Summary{}, nil, err
+	}
+	plays, err := ParsePlays(body, s.Match)
+	return s, plays, err
 }
 
 // The second half starts at 45:00 on ESPN's clock, as on ours
 const secondHalf = 45 * time.Minute
 
-// tracker turns successive summaries of one match into events: where the
-// clock is, and a goal for every goal the score went up by. It knows nothing
-// of time itself, so it is tested without a network or a clock.
+// tracker turns successive summaries of one match into events: the plays
+// not sent yet, then where the clock is. It knows nothing of time itself, so
+// it is tested without a network or a clock.
 type tracker struct {
 	matchID string
-	score   Score // what has been sent so far
+	sent    map[string]bool // the plays sent so far, by ID
+	period  int             // the period of the last clock sent
 }
 
 // next returns the events of a new summary and whether the match is over.
-func (t *tracker) next(s Summary) ([]event.Event, bool) {
-	var out []event.Event
+func (t *tracker) next(s Summary, plays []event.Event) ([]event.Event, bool) {
 	if s.State == "pre" {
 		return nil, false
 	}
@@ -83,8 +94,18 @@ func (t *tracker) next(s Summary) ([]event.Event, bool) {
 		period, at, stopped = 2, secondHalf, true
 	}
 
-	out = append(out, t.goals(event.Home, &t.score.Home, s.Score.Home, period, at)...)
-	out = append(out, t.goals(event.Away, &t.score.Away, s.Score.Away, period, at)...)
+	var out []event.Event
+	for _, p := range plays {
+		// A play of a half that is over came too late: the publisher has
+		// moved on to the next one, and would go back
+		if t.sent[p.ID] || p.Period < t.period {
+			continue
+		}
+		t.sent[p.ID] = true
+		out = append(out, p)
+	}
+	t.period = period
+
 	out = append(out, event.Event{
 		ID:      fmt.Sprintf("%s:clock", t.matchID),
 		MatchID: t.matchID,
@@ -94,23 +115,4 @@ func (t *tracker) next(s Summary) ([]event.Event, bool) {
 		Stopped: stopped,
 	})
 	return out, s.State == "post"
-}
-
-// goals sends a goal for each one the score went up by. A goal taken back
-// (VAR) only lowers the count: the event is out already.
-func (t *tracker) goals(side event.Side, sent *int, now, period int, at time.Duration) []event.Event {
-	var out []event.Event
-	for *sent < now {
-		*sent++
-		out = append(out, event.Event{
-			ID:      fmt.Sprintf("%s:goal:%s:%d", t.matchID, side, *sent),
-			MatchID: t.matchID,
-			Type:    event.Goal,
-			Side:    side,
-			Period:  period,
-			Elapsed: at,
-		})
-	}
-	*sent = min(*sent, now)
-	return out
 }

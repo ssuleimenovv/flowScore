@@ -8,12 +8,14 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+	"strings"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 )
 
-// summary is a summary as ESPN sends it, cut down to what ParseSummary reads
-func summary(state, status string, period int, clock float64, home, away string) string {
+// summary is a summary as ESPN sends it, cut down to what ParseSummary and
+// ParsePlays read
+func summary(state, status string, period int, clock float64, home, away string, plays ...string) string {
 	return fmt.Sprintf(`{
 		"header": {
 			"id": "401879268",
@@ -27,9 +29,17 @@ func summary(state, status string, period int, clock float64, home, away string)
 				]
 			}]
 		},
-		"gameInfo": {"venue": {"fullName": "Emirates Stadium"}}
-	}`, clock, period, status, state, home, away)
+		"gameInfo": {"venue": {"fullName": "Emirates Stadium"}},
+		"commentary": [%s]
+	}`, clock, period, status, state, home, away, strings.Join(plays, ","))
 }
+
+// play is one play of a summary's commentary
+func play(id, typ string, period int, clock float64, team string) string {
+	return fmt.Sprintf(`{"play": {"id": %q, "type": {"type": %q}, "period": {"number": %d},
+		"clock": {"value": %v, "displayValue": ""}, "team": {"displayName": %q}}}`, id, typ, period, clock, team)
+}
+
 
 func TestParseSummary(t *testing.T) {
 	s, err := ParseSummary([]byte(summary("in", "STATUS_SECOND_HALF", 2, 2770, "2", "1")))
@@ -63,44 +73,49 @@ func parse(t *testing.T, body string) Summary {
 }
 
 func TestTracker(t *testing.T) {
-	tr := tracker{matchID: "m1"}
+	tr := tracker{matchID: "m1", sent: map[string]bool{}}
+	pen := event.Event{ID: "m1:1", Type: event.Goal, Side: event.Home, Period: 1, Elapsed: 6 * time.Minute}
+	late := event.Event{ID: "m1:2", Type: event.ShotOnTarget, Side: event.Away, Period: 1, Elapsed: 47 * time.Minute}
+	shot := event.Event{ID: "m1:3", Type: event.ShotBlocked, Side: event.Away, Period: 2, Elapsed: 50 * time.Minute}
 
-	if events, over := tr.next(parse(t, summary("pre", "STATUS_SCHEDULED", 0, 0, "", ""))); events != nil || over {
+	if events, over := tr.next(parse(t, summary("pre", "STATUS_SCHEDULED", 0, 0, "", "")), nil); events != nil || over {
 		t.Errorf("before kick-off: %v, %v", events, over)
 	}
 
-	// 1:0 at 23:00: the goal, then where the clock is
-	events, _ := tr.next(parse(t, summary("in", "STATUS_FIRST_HALF", 1, 1380, "1", "0")))
-	if len(events) != 2 || events[0].Type != event.Goal || events[0].Side != event.Home ||
-		events[0].Elapsed != 23*time.Minute || events[1].Type != event.Clock || events[1].Stopped {
+	// The penalty, then where the clock is
+	events, _ := tr.next(parse(t, summary("in", "STATUS_FIRST_HALF", 1, 420, "1", "0")), []event.Event{pen})
+	if len(events) != 2 || events[0].ID != "m1:1" || events[1].Type != event.Clock || events[1].Stopped {
 		t.Errorf("first half: %+v", events)
 	}
 
-	// The same score again sends only the clock
-	events, _ = tr.next(parse(t, summary("in", "STATUS_FIRST_HALF", 1, 1410, "1", "0")))
+	// A play sent already is not sent again
+	events, _ = tr.next(parse(t, summary("in", "STATUS_FIRST_HALF", 1, 450, "1", "0")), []event.Event{pen})
 	if len(events) != 1 || events[0].Type != event.Clock {
-		t.Errorf("no new goal: %+v", events)
+		t.Errorf("nothing new: %+v", events)
 	}
 
 	// The break: the clock stands at 45:00 of the second half
-	events, _ = tr.next(parse(t, summary("in", "STATUS_HALFTIME", 1, 2820, "1", "0")))
+	events, _ = tr.next(parse(t, summary("in", "STATUS_HALFTIME", 1, 2700, "1", "0")), []event.Event{pen})
 	if c := events[0]; c.Type != event.Clock || !c.Stopped || c.Period != 2 || c.Elapsed != 45*time.Minute {
 		t.Errorf("break: %+v", c)
 	}
 
-	// Two goals at once, one each, then the final whistle
-	events, over := tr.next(parse(t, summary("post", "STATUS_FULL_TIME", 2, 5580, "2", "1")))
-	if len(events) != 3 || events[0].ID != "m1:goal:home:2" || events[1].ID != "m1:goal:away:1" || !over {
+	// A first-half play written down after the break comes too late
+	events, over := tr.next(parse(t, summary("post", "STATUS_FULL_TIME", 2, 5400, "1", "0")), []event.Event{pen, late, shot})
+	if len(events) != 2 || events[0].ID != "m1:3" || events[1].Type != event.Clock || !over {
 		t.Errorf("full time: %+v, over %v", events, over)
 	}
 }
 
+
 func TestLiveStreamsUntilTheFinalWhistle(t *testing.T) {
+	goal := play("1", "goal", 1, 630, "Arsenal")
 	polls := []string{
 		summary("in", "STATUS_FIRST_HALF", 1, 600, "0", "0"),
-		summary("in", "STATUS_FIRST_HALF", 1, 630, "1", "0"),
-		summary("post", "STATUS_FULL_TIME", 2, 5580, "1", "0"),
+		summary("in", "STATUS_FIRST_HALF", 1, 630, "1", "0", goal),
+		summary("post", "STATUS_FULL_TIME", 2, 5580, "1", "0", goal),
 	}
+
 	var n atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		i := min(int(n.Add(1))-1, len(polls)-1)

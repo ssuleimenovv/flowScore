@@ -39,9 +39,9 @@ func TestParsePlays(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Words without a play and the kick-off are not events of ours, and a
-	// foul told twice is one play
-	if len(plays) != 5 {
+	// Words without a play and the kick-off are not events of ours, a foul
+	// told twice is one play, and the assisted header brings a key pass
+	if len(plays) != 6 {
 		t.Fatalf("%d plays: %+v", len(plays), plays)
 	}
 
@@ -54,15 +54,20 @@ func TestParsePlays(t *testing.T) {
 		pen.Pos == nil || *pen.Pos != (event.Position{X: 88.5, Y: 50}) {
 		t.Errorf("penalty: %+v", pen)
 	}
-	if h := plays[2]; h.Type != event.ShotOffTarget || h.Side != event.Away || !h.Header ||
+	// The pass that set the header up comes first, at the same moment
+	if k := plays[2]; k.ID != "401879267:53558553:key" || k.Type != event.KeyPass || k.Side != event.Away ||
+		k.Player != "Jacob Murphy" || k.Elapsed != plays[3].Elapsed || k.Pos != nil {
+		t.Errorf("key pass: %+v", k)
+	}
+	if h := plays[3]; h.Type != event.ShotOffTarget || h.Side != event.Away || !h.Header ||
 		h.Situation != "open_play" || h.Player != "Joe Willock" || h.Period != 2 {
 		t.Errorf("header: %+v", h)
 	}
-	if c := plays[3]; c.Type != event.YellowCard || c.Side != event.Home || c.Pos != nil || c.Situation != "" {
+	if c := plays[4]; c.Type != event.YellowCard || c.Side != event.Home || c.Pos != nil || c.Situation != "" {
 		t.Errorf("card: %+v", c)
 	}
 	// ESPN's clock stands at 90:00; the two added minutes are only in the text
-	if b := plays[4]; b.Type != event.ShotBlocked || b.Elapsed != 92*time.Minute {
+	if b := plays[5]; b.Type != event.ShotBlocked || b.Elapsed != 92*time.Minute {
 		t.Errorf("stoppage time: %+v", b)
 	}
 }

@@ -31,7 +31,8 @@ var playTypes = map[string]event.Type{
 }
 
 // ParsePlays reads the commentary of a summary: every play that is an event
-// of ours, oldest first. A play names its team only, so m tells the sides.
+// of ours, oldest first, with a key pass before each assisted shot. A play
+// names its team only, so m tells the sides.
 func ParsePlays(body []byte, m event.Match) ([]event.Event, error) {
 	var raw struct {
 		Commentary []struct {
@@ -106,6 +107,20 @@ func ParsePlays(body []byte, m event.Match) ([]event.Event, error) {
 		if isShot(t) {
 			e.Header = strings.Contains(p.Text, " header ")
 			e.Situation = situation(p.Type.Type, p.Text)
+			// "Assisted by Jacob Murphy with a cross": the second one set it up
+			if len(p.Participants) > 1 && strings.Contains(p.Text, "Assisted by") {
+				a := p.Participants[1].Athlete
+				out = append(out, event.Event{
+					ID:       e.ID + ":key",
+					MatchID:  m.ID,
+					Type:     event.KeyPass,
+					Side:     e.Side,
+					Period:   e.Period,
+					Elapsed:  e.Elapsed,
+					Player:   a.DisplayName,
+					PlayerID: a.ID,
+				})
+			}
 		}
 		out = append(out, e)
 	}

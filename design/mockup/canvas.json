@@ -1,7 +1,24 @@
 {
-  "v": 3,
   "attachments": {},
   "boards": {
+    "About.dc.html": {
+      "h": 1060,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "О приложении · extended-v · тёмная",
+      "w": 1440,
+      "x": 4560,
+      "y": 12600
+    },
+    "AboutLight.dc.html": {
+      "h": 1060,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "О приложении · extended-v · светлая",
+      "w": 1440,
+      "x": 4560,
+      "y": 17100
+    },
     "Admin.dc.html": {
       "h": 1000,
       "is_interactive": true,
@@ -47,6 +64,42 @@
       "x": 1520,
       "y": 8300
     },
+    "CompetitionsExtended.dc.html": {
+      "h": 1360,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Турниры · extended-v · тёмная",
+      "w": 1440,
+      "x": 1520,
+      "y": 10760
+    },
+    "CompetitionsExtendedLight.dc.html": {
+      "h": 1360,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Турниры · extended-v · светлая",
+      "w": 1440,
+      "x": 1520,
+      "y": 15260
+    },
+    "HomeDays.dc.html": {
+      "h": 1500,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Главная: дни и турниры · extended-v · тёмная",
+      "w": 1440,
+      "x": 4560,
+      "y": 10760
+    },
+    "HomeDaysLight.dc.html": {
+      "h": 1500,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Главная: дни и турниры · extended-v · светлая",
+      "w": 1440,
+      "x": 4560,
+      "y": 15260
+    },
     "League.dc.html": {
       "h": 1120,
       "is_interactive": true,
@@ -64,6 +117,24 @@
       "w": 1440,
       "x": 1520,
       "y": 7000
+    },
+    "LeagueStats.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Лига: статистика · extended-v · тёмная",
+      "w": 1440,
+      "x": 0,
+      "y": 12600
+    },
+    "LeagueStatsLight.dc.html": {
+      "h": 1100,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Лига: статистика · extended-v · светлая",
+      "w": 1440,
+      "x": 0,
+      "y": 17100
     },
     "Main.dc.html": {
       "h": 1400,
@@ -92,6 +163,24 @@
       "x": 1520,
       "y": 0
     },
+    "MatchExtended.dc.html": {
+      "h": 1720,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Матч: составы, H2H, коэффициенты · extended-v · тёмная",
+      "w": 1440,
+      "x": 0,
+      "y": 10760
+    },
+    "MatchExtendedLight.dc.html": {
+      "h": 1720,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Матч: составы, H2H, коэффициенты · extended-v · светлая",
+      "w": 1440,
+      "x": 0,
+      "y": 15260
+    },
     "MatchLight.dc.html": {
       "h": 1640,
       "is_interactive": true,
@@ -100,6 +189,42 @@
       "w": 1440,
       "x": 1520,
       "y": 5240
+    },
+    "MatchPhases.dc.html": {
+      "h": 1480,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Матч: фазы и карта ударов · extended-v · тёмная",
+      "w": 1440,
+      "x": 3040,
+      "y": 10760
+    },
+    "MatchPhasesLight.dc.html": {
+      "h": 1480,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Матч: фазы и карта ударов · extended-v · светлая",
+      "w": 1440,
+      "x": 3040,
+      "y": 15260
+    },
+    "MobileAbout.dc.html": {
+      "h": 1700,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "О приложении · extended-v · тёмная",
+      "w": 390,
+      "x": 3290,
+      "y": 5680
+    },
+    "MobileAboutLight.dc.html": {
+      "h": 1700,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "О приложении · extended-v · светлая",
+      "w": 390,
+      "x": 3290,
+      "y": 8580
     },
     "MobileAuth.dc.html": {
       "h": 944,
@@ -119,6 +244,24 @@
       "x": 4230,
       "y": 2800
     },
+    "MobileCompetitionsExtended.dc.html": {
+      "h": 2140,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Турниры · extended-v · тёмная",
+      "w": 390,
+      "x": 470,
+      "y": 5680
+    },
+    "MobileCompetitionsExtendedLight.dc.html": {
+      "h": 2140,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Турниры · extended-v · светлая",
+      "w": 390,
+      "x": 470,
+      "y": 8580
+    },
     "MobileHome.dc.html": {
       "h": 2060,
       "is_interactive": true,
@@ -127,6 +270,24 @@
       "w": 390,
       "x": 0,
       "y": 0
+    },
+    "MobileHomeDays.dc.html": {
+      "h": 1560,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Главная: дни и турниры · extended-v · тёмная",
+      "w": 390,
+      "x": 1410,
+      "y": 5680
+    },
+    "MobileHomeDaysLight.dc.html": {
+      "h": 1560,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Главная: дни и турниры · extended-v · светлая",
+      "w": 390,
+      "x": 1410,
+      "y": 8580
     },
     "MobileHomeLight.dc.html": {
       "h": 2060,
@@ -155,6 +316,24 @@
       "x": 2350,
       "y": 2800
     },
+    "MobileLeagueStats.dc.html": {
+      "h": 1420,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Лига: статистика · extended-v · тёмная",
+      "w": 390,
+      "x": 1880,
+      "y": 5680
+    },
+    "MobileLeagueStatsLight.dc.html": {
+      "h": 1420,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Лига: статистика · extended-v · светлая",
+      "w": 390,
+      "x": 1880,
+      "y": 8580
+    },
     "MobileMatch.dc.html": {
       "h": 1740,
       "is_interactive": true,
@@ -164,6 +343,24 @@
       "x": 470,
       "y": 0
     },
+    "MobileMatchExtended.dc.html": {
+      "h": 2280,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Матч: составы, H2H, коэффициенты · extended-v · тёмная",
+      "w": 390,
+      "x": 0,
+      "y": 5680
+    },
+    "MobileMatchExtendedLight.dc.html": {
+      "h": 2280,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Матч: составы, H2H, коэффициенты · extended-v · светлая",
+      "w": 390,
+      "x": 0,
+      "y": 8580
+    },
     "MobileMatchLight.dc.html": {
       "h": 1740,
       "is_interactive": true,
@@ -172,6 +369,24 @@
       "w": 390,
       "x": 470,
       "y": 2800
+    },
+    "MobileMatchPhases.dc.html": {
+      "h": 1980,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Матч: фазы и карта ударов · extended-v · тёмная",
+      "w": 390,
+      "x": 940,
+      "y": 5680
+    },
+    "MobileMatchPhasesLight.dc.html": {
+      "h": 1980,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Матч: фазы и карта ударов · extended-v · светлая",
+      "w": 390,
+      "x": 940,
+      "y": 8580
     },
     "MobileNotifications.dc.html": {
       "h": 1280,
@@ -191,6 +406,24 @@
       "x": 3290,
       "y": 2800
     },
+    "MobileOnboarding.dc.html": {
+      "h": 960,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Онбординг · extended-v · тёмная",
+      "w": 390,
+      "x": 2820,
+      "y": 5680
+    },
+    "MobileOnboardingLight.dc.html": {
+      "h": 960,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Онбординг · extended-v · светлая",
+      "w": 390,
+      "x": 2820,
+      "y": 8580
+    },
     "MobilePlayer.dc.html": {
       "h": 1740,
       "is_interactive": true,
@@ -208,6 +441,24 @@
       "w": 390,
       "x": 1880,
       "y": 2800
+    },
+    "MobilePlayerSeason.dc.html": {
+      "h": 1380,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Игрок: сезон · extended-v · тёмная",
+      "w": 390,
+      "x": 2350,
+      "y": 5680
+    },
+    "MobilePlayerSeasonLight.dc.html": {
+      "h": 1380,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Игрок: сезон · extended-v · светлая",
+      "w": 390,
+      "x": 2350,
+      "y": 8580
     },
     "MobileProfile.dc.html": {
       "h": 2180,
@@ -272,6 +523,24 @@
       "x": 4700,
       "y": 0
     },
+    "MobileStatesExtended.dc.html": {
+      "h": 2140,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Состояния · extended-v · тёмная",
+      "w": 390,
+      "x": 3760,
+      "y": 5680
+    },
+    "MobileStatesExtendedLight.dc.html": {
+      "h": 2140,
+      "is_interactive": true,
+      "page": "mobile",
+      "title": "Состояния · extended-v · светлая",
+      "w": 390,
+      "x": 3760,
+      "y": 8580
+    },
     "MobileTeam.dc.html": {
       "h": 1660,
       "is_interactive": true,
@@ -308,6 +577,24 @@
       "x": 4560,
       "y": 7000
     },
+    "Onboarding.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Онбординг · extended-v · тёмная",
+      "w": 1440,
+      "x": 3040,
+      "y": 12600
+    },
+    "OnboardingLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Онбординг · extended-v · светлая",
+      "w": 1440,
+      "x": 3040,
+      "y": 17100
+    },
     "Player.dc.html": {
       "h": 1180,
       "is_interactive": true,
@@ -325,6 +612,24 @@
       "w": 1440,
       "x": 0,
       "y": 7000
+    },
+    "PlayerSeason.dc.html": {
+      "h": 1060,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Игрок: сезон · extended-v · тёмная",
+      "w": 1440,
+      "x": 1520,
+      "y": 12600
+    },
+    "PlayerSeasonLight.dc.html": {
+      "h": 1060,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Игрок: сезон · extended-v · светлая",
+      "w": 1440,
+      "x": 1520,
+      "y": 17100
     },
     "Profile.dc.html": {
       "h": 1760,
@@ -388,6 +693,24 @@
       "w": 1440,
       "x": 0,
       "y": 0
+    },
+    "StatesExtended.dc.html": {
+      "h": 820,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Состояния · extended-v · тёмная",
+      "w": 1440,
+      "x": 0,
+      "y": 13820
+    },
+    "StatesExtendedLight.dc.html": {
+      "h": 820,
+      "is_interactive": true,
+      "page": "desktop",
+      "title": "Состояния · extended-v · светлая",
+      "w": 1440,
+      "x": 0,
+      "y": 18320
     },
     "Team.dc.html": {
       "h": 1240,
@@ -454,6 +777,15 @@
       "x": 0,
       "y": 4940
     },
+    "t_dx": {
+      "kind": "title1",
+      "maxW": 5920,
+      "page": "desktop",
+      "text": "extended-v · то, чего не было в мокапе",
+      "w": 240,
+      "x": 0,
+      "y": 10460
+    },
     "t_md": {
       "kind": "title1",
       "maxW": 5090,
@@ -471,6 +803,15 @@
       "w": 240,
       "x": 0,
       "y": 2500
+    },
+    "t_mx": {
+      "kind": "title1",
+      "maxW": 4700,
+      "page": "mobile",
+      "text": "extended-v · то, чего не было в мокапе",
+      "w": 240,
+      "x": 0,
+      "y": 5380
     }
   },
   "order": [
@@ -519,7 +860,43 @@
     "MobileAuthLight.dc.html",
     "States.dc.html",
     "ApiMap.dc.html",
-    "Tokens.dc.html"
+    "Tokens.dc.html",
+    "MatchExtended.dc.html",
+    "CompetitionsExtended.dc.html",
+    "MatchPhases.dc.html",
+    "HomeDays.dc.html",
+    "LeagueStats.dc.html",
+    "PlayerSeason.dc.html",
+    "Onboarding.dc.html",
+    "About.dc.html",
+    "StatesExtended.dc.html",
+    "MatchExtendedLight.dc.html",
+    "CompetitionsExtendedLight.dc.html",
+    "MatchPhasesLight.dc.html",
+    "HomeDaysLight.dc.html",
+    "LeagueStatsLight.dc.html",
+    "PlayerSeasonLight.dc.html",
+    "OnboardingLight.dc.html",
+    "AboutLight.dc.html",
+    "StatesExtendedLight.dc.html",
+    "MobileMatchExtended.dc.html",
+    "MobileCompetitionsExtended.dc.html",
+    "MobileMatchPhases.dc.html",
+    "MobileHomeDays.dc.html",
+    "MobileLeagueStats.dc.html",
+    "MobilePlayerSeason.dc.html",
+    "MobileOnboarding.dc.html",
+    "MobileAbout.dc.html",
+    "MobileStatesExtended.dc.html",
+    "MobileMatchExtendedLight.dc.html",
+    "MobileCompetitionsExtendedLight.dc.html",
+    "MobileMatchPhasesLight.dc.html",
+    "MobileHomeDaysLight.dc.html",
+    "MobileLeagueStatsLight.dc.html",
+    "MobilePlayerSeasonLight.dc.html",
+    "MobileOnboardingLight.dc.html",
+    "MobileAboutLight.dc.html",
+    "MobileStatesExtendedLight.dc.html"
   ],
   "pages": [
     {
@@ -535,5 +912,6 @@
       "name": "Состояния · API · токены"
     }
   ],
-  "title": "FlowScore"
+  "title": "FlowScore",
+  "v": 3
 }

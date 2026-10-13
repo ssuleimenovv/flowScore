@@ -1,9 +1,11 @@
 package espn
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
@@ -74,12 +76,13 @@ func (l *Live) read(ctx context.Context, matchID string) (Summary, []event.Event
 const secondHalf = 45 * time.Minute
 
 // tracker turns successive summaries of one match into events: the plays
-// not sent yet, then where the clock is. It knows nothing of time itself, so
-// it is tested without a network or a clock.
+// not sent yet, the minutes of possession, then where the clock is. It knows
+// nothing of time itself, so it is tested without a network or a clock.
 type tracker struct {
 	matchID string
 	sent    map[string]bool // the plays sent so far, by ID
 	period  int             // the period of the last clock sent
+	ball    ball
 }
 
 // next returns the events of a new summary and whether the match is over.
@@ -109,6 +112,18 @@ func (t *tracker) next(s Summary, plays []event.Event) ([]event.Event, bool) {
 		// The break belongs to the second half, with its clock stopped at 45:00
 		period, at, stopped = 2, secondHalf, true
 	}
+
+	for _, e := range t.ball.next(t.matchID, period, at, s.Possession) {
+		if e.Period >= t.period { // late, as a play can be
+			out = append(out, e)
+		}
+	}
+	// The minutes of possession go between the plays: joining a match under
+	// way, its first hour must not reach the engine after all its shots
+	slices.SortStableFunc(out, func(a, b event.Event) int {
+		return cmp.Or(cmp.Compare(a.Period, b.Period), cmp.Compare(a.Elapsed, b.Elapsed))
+	})
+
 	t.period = period
 
 	out = append(out, event.Event{

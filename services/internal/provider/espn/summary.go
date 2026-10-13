@@ -19,6 +19,9 @@ type Summary struct {
 	Period int           // 1 or 2; 0 before kick-off
 	Clock  time.Duration // match time: 46:10 in the second half is 46m10s
 	Score  Score
+	// Possession is the home team's share of the ball over the match so fat
+	// 0-1; nil until ESPN counts it
+	Possession *float64
 }
 
 type Score struct {
@@ -55,6 +58,17 @@ func ParseSummary(body []byte) (Summary, error) {
 				} `json:"competitors"`
 			} `json:"competitions"`
 		} `json:"header"`
+
+		Boxscore struct {
+			Teams []struct {
+				HomeAway   string `json:"homeAway"`
+				Statistics []struct {
+					Name         string `json:"name"`
+					DisplayValue string `json:"displayValue"` // "33.3"
+				} `json:"statistics"`
+			} `json:"teams"`
+		} `json:"boxscore"`
+
 		GameInfo struct {
 			Venue struct {
 				FullName string `json:"fullName"`
@@ -96,6 +110,26 @@ func ParseSummary(body []byte) (Summary, error) {
 		} else {
 			s.Match.Away, s.Score.Away = team, goals
 		}
+	}
+
+	// Before kick-off there is no share, or one of 0 for both teams
+	var home, away float64
+	for _, t := range raw.Boxscore.Teams {
+		for _, st := range t.Statistics {
+			if st.Name != "possessionPct" {
+				continue
+			}
+			pct, _ := strconv.ParseFloat(st.DisplayValue, 64)
+			if t.HomeAway == "home" {
+				home = pct
+			} else {
+				away = pct
+			}
+		}
+	}
+	if home+away > 0 {
+		share := home / (home + away)
+		s.Possession = &share
 	}
 	return s, nil
 }

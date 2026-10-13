@@ -11,6 +11,7 @@ security:
   - bearerAuth: []
 tags:
   - name: matches
+  - name: leagues
 
 paths:
   /matches:
@@ -160,6 +161,90 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /leagues:
+    get:
+      tags: [leagues]
+      operationId: listLeagues
+      summary: The leagues the gateway follows, in the order the screens show them
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeagueList'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /leagues/{leagueId}:
+    get:
+      tags: [leagues]
+      operationId: getLeague
+      summary: Season, the round being played and the Flow records
+      parameters:
+        - $ref: '#/components/parameters/LeagueId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/League'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/SeasonNotReady'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /leagues/{leagueId}/standings:
+    get:
+      tags: [leagues]
+      operationId: getStandings
+      summary: The table, with each team's average Flow
+      parameters:
+        - $ref: '#/components/parameters/LeagueId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandingList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/SeasonNotReady'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /leagues/{leagueId}/rounds/{round}:
+    get:
+      tags: [leagues]
+      operationId: getRound
+      summary: The matches of one round
+      parameters:
+        - $ref: '#/components/parameters/LeagueId'
+        - name: round
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/SeasonNotReady'
+        default:
+          $ref: '#/components/responses/Error'
+
   /ws/matches/{matchId}/stream:
     servers:
       - url: ws://localhost:8080
@@ -200,6 +285,14 @@ components:
         type: string
       example: m_01J8ZQ4T7K
 
+    LeagueId:
+      name: leagueId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: eng.1
+
   headers:
     ETag:
       schema:
@@ -220,6 +313,17 @@ components:
             $ref: '#/components/schemas/Problem'
     TooManyRequests:
       description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds to wait
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    SeasonNotReady:
+      description: The league is followed, but its season is still being read (about a minute after start)
       headers:
         Retry-After:
           description: Seconds to wait
@@ -802,3 +906,157 @@ components:
               const: insight.update
             data:
               $ref: '#/components/schemas/Explanation'
+
+    LeagueList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [id, name, ready]
+            properties:
+              id:
+                type: string
+                example: eng.1
+              name:
+                type: string
+                example: Премьер-лига
+              ready:
+                type: boolean
+                description: false while the season is still being read
+
+    League:
+      type: object
+      required: [id, name, season, round, rounds, records, updatedAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        season:
+          type: string
+          example: 2026/27
+        round:
+          type: integer
+          description: The round being played, or the next one
+        rounds:
+          type: integer
+          description: Rounds in the season
+        records:
+          type: array
+          description: The matches where one team's Flow was highest on average, best first, at most 3
+          items:
+            $ref: '#/components/schemas/FlowRecord'
+        updatedAt:
+          type: string
+          format: date-time
+
+    FlowRecord:
+      type: object
+      required: [matchId, round, home, away, score, side, flow, peak]
+      properties:
+        matchId:
+          type: string
+        round:
+          type: integer
+        home:
+          $ref: '#/components/schemas/Team'
+        away:
+          $ref: '#/components/schemas/Team'
+        score:
+          $ref: '#/components/schemas/Score'
+        side:
+          $ref: '#/components/schemas/Side'
+        flow:
+          type: number
+          description: That team's Flow averaged over the match, 0–100
+        peak:
+          type: number
+          description: The highest Flow of the match, of either team
+
+    StandingList:
+      type: object
+      required: [leagueId, items]
+      properties:
+        leagueId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Standing'
+
+    Standing:
+      type: object
+      required: [rank, team, played, won, drawn, lost, goalsFor, goalsAgainst, points, zone, flow]
+      properties:
+        rank:
+          type: integer
+        team:
+          $ref: '#/components/schemas/Team'
+        played:
+          type: integer
+        won:
+          type: integer
+        drawn:
+          type: integer
+        lost:
+          type: integer
+        goalsFor:
+          type: integer
+        goalsAgainst:
+          type: integer
+        points:
+          type: integer
+        zone:
+          type: [string, 'null']
+          enum: [champions, europa, conference, relegation, null]
+          description: What the place leads to
+        flow:
+          type: [number, 'null']
+          description: The team's Flow averaged over its matches; null before any is read
+
+    RoundList:
+      type: object
+      required: [leagueId, round, items]
+      properties:
+        leagueId:
+          type: string
+        round:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundMatch'
+
+    RoundMatch:
+      type: object
+      required: [id, kickoffAt, state, clock, home, away, score, flow]
+      properties:
+        id:
+          type: string
+          description: The match's ID on ESPN, the same as on the match screen while it is live
+        kickoffAt:
+          type: string
+          format: date-time
+        state:
+          type: string
+          enum: [pre, in, post]
+        clock:
+          type: string
+          description: The minute as ESPN shows it while in play ("72'"); empty otherwise
+        home:
+          $ref: '#/components/schemas/Team'
+        away:
+          $ref: '#/components/schemas/Team'
+        score:
+          oneOf:
+            - $ref: '#/components/schemas/Score'
+            - type: 'null'
+          description: null before kick-off
+        flow:
+          oneOf:
+            - $ref: '#/components/schemas/FlowValues'
+            - type: 'null'
+          description: Each team's Flow averaged over the match; null until it is over and read

@@ -22,6 +22,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/espn"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
+	"github.com/ssuleimenovv/flowscore/services/internal/season"
 	"github.com/ssuleimenovv/flowscore/services/internal/xg"
 )
 
@@ -46,6 +47,7 @@ func main() {
 	insights := flag.String("insights", env("FLOWSCORE_INSIGHTS", "demo/insights.json"), "file that keeps the analysis texts between starts")
 	espnLeagues := flag.String("espn", env("FLOWSCORE_ESPN", "eng.1"), "ESPN leagues whose real matches to follow, comma-separated; empty for none")
 	espnEvery := flag.Duration("espn-every", 30*time.Second, "how often to read ESPN")
+	seasonEvery := flag.Duration("season-every", 6*time.Hour, "how often to read the seasons of the ESPN leagues again, for their tables and Flow; 0 for never")
 
 	flag.Parse()
 
@@ -106,10 +108,14 @@ func main() {
 		go show.run(ctx, hub, publisher, params, info, &replay)
 	}
 
+	var leagues []string
 	if *espnLeagues != "" {
+		leagues = strings.Split(*espnLeagues, ",")
+	}
+	if len(leagues) > 0 {
 		follow := liveESPN{
 			client:       espn.NewClient(),
-			leagues:      strings.Split(*espnLeagues, ","),
+			leagues:      leagues,
 			every:        *espnEvery,
 			hub:          hub,
 			store:        store,
@@ -117,6 +123,13 @@ func main() {
 			newPublisher: newPublisher,
 		}
 		go follow.run(ctx)
+	}
+
+	// The league screens: each league's season, read once at start and then
+	// again now and then, since a match over stays over
+	seasons := &season.Seasons{Client: espn.NewClient(), Params: params, XG: &xgModel}
+	if len(leagues) > 0 && *seasonEvery > 0 {
+		go seasons.Run(ctx, leagues, *seasonEvery)
 	}
 
 	origins := strings.Split(*originList, ",")
@@ -127,6 +140,8 @@ func main() {
 	})
 	live.Register(mux, hub, origins)
 	api.Register(mux, store)
+	api.RegisterLeagues(mux, seasons, leagues)
+
 	srv := &http.Server{
 		Addr:              *addr,
 		Handler:           api.CORS(mux, origins),

@@ -144,7 +144,7 @@ func (p *Publisher) update(u flow.Update) {
 		})
 	}
 
-	if u.Cause != nil && p.stats.Add(*u.Cause) {
+	if u.Cause != nil && p.stats.Add(*u.Cause, p.modelXG(*u.Cause)) {
 		ms := MatchStats{Stats: p.stats.Rows()}
 		p.emit("match.stats", ms, func(s *Snapshot) { s.Stats = ms.Stats })
 	}

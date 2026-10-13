@@ -24,8 +24,10 @@ func NewStats() *Stats {
 	return &Stats{teams: map[event.Side]*tally{event.Home: {}, event.Away: {}}}
 }
 
-// Add counts the event and reports whether any row changed.
-func (s *Stats) Add(e event.Event) bool {
+// Add counts the event and reports whether any row changed. modelXG is our
+// model's xG of the event, nil when it is no shot: it counts only when the
+// source has no xG of its own, as ESPN has not implemented it.
+func (s *Stats) Add(e event.Event, modelXG *float64) bool {
 	if e.Type == event.Possession {
 		if e.HomeShare == nil {
 			return false
@@ -52,8 +54,11 @@ func (s *Stats) Add(e event.Event) bool {
 	default:
 		return false
 	}
-	if e.XG != nil {
+	switch {
+	case e.XG != nil:
 		t.xg += *e.XG
+	case modelXG != nil:
+		t.xg += *modelXG
 	}
 	return true
 }

@@ -35,15 +35,20 @@ export const router = createRouter({
     },
 
     {
+      path: '/leagues',
+      name: 'leagues',
+      component: () => import('@/pages/LeaguePage.vue'),
+      meta: { tab: 'leagues' },
+    },
+
+    {
       path: '/matches/:matchId/simulator',
       name: 'simulator',
       component: () => import('@/pages/SimulatorPage.vue'),
       meta: { tab: 'simulator', inner: true },
     },
 
-
     // Screens from the mockup that are not built yet
-    { path: '/leagues', component: stub, meta: { tab: 'leagues', stubTitle: 'Лиги' } },
     { path: '/simulator', component: stub, meta: { tab: 'simulator', stubTitle: 'Симулятор' } },
     { path: '/search', component: stub, meta: { tab: 'search', stubTitle: 'Поиск' } },
     { path: '/settings', component: stub, meta: { tab: 'profile', stubTitle: 'Настройки' } },

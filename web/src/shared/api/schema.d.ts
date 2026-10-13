@@ -110,6 +110,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/leagues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The leagues the gateway follows, in the order the screens show them */
+        get: operations["listLeagues"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/leagues/{leagueId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Season, the round being played and the Flow records */
+        get: operations["getLeague"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/leagues/{leagueId}/standings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The table, with each team's average Flow */
+        get: operations["getStandings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/leagues/{leagueId}/rounds/{round}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The matches of one round */
+        get: operations["getRound"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ws/matches/{matchId}/stream": {
         parameters: {
             query?: never;
@@ -432,6 +500,85 @@ export interface components {
              */
             type: "insight.update";
         };
+        LeagueList: {
+            items: {
+                /** @example eng.1 */
+                id: string;
+                /** @example Премьер-лига */
+                name: string;
+                /** @description false while the season is still being read */
+                ready: boolean;
+            }[];
+        };
+        League: {
+            id: string;
+            name: string;
+            /** @example 2026/27 */
+            season: string;
+            /** @description The round being played, or the next one */
+            round: number;
+            /** @description Rounds in the season */
+            rounds: number;
+            /** @description The matches where one team's Flow was highest on average, best first, at most 3 */
+            records: components["schemas"]["FlowRecord"][];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        FlowRecord: {
+            matchId: string;
+            round: number;
+            home: components["schemas"]["Team"];
+            away: components["schemas"]["Team"];
+            score: components["schemas"]["Score"];
+            side: components["schemas"]["Side"];
+            /** @description That team's Flow averaged over the match, 0–100 */
+            flow: number;
+            /** @description The highest Flow of the match, of either team */
+            peak: number;
+        };
+        StandingList: {
+            leagueId: string;
+            items: components["schemas"]["Standing"][];
+        };
+        Standing: {
+            rank: number;
+            team: components["schemas"]["Team"];
+            played: number;
+            won: number;
+            drawn: number;
+            lost: number;
+            goalsFor: number;
+            goalsAgainst: number;
+            points: number;
+            /**
+             * @description What the place leads to
+             * @enum {string|null}
+             */
+            zone: "champions" | "europa" | "conference" | "relegation" | null;
+            /** @description The team's Flow averaged over its matches; null before any is read */
+            flow: number | null;
+        };
+        RoundList: {
+            leagueId: string;
+            round: number;
+            items: components["schemas"]["RoundMatch"][];
+        };
+        RoundMatch: {
+            /** @description The match's ID on ESPN, the same as on the match screen while it is live */
+            id: string;
+            /** Format: date-time */
+            kickoffAt: string;
+            /** @enum {string} */
+            state: "pre" | "in" | "post";
+            /** @description The minute as ESPN shows it while in play ("72'"); empty otherwise */
+            clock: string;
+            home: components["schemas"]["Team"];
+            away: components["schemas"]["Team"];
+            /** @description null before kick-off */
+            score: components["schemas"]["Score"] | null;
+            /** @description Each team's Flow averaged over the match; null until it is over and read */
+            flow: components["schemas"]["FlowValues"] | null;
+        };
     };
     responses: {
         /** @description Access token missing or expired */
@@ -463,6 +610,17 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
+        /** @description The league is followed, but its season is still being read (about a minute after start) */
+        SeasonNotReady: {
+            headers: {
+                /** @description Seconds to wait */
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
         /** @description Unexpected error */
         Error: {
             headers: {
@@ -476,6 +634,8 @@ export interface components {
     parameters: {
         /** @example m_01J8ZQ4T7K */
         MatchId: string;
+        /** @example eng.1 */
+        LeagueId: string;
     };
     requestBodies: never;
     headers: {
@@ -657,6 +817,106 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+            default: components["responses"]["Error"];
+        };
+    };
+    listLeagues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeagueList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getLeague: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example eng.1 */
+                leagueId: components["parameters"]["LeagueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["League"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["SeasonNotReady"];
+            default: components["responses"]["Error"];
+        };
+    };
+    getStandings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example eng.1 */
+                leagueId: components["parameters"]["LeagueId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandingList"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["SeasonNotReady"];
+            default: components["responses"]["Error"];
+        };
+    };
+    getRound: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example eng.1 */
+                leagueId: components["parameters"]["LeagueId"];
+                round: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoundList"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["SeasonNotReady"];
             default: components["responses"]["Error"];
         };
     };

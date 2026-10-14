@@ -234,4 +234,24 @@ const ago = computed(() => {
 .is-brief .factors {
   gap: 10px;
 }
+
+/* Desktop: the card keeps its height while the agent's text and the factors
+   change, so the cards under it do not jump with every update. Room for two
+   lines of title, five of text and all five factors, each on one line */
+.is-full .summary {
+  min-height: calc(
+    var(--fs-text-title-3) * 1.25 * 2 + var(--fs-space-8) + var(--fs-text-subheadline) * 1.55 * 5
+  );
+}
+
+.is-full .factors,
+.is-full .empty {
+  min-height: calc(var(--fs-text-subheadline) * 1.35 * 5 + var(--fs-space-12) * 4);
+}
+
+.is-full .label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

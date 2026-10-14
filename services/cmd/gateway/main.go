@@ -124,24 +124,22 @@ func main() {
 
 	if len(leagues) > 0 {
 		follow := liveESPN{
-			client:       espn.NewClient(),
-			leagues:      leagues,
-			every:        *espnEvery,
-			hub:          hub,
-			store:        store,
-			params:       params,
-						// A real match predicts from this season's ratings; the demo
+			client:  espn.NewClient(),
+			leagues: leagues,
+			every:   *espnEvery,
+			hub:     hub,
+			store:   store,
+			params:  params,
+			// A real match predicts from this season's ratings; the demo
 			// matches are of 2015/16 and keep the model's own
 			newPublisher: func(matchID string) *live.Publisher {
 				p := newPublisher(matchID)
 				p.UseRatings(seasons)
 				return p
 			},
-
 		}
 		go follow.run(ctx)
 	}
-
 
 	origins := strings.Split(*originList, ",")
 	mux := http.NewServeMux()

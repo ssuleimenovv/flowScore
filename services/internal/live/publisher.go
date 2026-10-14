@@ -30,7 +30,8 @@ type Publisher struct {
 
 	// The outcome model, nil without one, and what it knows about the match
 	model     *predict.Model
-	ratings   Ratings // the current season's, nil to use the model's own
+	market    *predict.Outcome // what the bookmakers think before kick-off, nil if unknown
+	ratings   Ratings          // the current season's, nil to use the model's own
 	rating    float64
 	situation predict.Situation
 	sent      Probabilities // the chances viewers have, to send only a change
@@ -62,6 +63,13 @@ type Ratings interface {
 // the model's own ratings only for team r does not know
 func (p *Publisher) UseRatings(r Ratings) {
 	p.ratings = r
+}
+
+// UseMarket makes the chances before kick-off those of the bookmakers, and
+// the live ones start from there. It comes before the ratings, which know
+// only the season's xG, not the squads.
+func (p *Publisher) UseMarket(o predict.Outcome) {
+	p.market = &o
 }
 
 // UseXG makes the Publisher add our own xG to every shot it sends.
@@ -106,6 +114,9 @@ func (p *Publisher) preMatch(match event.Match) {
 		if r, ok := p.ratings.Rating(match.Home, match.Away); ok {
 			p.rating = r
 		}
+	}
+	if p.market != nil {
+		p.rating = p.model.RatingFor(*p.market)
 	}
 	p.situation = predict.Situation{Period: 1}
 	p.sent = toPercents(p.model.Predict(p.rating, p.situation))

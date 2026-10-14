@@ -1,9 +1,9 @@
-package season 
+package season
 
 import "github.com/ssuleimenovv/flowscore/services/internal/event"
 
-// A team's rating counts this many average games before its own, as in 
-// ai/prediction/dataset.py: after 5 matches is is half the team's record
+// A team's rating counts this many average games before its own, as in
+// ai/prediction/dataset.py: after 5 matches it is half the team's record
 // and half "an average team"
 const priorGames = 5
 

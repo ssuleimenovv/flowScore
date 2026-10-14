@@ -8,6 +8,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
+	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/espn"
 )
 
@@ -94,6 +95,9 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 	// Until kick-off the chances follow the season's ratings, which are read
 	// a few minutes after a restart and again every few hours
 	if g.State == "pre" {
+		if m := g.Market; m != nil {
+			game.publisher.UseMarket(predict.Outcome{Home: m.Home, Draw: m.Draw, Away: m.Away})
+		}
 		game.publisher.Schedule(game.info)
 	}
 	if g.State != "pre" && !game.started {

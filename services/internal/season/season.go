@@ -19,7 +19,7 @@ import (
 type League struct {
 	ID        string // "eng.1"
 	Table     espn.Table
-	Games     []Game // the whole season, by kick-off
+	Games     []Game             // the whole season, by kick-off
 	Ratings   map[string]float64 // each team's strength for the outcome model, by team ID
 	UpdatedAt time.Time
 }

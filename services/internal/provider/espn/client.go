@@ -43,6 +43,7 @@ type Game struct {
 	State      string // "pre", "in" or "post"
 	Clock      string // "72'" as ESPN shows it; while in play it is the minute
 	Home, Away Side
+	Market     *Market // nil when ESPN shows no odds
 }
 
 // Side is one team of a game and its goals, "" before kick-off.
@@ -99,6 +100,11 @@ func (c *Client) Board(ctx context.Context, league string, day time.Time) (Board
 						DisplayName  string `json:"displayName"`
 					} `json:"team"`
 				} `json:"competitors"`
+				Odds []struct {
+					Moneyline struct {
+						Home, Draw, Away moneyline
+					} `json:"moneyline"`
+				} `json:"odds"`
 			} `json:"competitions"`
 		} `json:"events"`
 	}
@@ -123,7 +129,12 @@ func (c *Client) Board(ctx context.Context, league string, day time.Time) (Board
 		}
 		g := Game{ID: e.ID, Name: e.Name, Start: start, State: e.Status.Type.State, Clock: e.Status.DisplayClock}
 		if len(e.Competitions) > 0 {
-			for _, t := range e.Competitions[0].Competitors {
+			c := e.Competitions[0]
+			if len(c.Odds) > 0 {
+				ml := c.Odds[0].Moneyline
+				g.Market = market(ml.Home, ml.Draw, ml.Away)
+			}
+			for _, t := range c.Competitors {
 				side := Side{Team: event.Team{ID: t.Team.ID, Code: t.Team.Abbreviation, Name: t.Team.DisplayName}, Score: t.Score}
 				if t.HomeAway == "home" {
 					g.Home = side

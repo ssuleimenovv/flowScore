@@ -45,3 +45,22 @@ func TestPublisherUsesSeasonRatings(t *testing.T) {
 		t.Errorf("Sunderland – City by the model's ratings = %+v", got)
 	}
 }
+
+func TestPublisherUsesMarket(t *testing.T) {
+	model, err := predict.Load("../../../ai/prediction/model.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	store := NewStore()
+	p := NewPublisher(NewHub(), store, "m1", flow.DefaultParams())
+	p.UseModel(&model)
+	// The season rates Everton above Chelsea; the bookmakers know better
+	p.UseRatings(ratings{{"368", "363"}: 0.1})
+	p.UseMarket(predict.Outcome{Home: 0.30, Draw: 0.26, Away: 0.44})
+	p.Schedule(event.Match{ID: "m1", Home: event.Team{ID: "368", Name: "Everton"}, Away: event.Team{ID: "363", Name: "Chelsea"}})
+
+	snap, _ := store.Get("m1")
+	if got := snap.Prediction.PreMatch; got.Away-got.Home < 12 || got.Away-got.Home > 16 {
+		t.Errorf("Everton – Chelsea before kick-off = %+v, want Chelsea about 14 points ahead", got)
+	}
+}

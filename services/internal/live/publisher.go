@@ -30,6 +30,7 @@ type Publisher struct {
 
 	// The outcome model, nil without one, and what it knows about the match
 	model     *predict.Model
+	ratings   Ratings // the current season's, nil to use the model's own
 	rating    float64
 	situation predict.Situation
 	sent      Probabilities // the chances viewers have, to send only a change
@@ -49,6 +50,18 @@ func NewPublisher(hub *Hub, store *Store, matchID string, params flow.Params) *P
 // UseModel makes the Publisher predict the outcome with m (docs/PREDICTION.md).
 func (p *Publisher) UseModel(m *predict.Model) {
 	p.model = m
+}
+
+// Ratings are the team's strength this season: Rating returns the home
+// team's minus the away team's, and false when it does not know them
+type Ratings interface {
+	Rating(home, away event.Team) (float64, bool)
+}
+
+// UseRatings makes the Publisher take the team's strength from r, and from
+// the model's own ratings only for team r does not know
+func (p *Publisher) UseRatings(r Ratings) {
+	p.ratings = r
 }
 
 // UseXG makes the Publisher add our own xG to every shot it sends.
@@ -89,6 +102,11 @@ func (p *Publisher) preMatch(match event.Match) {
 		return
 	}
 	p.rating = p.model.Rating(match.Home.Name, match.Away.Name)
+	if p.ratings != nil {
+		if r, ok := p.ratings.Rating(match.Home, match.Away); ok {
+			p.rating = r
+		}
+	}
 	p.situation = predict.Situation{Period: 1}
 	p.sent = toPercents(p.model.Predict(p.rating, p.situation))
 	prediction := Prediction{Current: p.sent, PreMatch: p.sent, Model: p.model.Name}

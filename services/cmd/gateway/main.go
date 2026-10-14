@@ -112,6 +112,16 @@ func main() {
 	if *espnLeagues != "" {
 		leagues = strings.Split(*espnLeagues, ",")
 	}
+
+	// The league screens and the ratings of the real matches: each league's
+	// season, read once at start and then again now and then, since a match
+	// over stays over
+	// again now and then, since a match over stays over
+	seasons := &season.Seasons{Client: espn.NewClient(), Params: params, XG: &xgModel}
+	if len(leagues) > 0 && *seasonEvery > 0 {
+		go seasons.Run(ctx, leagues, *seasonEvery)
+	}
+
 	if len(leagues) > 0 {
 		follow := liveESPN{
 			client:       espn.NewClient(),
@@ -120,17 +130,18 @@ func main() {
 			hub:          hub,
 			store:        store,
 			params:       params,
-			newPublisher: newPublisher,
+						// A real match predicts from this season's ratings; the demo
+			// matches are of 2015/16 and keep the model's own
+			newPublisher: func(matchID string) *live.Publisher {
+				p := newPublisher(matchID)
+				p.UseRatings(seasons)
+				return p
+			},
+
 		}
 		go follow.run(ctx)
 	}
 
-	// The league screens: each league's season, read once at start and then
-	// again now and then, since a match over stays over
-	seasons := &season.Seasons{Client: espn.NewClient(), Params: params, XG: &xgModel}
-	if len(leagues) > 0 && *seasonEvery > 0 {
-		go seasons.Run(ctx, leagues, *seasonEvery)
-	}
 
 	origins := strings.Split(*originList, ",")
 	mux := http.NewServeMux()

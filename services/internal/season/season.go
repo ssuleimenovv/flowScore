@@ -20,6 +20,7 @@ type League struct {
 	ID        string // "eng.1"
 	Table     espn.Table
 	Games     []Game // the whole season, by kick-off
+	Ratings   map[string]float64 // each team's strength for the outcome model, by team ID
 	UpdatedAt time.Time
 }
 
@@ -123,7 +124,7 @@ func (s *Seasons) Refresh(ctx context.Context, id string) error {
 	if s.leagues == nil {
 		s.leagues = map[string]League{}
 	}
-	s.leagues[id] = League{ID: id, Table: table, Games: games, UpdatedAt: time.Now().UTC()}
+	s.leagues[id] = League{ID: id, Table: table, Games: games, Ratings: ratings(games), UpdatedAt: time.Now().UTC()}
 	return nil
 }
 

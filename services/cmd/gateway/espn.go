@@ -88,9 +88,13 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 			return
 		}
 		game = &liveGame{league: league, info: s.Match, publisher: l.newPublisher(g.ID), done: make(chan struct{})}
-		game.publisher.Schedule(game.info)
 		l.games[g.ID] = game
 		log.Printf("espn: %s, kick-off %s", g.Name, g.Start.Format(time.RFC3339))
+	}
+	// Until kick-off the chances follow the season's ratings, which are read
+	// a few minutes after a restart and again every few hours
+	if g.State == "pre" {
+		game.publisher.Schedule(game.info)
 	}
 	if g.State != "pre" && !game.started {
 		game.started = true

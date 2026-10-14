@@ -13,6 +13,7 @@ import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
 import MatchTabs, { type MatchTab } from '@/features/match/ui/MatchTabs.vue'
 import OutcomeCard from '@/features/match/ui/OutcomeCard.vue'
+import ShotMapCard from '@/features/match/ui/ShotMapCard.vue'
 import SimulatorCta from '@/features/match/ui/SimulatorCta.vue'
 import StatsCard from '@/features/match/ui/StatsCard.vue'
 import { useMatchClock } from '@/features/match/useMatchClock'
@@ -133,6 +134,9 @@ onUnmounted(() => setTitle(null))
             variant="brief"
           />
         </div>
+        <!-- Where the shots came from, then how many: both on the phone's stats tab -->
+        <div class="panel" :class="{ active: tab === 'stats' }"><ShotMapCard :live="state" /></div>
+
         <div class="panel" v-bind="panel('stats')">
           <StatsCard v-if="state.match.stats.length" :live="state" />
           <AppCard v-else class="fs-in">
@@ -146,7 +150,9 @@ onUnmounted(() => setTitle(null))
       </div>
       <aside class="side">
         <div class="panel" v-bind="panel('events')"><ChronicleCard :live="state" /></div>
-        <div class="panel" :class="{ active: tab === 'flow' }"><SimulatorCta :match-id="state.match.id"/></div>
+        <div class="panel" :class="{ active: tab === 'flow' }">
+          <SimulatorCta :match-id="state.match.id" />
+        </div>
         <!-- The phone's AI tab: every factor; the desktop shows them under the wave -->
         <div class="panel narrow-only" v-bind="panel('ai')">
           <ExplainCard :live="state" :updated-at="updatedAt" variant="factors" />

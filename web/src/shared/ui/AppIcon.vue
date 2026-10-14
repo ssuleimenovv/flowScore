@@ -22,6 +22,7 @@ export type IconName =
   | 'offline'
   | 'lock'
   | 'pulse'
+  | 'target'
 
 interface Shape {
   paths: string[]
@@ -77,6 +78,14 @@ const icons: Record<IconName, Shape> = {
     ],
   },
   pulse: { paths: ['M3 12h4l3-8 4 16 3-8h4'] },
+  target: {
+    paths: [],
+    circles: [
+      [12, 12, 9],
+      [12, 12, 5],
+      [12, 12, 1],
+    ],
+  },
 }
 
 const { name, size = 24 } = defineProps<{ name: IconName; size?: number }>()
@@ -95,6 +104,6 @@ const { name, size = 24 } = defineProps<{ name: IconName; size?: number }>()
     aria-hidden="true"
   >
     <path v-for="d in icons[name].paths" :key="d" :d="d" />
-    <circle v-for="[cx, cy, r] in icons[name].circles ?? []" :key="`${cx}-${cy}`" :cx :cy :r />
+    <circle v-for="[cx, cy, r] in icons[name].circles ?? []" :key="`${cx}-${cy}-${r}`" :cx :cy :r />
   </svg>
 </template>

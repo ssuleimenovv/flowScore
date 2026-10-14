@@ -14,8 +14,9 @@ import type {
   WsMessage,
 } from '@/shared/api/types'
 
-// How many timeline events to keep; older ones are dropped.
-const MAX_EVENTS = 100
+// How many timeline events to keep; older ones are dropped. A season match
+// has up to 126, and the shot map needs the first shots till the end.
+const MAX_EVENTS = 200
 
 // MatchLive is the match screen's data: a REST snapshot plus the stream on top.
 export interface MatchLive {
@@ -111,7 +112,7 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
       }
     }
 
-        case 'insight.update': {
+    case 'insight.update': {
       if (message.seq <= state.seq.insight) return state
       return {
         ...state,
@@ -122,7 +123,6 @@ export function applyMessage(state: MatchLive, message: WsMessage): MatchLive {
 
     default:
       return state // a message type this client does not know yet
-
   }
 }
 

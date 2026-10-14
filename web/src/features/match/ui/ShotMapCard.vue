@@ -179,7 +179,6 @@ const label = computed(
 /* A goal is filled in and ringed, so it stands out among the misses */
 .dot.goal {
   z-index: 1;
-  box-shadow: 0 0 0 2px var(--fs-text);
 }
 
 .dot.goal.home {
@@ -248,7 +247,6 @@ const label = computed(
 .mark.goal {
   border: 0;
   background: var(--fs-home);
-  box-shadow: 0 0 0 2px var(--fs-text);
 }
 
 .mark.on {

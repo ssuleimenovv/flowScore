@@ -48,7 +48,12 @@ describe('shots', () => {
   })
 
   it('turns the away team round to attack the left goal', () => {
-    expect(shots(events)[1]).toMatchObject({ outcome: 'on', left: '18%', top: '70%', size: '17px' })
+    expect(shots(events)[1]).toMatchObject({
+      outcome: 'block',
+      left: '18%',
+      top: '70%',
+      size: '17px',
+    })
   })
 
   it('counts every shot in the totals, one without a position too, but not an own goal', () => {

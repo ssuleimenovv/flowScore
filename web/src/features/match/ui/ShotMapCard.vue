@@ -47,7 +47,8 @@ const label = computed(
     <div class="foot">
       <span class="legend" aria-hidden="true">
         <span class="key"><span class="mark home goal" />Гол</span>
-        <span class="key"><span class="mark home on" />В створ / блок</span>
+        <span class="key"><span class="mark home on" />В створ</span>
+        <span class="key"><span class="mark home block" />Блок</span>
         <span class="key"><span class="mark home off" />Мимо</span>
         <span>размер — наша xG</span>
       </span>
@@ -162,11 +163,16 @@ const label = computed(
   border-color: var(--fs-away);
 }
 
-.dot.on.home {
+/* On target: filled with the text color, so it stands out from a miss */
+.dot.on {
+  background: var(--fs-text);
+}
+
+.dot.block.home {
   background: var(--fs-home-soft);
 }
 
-.dot.on.away {
+.dot.block.away {
   background: var(--fs-away-soft);
 }
 
@@ -246,6 +252,10 @@ const label = computed(
 }
 
 .mark.on {
+  background: var(--fs-text);
+}
+
+.mark.block {
   background: var(--fs-home-soft);
 }
 

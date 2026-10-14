@@ -4,7 +4,7 @@ import { surname } from './wave'
 // "Карта ударов" from the MatchPhases boards: every shot where it was taken,
 // the home team attacking to the right and the away team to the left.
 
-export type ShotOutcome = 'goal' | 'on' | 'off' // a blocked shot is drawn as one on target
+export type ShotOutcome = 'goal' | 'on' | 'block' | 'off' // a blocked shot is drawn as one on target
 
 export interface Shot {
   id: string
@@ -24,7 +24,7 @@ export interface ShotTotals {
 const OUTCOMES: Partial<Record<MatchEvent['type'], ShotOutcome>> = {
   goal: 'goal',
   shot_on_target: 'on',
-  shot_blocked: 'on',
+  shot_blocked: 'block',
   shot_off_target: 'off',
 }
 

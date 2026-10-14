@@ -34,8 +34,9 @@ type Publisher struct {
 	ratings   Ratings          // the current season's, nil to use the model's own
 	rating    float64
 	situation predict.Situation
-	sent      Probabilities // the chances viewers have, to send only a change
-	xg        *xg.Model     // our xG model, nil without one
+	sent      Probabilities  // the chances viewers have, to send only a change
+	xg        *xg.Model      // our xG model, nil without one
+	lineups   *event.Lineups // both teams' players, nil until the source has them
 
 	// The analysis agent, nil without one; its answers come back on answers
 	agent   *insight.Agent
@@ -77,6 +78,13 @@ func (p *Publisher) UseXG(m *xg.Model) {
 	p.xg = m
 }
 
+// UseLineups gives the match both teams' players. The source may send them
+// again, with the changes since: they replace the ones before.
+func (p *Publisher) UseLineups(l *event.Lineups) {
+	p.lineups = l
+	p.store.update(p.matchID, func(s *Snapshot) { s.Lineups = l })
+}
+
 // UseAgent makes the Publisher ask the agent a for an analysis at the key moment
 func (p *Publisher) UseAgent(a *insight.Agent) {
 	p.agent = a
@@ -87,6 +95,7 @@ func (p *Publisher) UseAgent(a *insight.Agent) {
 // so the page can load it before anyone starts the replay.
 func (p *Publisher) Schedule(match event.Match) {
 	p.store.Schedule(match, p.seq)
+	p.UseLineups(p.lineups)
 	p.preMatch(match)
 }
 
@@ -100,6 +109,7 @@ func (p *Publisher) Start(match event.Match) {
 	p.tenth = 0
 	p.stats = NewStats()
 	p.store.Start(match, p.seq)
+	p.UseLineups(p.lineups)
 	p.preMatch(match)
 }
 

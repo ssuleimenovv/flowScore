@@ -139,3 +139,27 @@ func TestInsightWithoutModel(t *testing.T) {
 		t.Errorf("status = %d, want 404", res.StatusCode)
 	}
 }
+
+func TestLineups(t *testing.T) {
+	store := live.NewStore()
+	p := live.NewPublisher(live.NewHub(), store, "m1", flow.DefaultParams())
+	p.Start(event.Match{ID: "m1"})
+	mux := http.NewServeMux()
+	Register(mux, store)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	var problem map[string]any
+	if res := get(t, srv.URL+"/api/v1/matches/m1/lineups", &problem); res.StatusCode != http.StatusNotFound {
+		t.Fatalf("before the source has them: status %d", res.StatusCode)
+	}
+
+	p.UseLineups(&event.Lineups{Away: event.Lineup{Players: []event.Player{{ID: "33", Name: "Petr Čech", Starter: true}}}})
+	var body live.MatchLineups
+	if res := get(t, srv.URL+"/api/v1/matches/m1/lineups", &body); res.StatusCode != http.StatusOK {
+		t.Fatalf("status %d", res.StatusCode)
+	}
+	if body.MatchID != "m1" || body.Home.Formation != nil || len(body.Home.Starters) != 0 || body.Away.Starters[0].Name != "Petr Čech" {
+		t.Errorf("lineups %+v", body)
+	}
+}

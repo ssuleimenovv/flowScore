@@ -19,6 +19,7 @@ func Register(mux *http.ServeMux, store *live.Store) {
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/flow", withSnapshot(store, flowResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/events", withSnapshot(store, eventsResponse))
 	mux.HandleFunc("GET /api/v1/matches/{matchId}/insight", insightHandler(store))
+	mux.HandleFunc("GET /api/v1/matches/{matchId}/lineups", lineupsHandler(store))
 	mux.HandleFunc("POST /api/v1/matches/{matchId}/simulate", simulateHandler(store))
 
 }
@@ -183,6 +184,20 @@ func insightHandler(store *live.Store) http.HandlerFunc {
 			Seq:         snap.Seq,
 		})
 
+	}
+}
+
+// lineupsHandler answers 404 until the source has the lineups: ESPN shows
+// them about an hour before kick-off.
+func lineupsHandler(store *live.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		snap, ok := store.Get(r.PathValue("matchId"))
+		lineups, known := live.LineupsOf(snap)
+		if !ok || !known {
+			writeProblem(w, http.StatusNotFound, "No lineups for this match")
+			return
+		}
+		writeJSON(w, http.StatusOK, lineups)
 	}
 }
 

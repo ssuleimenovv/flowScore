@@ -36,6 +36,21 @@ func (r *Replay) Stream(ctx context.Context, matchID string) (<-chan event.Event
 	return play(ctx, evs, r.Speed), nil
 }
 
+// Lineups reads both teams' players of a match, as a source would have
+// them before kick-off. The substitutions are in too: the API shows each
+// only once the replay reaches it.
+func (r *Replay) Lineups(match event.Match) (*event.Lineups, error) {
+	home, err := strconv.Atoi(match.Home.ID)
+	if err != nil {
+		return nil, err
+	}
+	return LoadLineups(
+		filepath.Join(r.EventsDir, "lineups-"+match.ID+".json"),
+		filepath.Join(r.EventsDir, "events-"+match.ID+".json"),
+		home,
+	)
+}
+
 // play sends events with the same gaps as in the real match, scaled by speed.
 func play(ctx context.Context, evs []event.Event, speed float64) <-chan event.Event {
 	out := make(chan event.Event)

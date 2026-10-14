@@ -127,6 +127,29 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /matches/{matchId}/lineups:
+    get:
+      tags: [matches]
+      operationId: getMatchLineups
+      summary: Both teams' players, where the starters stand and the substitutions so far
+      description: |
+        404 until the source has the lineups: ESPN shows them about an hour
+        before kick-off. A substitution is in only once the match has reached
+        it, so a demo replay does not tell the future.
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchLineups'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/Error'
+
   /matches/{matchId}/simulate:
     post:
       tags: [matches]
@@ -672,6 +695,76 @@ components:
         Seq of the last stream message already included in this response.
         Apply only stream messages with a greater seq.
 
+
+    MatchLineups:
+      type: object
+      required: [matchId, home, away]
+      properties:
+        matchId:
+          type: string
+        home:
+          $ref: '#/components/schemas/TeamLineup'
+        away:
+          $ref: '#/components/schemas/TeamLineup'
+
+    TeamLineup:
+      type: object
+      required: [formation, starters, bench]
+      properties:
+        formation:
+          type: [string, 'null']
+          description: '"4-2-3-1"; null when the source does not say'
+          example: 4-2-3-1
+        starters:
+          type: array
+          description: From the keeper forward, each line from the left wing to the right one
+          items:
+            $ref: '#/components/schemas/LineupPlayer'
+        bench:
+          type: array
+          description: The players who came on first, by when
+          items:
+            $ref: '#/components/schemas/LineupPlayer'
+
+    LineupPlayer:
+      type: object
+      required: [id, name, number, position, on, off]
+      properties:
+        id:
+          type: string
+          description: The same as the player id of the match events
+        name:
+          type: string
+        number:
+          type: [string, 'null']
+          description: Shirt number
+        position:
+          type: [object, 'null']
+          description: |
+            Where a starter stands, 0–100 attacking left to right like the
+            event positions; null on the bench
+          required: [x, y]
+          properties:
+            x:
+              type: number
+            y:
+              type: number
+        on:
+          $ref: '#/components/schemas/LineupMinute'
+        off:
+          $ref: '#/components/schemas/LineupMinute'
+
+    LineupMinute:
+      type: [object, 'null']
+      description: When the player came on or went off; null if not, or not yet
+      required: [minute, addedTime]
+      properties:
+        minute:
+          type: integer
+          example: 90
+        addedTime:
+          type: [integer, 'null']
+          example: 3
 
     Probabilities:
       type: object

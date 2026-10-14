@@ -28,8 +28,11 @@ type Snapshot struct {
 	// the Latest analysis, nil until the agent answers. A new one replaces
 	// it whole, so a copy may share it
 	Explanation *Explanation
-	Seq         int64 // last stream message already included
-	UpdatedAt   time.Time
+	// Both teams' players, nil until the source has them. A new lineup
+	// replaces it whole, so a copy may share it
+	Lineups   *event.Lineups
+	Seq       int64 // last stream message already included
+	UpdatedAt time.Time
 }
 
 type Score struct {

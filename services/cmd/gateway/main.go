@@ -103,6 +103,11 @@ func main() {
 			log.Fatal(err)
 		}
 		publisher := newPublisher(info.ID)
+		lineups, err := replay.Lineups(info)
+		if err != nil {
+			log.Fatalf("lineups of %s: %v", info.ID, err)
+		}
+		publisher.UseLineups(lineups)
 
 		show := schedule{wait: *wait, rest: *rest, first: 20*time.Second + time.Duration(i)*round/time.Duration(len(ids))}
 		go show.run(ctx, hub, publisher, params, info, &replay)

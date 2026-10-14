@@ -89,6 +89,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/matches/{matchId}/lineups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Both teams' players, where the starters stand and the substitutions so far
+         * @description 404 until the source has the lineups: ESPN shows them about an hour
+         *     before kick-off. A substitution is in only once the match has reached
+         *     it, so a demo replay does not tell the future.
+         */
+        get: operations["getMatchLineups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/matches/{matchId}/simulate": {
         parameters: {
             query?: never;
@@ -364,6 +386,46 @@ export interface components {
          *     Apply only stream messages with a greater seq.
          */
         SnapshotSeq: number;
+        MatchLineups: {
+            matchId: string;
+            home: components["schemas"]["TeamLineup"];
+            away: components["schemas"]["TeamLineup"];
+        };
+        TeamLineup: {
+            /**
+             * @description "4-2-3-1"; null when the source does not say
+             * @example 4-2-3-1
+             */
+            formation: string | null;
+            /** @description From the keeper forward, each line from the left wing to the right one */
+            starters: components["schemas"]["LineupPlayer"][];
+            /** @description The players who came on first, by when */
+            bench: components["schemas"]["LineupPlayer"][];
+        };
+        LineupPlayer: {
+            /** @description The same as the player id of the match events */
+            id: string;
+            name: string;
+            /** @description Shirt number */
+            number: string | null;
+            /**
+             * @description Where a starter stands, 0–100 attacking left to right like the
+             *     event positions; null on the bench
+             */
+            position: {
+                x: number;
+                y: number;
+            } | null;
+            on: components["schemas"]["LineupMinute"];
+            off: components["schemas"]["LineupMinute"];
+        };
+        /** @description When the player came on or went off; null if not, or not yet */
+        LineupMinute: {
+            /** @example 90 */
+            minute: number;
+            /** @example 3 */
+            addedTime: number | null;
+        } | null;
         /** @description Whole percents of a home win, a draw and an away win; they add up to 100 */
         Probabilities: {
             home: number;
@@ -779,6 +841,31 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["TooManyRequests"];
+            default: components["responses"]["Error"];
+        };
+    };
+    getMatchLineups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example m_01J8ZQ4T7K */
+                matchId: components["parameters"]["MatchId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchLineups"];
+                };
+            };
+            404: components["responses"]["NotFound"];
             default: components["responses"]["Error"];
         };
     };

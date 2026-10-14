@@ -27,6 +27,9 @@
   --fs-seg-selected: #5b5456;
   --fs-bar-bg: rgba(11, 9, 9, 0.78);
   --fs-separator: rgba(84, 84, 88, 0.55);
+  /* Card colors, the same in both themes, as on the MatchExtended board */
+  --fs-card-yellow: #f5c518;
+  --fs-card-red: #e5383b;
 }
 
 :root[data-theme='light'] {

@@ -8,6 +8,7 @@ import ChronicleSkeleton from '@/features/match/ui/ChronicleSkeleton.vue'
 import ExplainCard from '@/features/match/ui/ExplainCard.vue'
 import FlowWaveCard from '@/features/match/ui/FlowWaveCard.vue'
 import FlowWaveSkeleton from '@/features/match/ui/FlowWaveSkeleton.vue'
+import LineupsCard from '@/features/match/ui/LineupsCard.vue'
 import MatchHero from '@/features/match/ui/MatchHero.vue'
 import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
@@ -16,6 +17,7 @@ import OutcomeCard from '@/features/match/ui/OutcomeCard.vue'
 import ShotMapCard from '@/features/match/ui/ShotMapCard.vue'
 import SimulatorCta from '@/features/match/ui/SimulatorCta.vue'
 import StatsCard from '@/features/match/ui/StatsCard.vue'
+import { useLineups } from '@/features/match/useLineups'
 import { useMatchClock } from '@/features/match/useMatchClock'
 import { useMatchLive } from '@/features/match/useMatchLive'
 import { ApiError } from '@/shared/api/http'
@@ -43,6 +45,7 @@ const {
   retry,
 } = useMatchLive(String(route.params.matchId))
 const { online } = useNetwork()
+const { lineups, request: lineupsRequest } = useLineups(String(route.params.matchId), state)
 
 const match = computed(() => state.value?.match)
 const { seconds } = useMatchClock(match)
@@ -146,6 +149,10 @@ onUnmounted(() => setTitle(null))
               text="Удары, xG и владение появятся здесь с первых минут матча."
             />
           </AppCard>
+        </div>
+        <!-- Both elevens and the benches, under the numbers of the match -->
+        <div v-if="lineupsRequest === 'success'" class="panel" :class="{ active: tab === 'stats' }">
+          <LineupsCard :live="state" :lineups />
         </div>
       </div>
       <aside class="side">

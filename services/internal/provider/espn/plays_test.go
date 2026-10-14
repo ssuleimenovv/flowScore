@@ -67,7 +67,7 @@ func TestParsePlays(t *testing.T) {
 		t.Errorf("card: %+v", c)
 	}
 	// ESPN's clock stands at 90:00; the two added minutes are only in the text
-	if b := plays[5]; b.Type != event.ShotBlocked || b.Elapsed != 92*time.Minute {
+	if b := plays[5]; b.Type != event.ShotBlocked || b.Elapsed != 91*time.Minute {
 		t.Errorf("stoppage time: %+v", b)
 	}
 }

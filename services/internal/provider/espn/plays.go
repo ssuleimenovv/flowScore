@@ -128,14 +128,15 @@ func ParsePlays(body []byte, m event.Match) ([]event.Event, error) {
 }
 
 // added is the stoppage time of a clock like "90'+2'": the minutes past
-// 45:00 or 90:00 are only in the text.
+// 45:00 or 90:00 are only in the text. The second added minute starts at
+// 91:00, which our clock shows as 90+2.
 func added(clock string) time.Duration {
 	_, after, ok := strings.Cut(clock, "+")
 	if !ok {
 		return 0
 	}
 	n, _ := strconv.Atoi(strings.TrimSuffix(after, "'"))
-	return time.Duration(n) * time.Minute
+	return time.Duration(max(n-1, 0)) * time.Minute
 }
 
 func isShot(t event.Type) bool {

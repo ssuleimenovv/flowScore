@@ -18,6 +18,9 @@ type Live struct {
 	Client *Client
 	League string // "eng.1"
 	Every  time.Duration
+	// Lineups, if set, gets both teams' players from every summary read:
+	// ESPN adds the substitutions as they happen
+	Lineups func(*event.Lineups)
 }
 
 func (l *Live) Stream(ctx context.Context, matchID string) (<-chan event.Event, error) {
@@ -68,6 +71,14 @@ func (l *Live) read(ctx context.Context, matchID string) (Summary, []event.Event
 	if err != nil {
 		return Summary{}, nil, err
 	}
+	if l.Lineups != nil {
+		if lineups, err := ParseRosters(body); err != nil {
+			log.Printf("espn %s: %v", matchID, err)
+		} else if lineups != nil {
+			l.Lineups(lineups)
+		}
+	}
+
 	plays, err := ParsePlays(body, s.Match)
 	return s, plays, err
 }

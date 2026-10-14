@@ -32,6 +32,7 @@ type liveGame struct {
 	info      event.Match
 	publisher *live.Publisher
 	started   bool
+	lineups   bool          // ESPN has put up the lineups
 	done      chan struct{} // closed when the match has been played out
 }
 
@@ -90,6 +91,7 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 		}
 		game = &liveGame{league: league, info: s.Match, publisher: l.newPublisher(g.ID), done: make(chan struct{})}
 		l.games[g.ID] = game
+		l.readLineups(game, body)
 		log.Printf("espn: %s, kick-off %s", g.Name, g.Start.Format(time.RFC3339))
 	}
 	// Until kick-off the chances follow the season's ratings, which are read
@@ -98,11 +100,35 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 		if m := g.Market; m != nil {
 			game.publisher.UseMarket(predict.Outcome{Home: m.Home, Draw: m.Draw, Away: m.Away})
 		}
+
+		if !game.lineups && time.Until(g.Start) < lineupsAhead {
+			if body, err := l.client.Summary(ctx, league, g.ID); err == nil {
+				l.readLineups(game, body)
+			}
+		}
+
 		game.publisher.Schedule(game.info)
 	}
 	if g.State != "pre" && !game.started {
 		game.started = true
 		go l.play(ctx, game)
+	}
+}
+
+// ESPN puts the lineups up about an hour before kick-off. From this long
+// before, the summary of a match still without them is read on every poll
+const lineupsAhead = 90 * time.Minute
+
+// readLineups gives the match its lineups once the summary has them.
+func (l *liveESPN) readLineups(game *liveGame, body []byte) {
+	lineups, err := espn.ParseRosters(body)
+	if err != nil {
+		log.Printf("espn %s: %v", game.info.ID, err)
+		return
+	}
+	if lineups != nil {
+		game.publisher.UseLineups(lineups)
+		game.lineups = true
 	}
 }
 
@@ -115,7 +141,9 @@ func (l *liveESPN) play(ctx context.Context, g *liveGame) {
 	g.publisher.Start(g.info)
 	l.hub.CloseMatch(g.info.ID)
 
-	source := espn.Live{Client: l.client, League: g.league, Every: l.every}
+	// The lineups come with every summary, with the substitutions so far
+	source := espn.Live{Client: l.client, League: g.league, Every: l.every, Lineups: g.publisher.UseLineups}
+
 	events, err := source.Stream(ctx, g.info.ID)
 	if err != nil {
 		log.Printf("espn %s: %v", g.info.ID, err)

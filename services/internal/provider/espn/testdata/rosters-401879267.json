@@ -1,0 +1,764 @@
+{
+ "rosters": [
+  {
+   "homeAway": "home",
+   "formation": "4-2-3-1",
+   "roster": [
+    {
+     "starter": true,
+     "jersey": "19",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "307069",
+      "displayName": "Carl Rushworth"
+     },
+     "position": {
+      "abbreviation": "G"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "2",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "241093",
+      "displayName": "Ethan Pinnock"
+     },
+     "position": {
+      "abbreviation": "CD-L"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "4",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "303931",
+      "displayName": "Bobby Thomas"
+     },
+     "position": {
+      "abbreviation": "CD-R"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "3",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "206172",
+      "displayName": "Jay Da Silva"
+     },
+     "position": {
+      "abbreviation": "LB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "86'"
+       },
+       "substitution": false
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "27",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "281139",
+      "displayName": "Milan van Ewijk"
+     },
+     "position": {
+      "abbreviation": "RB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "66'"
+       },
+       "substitution": false
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "5",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "286967",
+      "displayName": "Jack Rudoni"
+     },
+     "position": {
+      "abbreviation": "AM"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "6'"
+       },
+       "substitution": false
+      },
+      {
+       "clock": {
+        "displayValue": "83'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "6",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "191337",
+      "displayName": "Matt Grimes"
+     },
+     "position": {
+      "abbreviation": "LM"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "83'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "8",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "387659",
+      "displayName": "Caleb Yirenkyi"
+     },
+     "position": {
+      "abbreviation": "RM"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "78'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "49",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "366817",
+      "displayName": "Sidiki Cherif"
+     },
+     "position": {
+      "abbreviation": "F"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "48'"
+       },
+       "substitution": false
+      },
+      {
+       "clock": {
+        "displayValue": "78'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "10",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "246954",
+      "displayName": "Ephron Mason-Clark"
+     },
+     "position": {
+      "abbreviation": "AM-L"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "61'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "23",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "240495",
+      "displayName": "Brandon Thomas-Asante"
+     },
+     "position": {
+      "abbreviation": "AM-R"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "81'"
+       },
+       "substitution": false
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "12",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "374220",
+      "displayName": "Stephen Mfuni"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "83'"
+       },
+       "substitution": true
+      },
+      {
+       "clock": {
+        "displayValue": "86'"
+       },
+       "substitution": false
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "22",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "260168",
+      "displayName": "Joel Latibeaudiere"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "29",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "256015",
+      "displayName": "Victor Torp"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "83'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "38",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "236912",
+      "displayName": "Gustavo Hamer"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "25",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "143007",
+      "displayName": "Daniel Bentley"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "9",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "282647",
+      "displayName": "Ellis Simms"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "78'"
+       },
+       "substitution": true
+      },
+      {
+       "clock": {
+        "displayValue": "81'"
+       },
+       "substitution": false
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "7",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "302002",
+      "displayName": "Tatsuhiro Sakamoto"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "61'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "34",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "277383",
+      "displayName": "Yann Gboho"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "16",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "258491",
+      "displayName": "Frank Onyeka"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "78'"
+       },
+       "substitution": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "homeAway": "away",
+   "formation": "4-2-3-1",
+   "roster": [
+    {
+     "starter": true,
+     "jersey": "21",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "319267",
+      "displayName": "Lukás Hornícek"
+     },
+     "position": {
+      "abbreviation": "G"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "4",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "274633",
+      "displayName": "Sven Botman"
+     },
+     "position": {
+      "abbreviation": "CD-L"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "70'"
+       },
+       "substitution": false
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "12",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "303444",
+      "displayName": "Malick Thiaw"
+     },
+     "position": {
+      "abbreviation": "CD-R"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "3",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "106139",
+      "displayName": "Lewis Hall"
+     },
+     "position": {
+      "abbreviation": "LB"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "67",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "349078",
+      "displayName": "Lewis Miley"
+     },
+     "position": {
+      "abbreviation": "RB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "59'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "9",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "224077",
+      "displayName": "Yoane Wissa"
+     },
+     "position": {
+      "abbreviation": "AM"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "78'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "28",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "259517",
+      "displayName": "Joe Willock"
+     },
+     "position": {
+      "abbreviation": "LM"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "59'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "6",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "323986",
+      "displayName": "Nico González"
+     },
+     "position": {
+      "abbreviation": "RM"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "70'"
+       },
+       "substitution": false
+      }
+     ]
+    },
+    {
+     "starter": true,
+     "jersey": "20",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "359651",
+      "displayName": "Matias Fernandez-Pardo"
+     },
+     "position": {
+      "abbreviation": "F"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "11",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "243386",
+      "displayName": "Harvey Barnes"
+     },
+     "position": {
+      "abbreviation": "AM-L"
+     }
+    },
+    {
+     "starter": true,
+     "jersey": "23",
+     "subbedIn": false,
+     "subbedOut": true,
+     "athlete": {
+      "id": "172836",
+      "displayName": "Jacob Murphy"
+     },
+     "position": {
+      "abbreviation": "AM-R"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "59'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "5",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "179233",
+      "displayName": "Fabian Schär"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "1",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "161715",
+      "displayName": "Nick Pope"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "37",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "308979",
+      "displayName": "Amar Dedic"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "59'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "33",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "198138",
+      "displayName": "Dan Burn"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "90'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "10",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "319431",
+      "displayName": "William Osula"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "78'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "14",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "384372",
+      "displayName": "Sean Steur"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "17",
+     "subbedIn": true,
+     "subbedOut": true,
+     "athlete": {
+      "id": "359108",
+      "displayName": "Bazoumana Touré"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "59'"
+       },
+       "substitution": true
+      },
+      {
+       "clock": {
+        "displayValue": "90'"
+       },
+       "substitution": true
+      }
+     ]
+    },
+    {
+     "starter": false,
+     "jersey": "8",
+     "subbedIn": false,
+     "subbedOut": false,
+     "athlete": {
+      "id": "396630",
+      "displayName": "Aladji Bamba"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     }
+    },
+    {
+     "starter": false,
+     "jersey": "7",
+     "subbedIn": true,
+     "subbedOut": false,
+     "athlete": {
+      "id": "202232",
+      "displayName": "Joelinton"
+     },
+     "position": {
+      "abbreviation": "SUB"
+     },
+     "plays": [
+      {
+       "clock": {
+        "displayValue": "59'"
+       },
+       "substitution": true
+      },
+      {
+       "clock": {
+        "displayValue": "81'"
+       },
+       "substitution": false
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

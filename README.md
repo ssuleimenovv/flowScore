@@ -4,19 +4,42 @@
 
 **Live football analytics that shows *who is controlling the game right now* — and why.**
 
-**Live demo:** <https://flowscore-pi.vercel.app/matches/3754314> ·
+**Live:** <https://flowscore-pi.vercel.app> ·
+[a demo match](https://flowscore-pi.vercel.app/matches/3754314) ·
+[league tables](https://flowscore-pi.vercel.app/leagues) ·
 [“What if?” simulator](https://flowscore-pi.vercel.app/matches/3754314/simulator)
 
 FlowScore turns the raw event stream of a football match (shots, corners, cards,
 possession) into **Flow Momentum**: a 0–100 score per team that rises with pressure
 and decays when it fades. On top of it: a minute-by-minute flow wave, a chronicle
-that shows how much each event moved the flow, live match stats, an explanation of
-what drives the flow with a short AI analysis, in-play win/draw/loss probabilities,
-our own xG model and a "what if?" simulator.
+that shows how much each event moved the flow, a shot map, both lineups, live match
+stats, an explanation of what drives the flow with a short AI analysis, in-play
+win/draw/loss chances, our own xG model and a "what if?" simulator.
 
-> Status: **early, actively developed, deployed.** The demo replays six Premier
-> League matches of 2015/16 on a staggered schedule, as if they were live. The free backend sleeps when
-> idle, so the first visit can take up to a minute to wake it. See the roadmap below.
+> Status: **early, actively developed, deployed.** The app follows the real matches
+> of the top five European leagues live from ESPN, and between them replays six
+> Premier League matches of 2015/16 as demos. The free backend sleeps when idle, so
+> the first visit can take up to a minute to wake it. See the roadmap below.
+
+![The match screen: a live demo match, its Flow wave with the goals and the chronicle with each event's Flow effect](docs/screenshots/match.png)
+
+---
+
+## Screenshots
+
+Taken from the deployed app.
+
+| Home: today by day, with each match's chances | Leagues: the table with each team's average Flow |
+|---|---|
+| ![Home screen](docs/screenshots/home.png) | ![Leagues screen](docs/screenshots/leagues.png) |
+| **Shot map sized by our xG, and the match stats** | **"What if?": a red card later in the match** |
+| ![Shot map and match stats](docs/screenshots/shot-map-stats.png) | ![Simulator](docs/screenshots/simulator.png) |
+
+<p>
+  <img src="docs/screenshots/phone-match.png" alt="The match screen on a phone" width="260">
+  &nbsp;
+  <img src="docs/screenshots/phone-leagues.png" alt="The leagues screen on a phone" width="260">
+</p>
 
 ---
 
@@ -30,7 +53,7 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   team never shows zero.
 - **Explainable by construction.** Flow is a sum of decaying event contributions,
   so every value can be broken down into the events that caused it ("4 shots in
-  7 minutes: +14").
+  7 minutes: +14"), and every player's part in it can be added up.
 - **Validated on a season.** On 380 Premier League matches (time-blocked
   cross-validation, every match predicted by a model that never saw it), Flow
   predicts whether a team shoots in the next 10 minutes better than the base
@@ -38,11 +61,14 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   reported as such. The same check fixed three weights, including one with the
   wrong sign ([docs/FLOW.md, section 8](docs/FLOW.md)).
 - **An outcome model that says what it can't do.** In-play win/draw/loss
-  probabilities from a Poisson goal model (score, time left, team rating, red
-  cards, a draw fix): log loss 0.746 vs 1.091 for the base rates, calibrated
-  within 3 points. Adding Flow or xG does not improve it (95% CI of the gain
-  includes zero), so Flow stays a "who is pressing now" signal and is not sold
-  as a predictor ([docs/PREDICTION.md](docs/PREDICTION.md)).
+  chances from a Poisson goal model (score, time left, team strength, red cards,
+  a draw fix): log loss 0.746 vs 1.091 for the base rates, calibrated within
+  3 points. Adding Flow or xG does not improve it (95% CI of the gain includes
+  zero), so Flow stays a "who is pressing now" signal and is not sold as a
+  predictor ([docs/PREDICTION.md](docs/PREDICTION.md)). For a real match the
+  team strength comes from this season's xG, and before kick-off the chances
+  start from the market's consensus, so a newcomer to football sees who the
+  favourite is from the first minute; the app shows only the chances.
 - **Our own xG model** for sources that do not provide xG: a logistic regression on
   distance, angle, header and what led to the shot. On 9,908 shots it scores log
   loss 0.272 against 0.325 for the base rate and 0.255 for StatsBomb's xG, which
@@ -52,13 +78,26 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   card, an LLM (Gemini) gets the score, each team's Flow and its factors, the key
   events and the chances, and writes two or three sentences; it is told to invent
   nothing. One request at a time, a wait on 429, and every text kept in a file, so
-  the deployed demo spends no quota at all.
+  the demo spends no quota at all.
 
 ---
 
 ## What works today
 
 **Backend (Go)**
+- **Live matches from ESPN** (Premier League, La Liga, Bundesliga, Serie A,
+  Ligue 1): the scoreboard is polled, every match gets its own engine and
+  publisher at kick-off, and the commentary becomes shots with positions,
+  cards, goals, key passes and substitutions. ESPN's running share of the ball
+  is turned into one possession event per minute.
+- **Lineups** from ESPN about an hour before kick-off and as the match goes, and
+  from StatsBomb for the demos: the starters placed on the lines of their
+  formation, the bench, and every substitution shown only once the match has
+  reached it.
+- **Seasons:** every played match of each league is run through the Flow engine
+  and our xG once, for the league tables with each team's average Flow, the rounds
+  (ESPN does not number them; they are worked out from the fixtures) and the
+  season's Flow records.
 - StatsBomb Open Data replay provider: plays a historical match "live" at any
   speed (×1…×600), with possession reconstructed per minute and player nicknames
   from lineups.
@@ -67,33 +106,33 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
   snapshot; every message carries a `seq`.
 - WebSocket hub (`coder/websocket`): fan-out per match, slow clients are dropped
   instead of blocking others.
-- REST snapshot: `/api/v1/matches`, `/api/v1/matches/{id}`, `/flow`, `/events`,
-  `/insight`.
-- A schedule of six demo matches: each is announced, played and kept on the list
-  for a while, then replayed, staggered so some are always live.
+- REST: `/api/v1/matches`, `/matches/{id}`, `/flow`, `/events`, `/insight`,
+  `/lineups`, `POST /simulate`; `/api/v1/leagues`, `/leagues/{id}`, `/standings`,
+  `/rounds/{round}`.
 - Analysis agent (`internal/insight`): a queue in front of the LLM with a timeout,
   a pause under the rate limit, a wait on 429, a cache keyed by moment and kept on
   disk; the provider sits behind a `Writer` interface.
-- Our xG model in Go (`internal/xg`) on every shot, next to StatsBomb's.
 - Outcome model in Go, matching the Python fit to 1e-15 on 306 checked cases;
-  chances go out on the stream when a whole percent changes.
-- `POST /simulate`: the chances with red cards added later in the match; the rest
-  of the match is split at each red, every piece with its own goal rates.
+  chances go out on the stream when a whole percent changes. "What if?" splits
+  the rest of the match at each added red card.
 - Match stats computed from events: possession, shots, on target, xG, key passes,
-  tackles.
-- Halftime and full-time whistles, first-half score, a clock resynced with every
-  update.
+  tackles; our xG wherever the source has none.
+- A recorder (`cmd/record`) that keeps every ESPN summary of a match day, to
+  build and test the parsers on real data.
 
 **Frontend (Vue 3 + TypeScript)**
-- Home screen: live matches with score, flow sparkline, share bar and the AI
-  headline; the biggest Flow rises of the last 5 minutes; later today; the day's
-  forecast.
+- Home screen by day: live matches with score, flow sparkline, share bar and the
+  AI headline; the biggest Flow rises of the last 5 minutes; the matches still to
+  come with their chances; the demo set apart.
 - Match screen per the design mockup: scoreboard with live clock, Flow share bar,
   flow wave (1/5/15-minute smoothing, hover readout, goal markers), chronicle with
-  Flow impact per event and both xG values per shot, match stats, the AI analysis
-  next to "why Flow is what it is" factors, outcome probabilities with the change
-  since kick-off, and after the final whistle the result against what the model
-  expected.
+  Flow impact per event and both xG values per shot, **shot map** sized by xG,
+  match stats, **lineups** on a pitch or as a list with each player's part in the
+  Flow, the AI analysis next to "why Flow is what it is", outcome chances with the
+  change since kick-off, and after the final whistle the result against what the
+  model expected.
+- **Leagues screen:** the table with the European and relegation places and each
+  team's average Flow, the matches of any round, the season's Flow records.
 - Simulator screen: pick a red card and a minute, see the scenario against the
   match as it stands and why it moved.
 - Two layouts from one DOM: two-column desktop, tabbed phone view
@@ -101,10 +140,10 @@ Momentum graphs exist elsewhere. FlowScore's goal is to make the metric
 - **Snapshot + stream merge:** the client loads a REST snapshot, buffers stream
   messages meanwhile, applies only messages newer than each part of the snapshot,
   and reloads on any `seq` gap.
-- Reconnect with exponential backoff and jitter, offline and reconnect banners,
-  skeletons, empty, error and 404 states.
+- Every screen has its loading, empty, error, offline and reconnecting states;
+  reconnect with exponential backoff and jitter.
 - Light and dark themes via design tokens, reduced-motion support, keyboard and
-  screen-reader friendly tabs.
+  screen-reader friendly controls.
 
 **Contract-first:** [api/openapi.yaml](api/openapi.yaml) is the single source of
 truth; the frontend types are generated from it.
@@ -115,12 +154,15 @@ truth; the frontend types are generated from it.
 
 ```mermaid
 flowchart LR
-  SB[StatsBomb replay] --> P[Provider<br/>normalizer]
+  ESPN[ESPN live] --> P[Providers<br/>normalizers]
+  SB[StatsBomb replay] --> P
   P -->|events| E[Flow Engine<br/>per-match state]
   E -->|updates| PUB[Publisher]
   PUB -->|snapshot| S[(Store)]
   PUB -->|seq'd messages| H[WebSocket hub]
+  ESPN --> SEA[Seasons<br/>tables, rounds, ratings]
   S --> R[REST API]
+  SEA --> R
   R --> C[Vue client]
   H --> C
 ```
@@ -129,9 +171,8 @@ The client never trusts ordering by luck: the snapshot and every message carry a
 `seq`. The publisher writes the store *before* sending a message, so a snapshot is
 never behind a message a client has already received.
 
-The target architecture (auth, ingest from live sources, Postgres/Redis, AI
-orchestrator in Python, push notifications) is described in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The target architecture (accounts, Postgres/Redis, an AI orchestrator in Python,
+push notifications) is described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
@@ -145,10 +186,10 @@ orchestrator in Python, push notifications) is described in
 | Contract | OpenAPI 3.1, `openapi-typescript` |
 | Quality | Go tests, Vitest, Playwright, ESLint, Oxlint, Prettier, `vue-tsc` |
 | ML | Python, numpy, pandas, SciPy, scikit-learn |
-| Data | StatsBomb Open Data (demo and validation) |
+| Data | ESPN (live), StatsBomb Open Data (demo and validation) |
 | Deploy | Docker (distroless, 19 MB), Render, Vercel, GitHub Actions |
 | AI | Gemini API (`google.golang.org/genai`), structured output |
-| Planned | PostgreSQL, Redis, Capacitor for iOS/Android |
+| Planned | PostgreSQL, accounts, Capacitor for iOS/Android |
 
 ---
 
@@ -159,26 +200,29 @@ ai/calibration  Flow validation on a StatsBomb season (Python)
 ai/prediction   Outcome model: dataset, fit, validation, model.json (Python)
 ai/xg           Our xG model: shots, fit, validation, model.json (Python)
 api/            OpenAPI contract (REST + WebSocket messages)
-docs/           Architecture and the Flow Momentum spec
+docs/           Architecture, Flow Momentum, the outcome and xG models
 design/         Mockups the UI follows
 services/       Go backend
-  cmd/gateway   HTTP + WebSocket server with a looping demo replay
+  cmd/gateway   HTTP + WebSocket server: live ESPN matches and the demo replays
+  cmd/record    Keeps ESPN's summaries of a match day, for building parsers
   cmd/replay    Terminal replay: prints Flow minute by minute
   cmd/export    A StatsBomb season as CSV for ai/calibration
   internal/
-    event/      Normalized event model
+    event/      Normalized event model, lineups and how they are arranged
     flow/       Flow Engine (state, decay, weights)
     live/       Publisher, snapshot store, hub, stats
     api/        REST handlers, CORS
+    season/     Each league's season: table, rounds, Flow, team ratings
     predict/    Outcome model and "what if" simulation
     xg/         Our xG model
     insight/    AI analysis agent: queue, cache, Gemini writer
-    provider/   Data sources (StatsBomb replay)
+    provider/   Data sources: espn (live), statsbomb (replay)
   demo/         The demo matches the deployed gateway replays, and their analysis
   Dockerfile    The gateway image for Render
 web/            Vue client
   src/features/home        Home screen
-  src/features/match       Match screen logic and components
+  src/features/match       Match screen: wave, chronicle, shot map, lineups, stats
+  src/features/league      Leagues screen
   src/features/simulator   "What if?" screen
   src/shared           API client, live socket, UI kit, theme, motion
 ```
@@ -189,18 +233,22 @@ web/            Vue client
 
 **Requirements:** Go 1.24+, Node 22.18+ or 24.12+.
 
-**1. Backend.** The demo match is committed in `services/demo`. From `services/`:
+**1. Backend.** The demo matches are committed in `services/demo`. From `services/`:
 
 ```bash
 go run ./cmd/gateway -data demo/statsbomb -matches matches-demo.json
 go run ./cmd/gateway -data demo/statsbomb -matches matches-demo.json -speed 600   # a match in ~10 s
+go run ./cmd/gateway -data demo/statsbomb -matches matches-demo.json -espn eng.1,esp.1,ger.1,ita.1,fra.1
 ```
 
-The six demo matches run on their own schedule from the start. The AI analysis of
-the demo is in `demo/insights.json`; with `GEMINI_API_KEY` set, the gateway also
-asks Gemini about moments it has no text for and adds them to the file. For the
-whole 2015/16 season (needed by `ai/`), run `python ai/calibration/download.py`
-and start the gateway without `-data`.
+The gateway follows the Premier League on ESPN by default (`-espn ""` turns that
+off) and reads each league's season at start, which takes about a minute per
+league. The AI analysis of the demo is in `demo/insights.json`; with
+`GEMINI_API_KEY` set, the gateway also asks Gemini about moments it has no text
+for. For the whole 2015/16 season (needed by `ai/`), run
+`python ai/calibration/download.py` and start the gateway without `-data`.
+
+To keep a match day for later: `go run ./cmd/record -leagues ger.1,esp.1 -out data/espn`.
 
 **2. Frontend.** From `web/`:
 
@@ -228,14 +276,14 @@ type-check, lint, unit tests and build of the web app; the Docker image build.
 
 | Part | Host | Settings |
 |---|---|---|
-| Gateway | Render, Docker, free | `services/Dockerfile`, context `.`, health check `/healthz`, auto-deploy on commit, `FLOWSCORE_ORIGINS=flowscore.vercel.app,flowscore-*.vercel.app`, `GEMINI_API_KEY` |
-| Web | Vercel | root `web`, `VITE_API_URL=https://flowscore-api-7nwl.onrender.com` |
+| Gateway | Render, Docker, free | `services/Dockerfile`, context `.`, health check `/healthz`, `FLOWSCORE_ORIGINS=flowscore.vercel.app,flowscore-*.vercel.app`, `FLOWSCORE_ESPN=eng.1,esp.1,ger.1,ita.1,fra.1`, `GEMINI_API_KEY`. Deployed by hand (Manual Deploy): auto-deploy on commit did not fire reliably |
+| Web | Vercel | root `web`, `VITE_API_URL=https://flowscore-api-7nwl.onrender.com`, deployed on every push |
 
 The gateway reads its settings from flags or the environment: `PORT`,
 `FLOWSCORE_DATA`, `FLOWSCORE_MATCHES`, `FLOWSCORE_MODEL`, `FLOWSCORE_XG_MODEL`,
 `FLOWSCORE_MATCH`, `FLOWSCORE_ORIGINS` (host patterns allowed to call the API and
-the stream), `FLOWSCORE_INSIGHTS`, `FLOWSCORE_LLM_MODEL`; the Gemini key comes only
-from `GEMINI_API_KEY`.
+the stream), `FLOWSCORE_ESPN` (the leagues to follow), `FLOWSCORE_INSIGHTS`,
+`FLOWSCORE_LLM_MODEL`; the Gemini key comes only from `GEMINI_API_KEY`.
 
 ### Checks
 
@@ -260,29 +308,34 @@ npm run api:types    # regenerate types after changing api/openapi.yaml
 - [x] Flow validation on 380 matches: time-blocked CV, bootstrap intervals
 - [x] Explainability: top contributing factors per moment
 - [x] Outcome model: Poisson in-play, validated on 380 matches
-- [x] Outcome probabilities live on the Match screen
 - [x] "What if?" simulator: red cards (players and Flow forecast to come)
 - [x] Deploy: Docker, Render, Vercel, CI on every push
-- [x] Home screen with six demo matches on a schedule
-- [x] AI match analysis (Gemini), kept per moment
-- [x] Own xG model, validated on 9,908 shots
-- [ ] League, team and player screens
-- [ ] Auth, favorites, Flow spike notifications
-- [ ] Live data source, iOS and Android builds
+- [x] Home screen by day, AI match analysis (Gemini), own xG model
+- [x] Live matches of the top five leagues from ESPN
+- [x] Leagues screen: tables with average Flow, rounds, Flow records
+- [x] Shot map and lineups on the match screen
+- [ ] European cups and domestic cups (extra time and penalties)
+- [ ] Match phases: before kick-off (form, head-to-head), live, full time
+- [ ] Accounts, favorites, profile
+- [ ] Team and player screens, following a player
+- [ ] Flow spike notifications, iOS and Android builds
 
 ---
 
 ## How it's built
 
-A solo project built to learn production-grade Go, real-time systems and applied
-ML end to end. Every line is typed,
-read and understood by the author, and design decisions are documented in
-[docs/](docs/).
+A solo project to learn production-grade Go, real-time systems and applied ML end
+to end. The author writes the code and reviews every change, with an AI assistant
+(Claude) as a tutor and reviewer: it explains, proposes the code to type and checks
+it in a scratch copy. The API contract, the design mockups and much of the docs
+were drafted with it. Design decisions are documented in [docs/](docs/).
 
 ---
 
 ## Data attribution
 
+Live data: ESPN's public site API, which is unofficial and undocumented; its
+licensing will be settled before any store release.
 Demo and training data: **[StatsBomb Open Data](https://github.com/statsbomb/open-data)**.
 Used under the StatsBomb public data user agreement, which requires attribution;
 the app credits it on every page.

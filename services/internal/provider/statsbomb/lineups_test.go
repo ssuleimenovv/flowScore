@@ -1,6 +1,7 @@
 package statsbomb
 
 import (
+	"math"
 	"testing"
 	"time"
 )
@@ -36,7 +37,7 @@ func TestLoadLineups(t *testing.T) {
 		}
 	}
 	hart, clichy, aguero := city.Players[0], city.Players[1], city.Players[9]
-	if hart.Pos.X != 6 || hart.Pos.Y != 50 || clichy.Pos.X != 20 || clichy.Pos.Y != 14 || aguero.Pos.X != 58 || aguero.Pos.Y != 33 {
+	if hart.Pos.X != 6 || hart.Pos.Y != 50 || clichy.Pos.X != 20 || clichy.Pos.Y != 14 || math.Abs(aguero.Pos.X-45.33) > 0.01 || aguero.Pos.Y != 33 {
 		t.Errorf("Hart at %+v, Clichy at %+v, Agüero at %+v", *hart.Pos, *clichy.Pos, *aguero.Pos)
 	}
 

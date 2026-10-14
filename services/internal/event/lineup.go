@@ -106,16 +106,19 @@ func SortBench(bench []Player) {
 	})
 }
 
-// The keeper stands at 6; the outfield lines go from 20 to 58, a little past
-// the halfway line, as on the MatchExtended board
+// The keeper stands at 6 and the back line at 20, then a line every 12.7
+// as on the MatchExtended board: the front line of a 4-2-3-1 at 58, a little
+// past the halfway line, the one of a 4-4-2 at 45. More lines than that are
+// closer together, never past 58.
 func lineX(n, lines int) float64 {
 	if n == 0 {
 		return 6
 	}
-	if lines <= 2 {
-		return 39
+	gap := 38.0 / 3
+	if lines > 5 {
+		gap = 38 / float64(lines-2)
 	}
-	return 20 + float64(n-1)*38/float64(lines-2)
+	return 20 + float64(n-1)*gap
 }
 
 // The players of a line are spread around the middle, never wider than 14–86

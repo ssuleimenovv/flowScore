@@ -1,6 +1,7 @@
 package event
 
 import (
+	"math"
 	"strings"
 	"testing"
 )
@@ -29,9 +30,10 @@ func TestArrange(t *testing.T) {
 		if formation != "" {
 			continue
 		}
-		// Four lines: the keeper, the back three across the pitch, then 39 and 58
+		// Four lines: the keeper, the back three across the pitch, then a line
+		// every 12.7
 		lb, rb, st := p[1].Pos, p[3].Pos, p[5].Pos
-		if lb.X != 20 || lb.Y != 16 || rb.Y != 84 || p[4].Pos.X != 39 || st.X != 58 || st.Y != 50 {
+		if lb.X != 20 || lb.Y != 16 || rb.Y != 84 || !near(p[4].Pos.X, 32.67) || !near(st.X, 45.33) || st.Y != 50 {
 			t.Errorf("LB %+v, RB %+v, CM %+v, ST %+v", *lb, *rb, *p[4].Pos, *st)
 		}
 	}
@@ -41,4 +43,8 @@ func TestArrange(t *testing.T) {
 	if p[4].Pos.X != p[5].Pos.X || p[4].Pos.Y >= p[5].Pos.Y {
 		t.Errorf("CM %+v and ST %+v, want one line, CM on the left", *p[4].Pos, *p[5].Pos)
 	}
+}
+
+func near(a, b float64) bool {
+	return math.Abs(a-b) < 0.01
 }

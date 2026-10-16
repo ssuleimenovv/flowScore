@@ -61,18 +61,23 @@ const subtitle = computed(() =>
         v-if="view === 'pitch'"
         class="pitch"
         role="img"
-        :aria-label="`Расстановка на поле: ${live.match.home.name} слева, ${live.match.away.name} справа`"
+        :aria-label="`Расстановка на поле: ${live.match.home.name} и ${live.match.away.name}, каждая команда на своей половине`"
       >
         <span class="halfway" />
         <span class="centre" />
-        <span class="box left" />
-        <span class="box right" />
+        <span class="box home" />
+        <span class="box away" />
         <template v-for="t in teams" :key="t.side">
           <div
             v-for="p in t.pitch"
             :key="p.id"
             class="player"
-            :style="{ left: p.left, top: p.top }"
+            :style="{
+              '--left': p.left,
+              '--top': p.top,
+              '--down-left': p.downLeft,
+              '--down-top': p.downTop,
+            }"
           >
             <span class="shirt" :class="t.side">
               {{ p.number }}
@@ -149,7 +154,8 @@ const subtitle = computed(() =>
   font-size: var(--fs-text-footnote);
 }
 
-/* Both elevens face each other: the home team attacks to the right */
+/* Both elevens face each other, each in its own half: across the pitch on a
+   desktop, the home team attacking to the right */
 .pitch {
   position: relative;
   height: 440px;
@@ -187,18 +193,20 @@ const subtitle = computed(() =>
   border: 1px solid var(--fs-line);
 }
 
-.box.left {
+.box.home {
   left: 0;
   border-left: 0;
 }
 
-.box.right {
+.box.away {
   right: 0;
   border-right: 0;
 }
 
 .player {
   position: absolute;
+  top: var(--top);
+  left: var(--left);
   display: flex;
   flex-direction: column;
   gap: var(--fs-space-4);
@@ -263,9 +271,13 @@ const subtitle = computed(() =>
   background: var(--fs-card-red);
 }
 
+/* A long name is cut short rather than run into the next player's */
 .name {
+  max-width: 100%;
+  overflow: hidden;
   font-size: var(--fs-text-caption);
   font-weight: 600;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -386,8 +398,9 @@ const subtitle = computed(() =>
   color: var(--fs-away);
 }
 
-/* Phone, as on MobileMatchExtended: a lower pitch with smaller shirts, one
-   list under the other, the bench still side by side */
+/* Phone: the pitch stands upright, as in Sofascore or FotMob, since across a
+   narrow screen the lines would be too close. The home team at the top
+   attacks downwards. One list under the other, the bench still side by side */
 @media (max-width: 767px) {
   .lineups {
     gap: 14px;
@@ -398,14 +411,47 @@ const subtitle = computed(() =>
     display: none;
   }
 
+  /* Tall enough that the two front lines, either side of the halfway
+     line, do not cover each other's names */
   .pitch {
-    height: 300px;
+    height: 640px;
   }
 
-  /* The lines are about 40 px apart here: a longer name is cut short so
-     it does not run into the next line's */
+  .halfway {
+    top: 50%;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: auto;
+    height: 1px;
+  }
+
+  /* The boxes at the top and bottom goals: the rules name the side, so
+     they outweigh the desktop's left and right ones */
+  .box.home,
+  .box.away {
+    right: auto;
+    left: 25%;
+    width: 50%;
+    height: 13%;
+    border: 1px solid var(--fs-line);
+  }
+
+  .box.home {
+    top: 0;
+    border-top: 0;
+  }
+
+  .box.away {
+    top: auto;
+    bottom: 0;
+    border-bottom: 0;
+  }
+
   .player {
-    width: 42px;
+    top: var(--down-top);
+    left: var(--down-left);
+    width: 64px;
   }
 
   .shirt {
@@ -415,10 +461,7 @@ const subtitle = computed(() =>
   }
 
   .name {
-    max-width: 100%;
-    overflow: hidden;
     font-size: 10px;
-    text-overflow: ellipsis;
   }
 
   .lists {

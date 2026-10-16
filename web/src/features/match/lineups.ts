@@ -8,8 +8,12 @@ export interface PitchPlayer {
   id: string
   number: string // "47", "" if the source does not say
   name: string // "Foden"
-  left: string // "46%": the home team attacks to the right, the away team to the left
+  // Across the pitch, on a desktop: the home team attacks to the right
+  left: string // "46%"
   top: string
+  // Down the pitch, on a phone: the home team at the top attacks downwards
+  downLeft: string
+  downTop: string
   goal: boolean
   card: 'yellow' | 'red' | null
   off: string | null // "64′", when the player went off
@@ -76,8 +80,10 @@ function flowText(n: number): string {
   return '0'
 }
 
-// The eleven where they stand. The server gives every place attacking to the
-// right, so the away team is turned half a circle round to its end.
+// The eleven where they stand, each team in its own half. The server gives
+// every place attacking to the right; the away team is turned half a circle
+// round to its end. Down the pitch everything turns a quarter: a team facing
+// down has its left wing on the right of the screen.
 export function pitchPlayers(team: TeamLineup, side: Side, events: MatchEvent[]): PitchPlayer[] {
   const did = deeds(events, side)
   return team.starters
@@ -91,6 +97,8 @@ export function pitchPlayers(team: TeamLineup, side: Side, events: MatchEvent[])
         name: surname(p.name),
         left: `${home ? p.position.x : 100 - p.position.x}%`,
         top: `${home ? p.position.y : 100 - p.position.y}%`,
+        downLeft: `${home ? 100 - p.position.y : p.position.y}%`,
+        downTop: `${home ? p.position.x : 100 - p.position.x}%`,
         goal: (d?.goals ?? 0) > 0,
         card: d?.red ? 'red' : d?.yellow ? 'yellow' : null,
         off: minuteText(p.off),

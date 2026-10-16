@@ -53,6 +53,8 @@ describe('lineups', () => {
         name: 'Agüero',
         left: '58%',
         top: '33%',
+        downLeft: '67%',
+        downTop: '58%',
         goal: true,
         card: null,
         off: null,
@@ -63,6 +65,8 @@ describe('lineups', () => {
         name: 'Iheanacho',
         left: '58%',
         top: '67%',
+        downLeft: '33%',
+        downTop: '58%',
         goal: false,
         card: 'yellow',
         off: '70′',
@@ -72,6 +76,13 @@ describe('lineups', () => {
 
   it('turns the away team round to its end of the pitch', () => {
     expect(pitchPlayers(city, 'away', [])[0]).toMatchObject({ left: '42%', top: '67%' })
+  })
+
+  it('stands the pitch upright on a phone: the home team at the top, its left wing on the right', () => {
+    // Agüero, on the left of the home attack: down the pitch at the top, right of centre
+    expect(pitchPlayers(city, 'home', [])[0]).toMatchObject({ downLeft: '67%', downTop: '58%' })
+    // The same place for the away team: at the bottom, left of centre
+    expect(pitchPlayers(city, 'away', [])[0]).toMatchObject({ downLeft: '33%', downTop: '42%' })
   })
 
   it("lists what each player did and their part in the team's Flow", () => {

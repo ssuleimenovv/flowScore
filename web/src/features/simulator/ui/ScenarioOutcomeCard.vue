@@ -52,7 +52,7 @@ const width = (p: Probabilities, key: 'home' | 'draw') => `${p[key]}%`
       <div v-for="column in columns" :key="column.key" class="column" :class="column.key">
         <dt class="label">{{ column.label }}</dt>
         <dd class="value">{{ column.value }}%</dd>
-        <dd class="change">{{ column.change }}</dd>
+        <dd v-if="column.change" class="change">{{ column.change }}</dd>
       </div>
     </dl>
   </AppCard>

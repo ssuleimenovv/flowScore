@@ -39,6 +39,11 @@ describe('scenarioColumns', () => {
     ])
     expect(formatChances(sim.current)).toBe('32 · 40 · 28')
   })
+
+  it('shows no change before a scenario is set', () => {
+    const same = { ...sim, scenario: sim.current }
+    expect(scenarioColumns(match, same).map((c) => c.change)).toEqual([null, null, null])
+  })
 })
 
 describe('scenarioStory', () => {

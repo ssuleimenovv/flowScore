@@ -21,7 +21,7 @@ export interface ScenarioColumn {
   key: keyof Probabilities
   value: number
   label: string // "Победа Сити"
-  change: string // "+14", "−5", "0"
+  change: string | null // "+14", "−5"; null when the scenario does not move it
 }
 
 // The three results of the scenario and how far each moved from the match as
@@ -36,7 +36,8 @@ export function scenarioColumns(match: Match, sim: Simulation): ScenarioColumn[]
     key,
     label,
     value: sim.scenario[key],
-    change: signed(sim.scenario[key] - sim.current[key]),
+    change:
+      sim.scenario[key] === sim.current[key] ? null : signed(sim.scenario[key] - sim.current[key]),
   }))
 }
 

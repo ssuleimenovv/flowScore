@@ -128,6 +128,15 @@ func (s *Seasons) Refresh(ctx context.Context, id string) error {
 	return nil
 }
 
+// PlayedFlow is each team's Flow in a match over that the season has read,
+// averaged over the match; false for any other match, a cup's for one.
+func (s *Seasons) PlayedFlow(matchID string) (home, away float64, ok bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	f, ok := s.flows[matchID]
+	return f.Home, f.Away, ok
+}
+
 func (s *Seasons) flow(matchID string) (MatchFlow, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -31,7 +31,8 @@ type Snapshot struct {
 	// Both teams' players, nil until the source has them. A new lineup
 	// replaces it whole, so a copy may share it
 	Lineups   *event.Lineups
-	Seq       int64 // last stream message already included
+	PreMatch  *event.PreMatch // form, meetings and news; nil if the source has none
+	Seq       int64           // last stream message already included
 	UpdatedAt time.Time
 }
 

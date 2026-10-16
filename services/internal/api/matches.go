@@ -187,6 +187,20 @@ func insightHandler(store *live.Store) http.HandlerFunc {
 	}
 }
 
+// RegisterPreMatch adds "Перед матчем": each team's form, their meetings
+// and the news, with the Flow of the matches the season has read.
+func RegisterPreMatch(mux *http.ServeMux, store *live.Store, flows live.Flows) {
+	mux.HandleFunc("GET /api/v1/matches/{matchId}/prematch", func(w http.ResponseWriter, r *http.Request) {
+		snap, ok := store.Get(r.PathValue("matchId"))
+		pm, known := live.PreMatchOf(snap, flows)
+		if !ok || !known {
+			writeProblem(w, http.StatusNotFound, "Nothing known of this match before kick-off")
+			return
+		}
+		writeJSON(w, http.StatusOK, pm)
+	})
+}
+
 // lineupsHandler answers 404 until the source has the lineups: ESPN shows
 // them about an hour before kick-off.
 func lineupsHandler(store *live.Store) http.HandlerFunc {

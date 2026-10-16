@@ -91,7 +91,7 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 		}
 		game = &liveGame{league: league, info: s.Match, publisher: l.newPublisher(g.ID), done: make(chan struct{})}
 		l.games[g.ID] = game
-		l.readLineups(game, body)
+		l.readSummary(game, body)
 		log.Printf("espn: %s, kick-off %s", g.Name, g.Start.Format(time.RFC3339))
 	}
 	// Until kick-off the chances follow the season's ratings, which are read
@@ -103,7 +103,7 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 
 		if !game.lineups && time.Until(g.Start) < lineupsAhead {
 			if body, err := l.client.Summary(ctx, league, g.ID); err == nil {
-				l.readLineups(game, body)
+				l.readSummary(game, body)
 			}
 		}
 
@@ -119,8 +119,14 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 // before, the summary of a match still without them is read on every poll
 const lineupsAhead = 90 * time.Minute
 
-// readLineups gives the match its lineups once the summary has them.
-func (l *liveESPN) readLineups(game *liveGame, body []byte) {
+// readSummary gives the match what a summary read before kick-off has: the
+// teams' form, meetings and news, and the lineups once ESPN has them.
+func (l *liveESPN) readSummary(game *liveGame, body []byte) {
+	if pm, err := espn.ParsePreMatch(body); err != nil {
+		log.Printf("espn %s: %v", game.info.ID, err)
+	} else if pm != nil {
+		game.publisher.UsePreMatch(pm)
+	}
 	lineups, err := espn.ParseRosters(body)
 	if err != nil {
 		log.Printf("espn %s: %v", game.info.ID, err)

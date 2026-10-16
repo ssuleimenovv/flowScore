@@ -163,3 +163,28 @@ func TestLineups(t *testing.T) {
 		t.Errorf("lineups %+v", body)
 	}
 }
+
+func TestPreMatch(t *testing.T) {
+	store := live.NewStore()
+	p := live.NewPublisher(live.NewHub(), store, "m1", flow.DefaultParams())
+	p.Start(event.Match{ID: "m1", Home: event.Team{ID: "368"}, Away: event.Team{ID: "363"}})
+	mux := http.NewServeMux()
+	RegisterPreMatch(mux, store, nil)
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	// A demo match has nothing of the kind
+	var problem map[string]any
+	if res := get(t, srv.URL+"/api/v1/matches/m1/prematch", &problem); res.StatusCode != http.StatusNotFound {
+		t.Fatalf("without the info: status %d", res.StatusCode)
+	}
+
+	p.UsePreMatch(&event.PreMatch{Meetings: []event.PastMatch{{ID: "c", Home: event.Team{ID: "368"}, Away: event.Team{ID: "363"}, HomeGoals: 3}}})
+	var body live.MatchPreMatch
+	if res := get(t, srv.URL+"/api/v1/matches/m1/prematch", &body); res.StatusCode != http.StatusOK {
+		t.Fatalf("status %d", res.StatusCode)
+	}
+	if body.Meetings.HomeWins != 1 || body.Home.Matches == nil || body.News == nil || body.Meetings.Matches[0].Flow != nil {
+		t.Errorf("pre-match %+v", body)
+	}
+}

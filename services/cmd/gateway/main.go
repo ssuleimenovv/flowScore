@@ -155,6 +155,7 @@ func main() {
 	live.Register(mux, hub, origins)
 	api.Register(mux, store)
 	api.RegisterLeagues(mux, seasons, leagues)
+	api.RegisterPreMatch(mux, store, seasons)
 
 	srv := &http.Server{
 		Addr:              *addr,

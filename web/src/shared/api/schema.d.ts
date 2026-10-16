@@ -111,6 +111,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/matches/{matchId}/prematch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * "Перед матчем": each team's last matches, their meetings and the news
+         * @description Only a real match has it; a demo match answers 404. Flow is given only
+         *     for a match the season has read: one of the league's this season, not
+         *     a cup match nor one of an earlier season.
+         */
+        get: operations["getMatchPreMatch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/matches/{matchId}/simulate": {
         parameters: {
             query?: never;
@@ -426,6 +448,54 @@ export interface components {
             /** @example 3 */
             addedTime: number | null;
         } | null;
+        MatchPreMatch: {
+            matchId: string;
+            home: components["schemas"]["TeamForm"];
+            away: components["schemas"]["TeamForm"];
+            meetings: components["schemas"]["Meetings"];
+            /** @description The league's news, newest first */
+            news: components["schemas"]["NewsItem"][];
+        };
+        TeamForm: {
+            /** @description The team's last matches of any competition, oldest first */
+            matches: components["schemas"]["FormMatch"][];
+            /** @description The team's Flow averaged over the flowGames of them the season has read */
+            flow: number | null;
+            flowGames: number;
+        };
+        FormMatch: components["schemas"]["PastMatch"] & {
+            /**
+             * @description For the team whose form it is
+             * @enum {string}
+             */
+            result: "win" | "draw" | "loss";
+        };
+        PastMatch: {
+            id: string;
+            /** Format: date-time */
+            date: string;
+            /** @example Premier League */
+            competition: string;
+            home: components["schemas"]["Team"];
+            away: components["schemas"]["Team"];
+            score: components["schemas"]["Score"];
+            /** @description Each team's Flow averaged over the match; null if the season has not read it */
+            flow: components["schemas"]["FlowValues"] | null;
+        };
+        /** @description The two teams' last meetings, counted for this match's home and away team */
+        Meetings: {
+            homeWins: number;
+            draws: number;
+            awayWins: number;
+            /** @description Newest first */
+            matches: components["schemas"]["PastMatch"][];
+        };
+        NewsItem: {
+            headline: string;
+            url: string;
+            /** Format: date-time */
+            publishedAt: string;
+        };
         /** @description Whole percents of a home win, a draw and an away win; they add up to 100 */
         Probabilities: {
             home: number;
@@ -863,6 +933,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MatchLineups"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            default: components["responses"]["Error"];
+        };
+    };
+    getMatchPreMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example m_01J8ZQ4T7K */
+                matchId: components["parameters"]["MatchId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchPreMatch"];
                 };
             };
             404: components["responses"]["NotFound"];

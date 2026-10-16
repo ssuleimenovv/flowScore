@@ -150,6 +150,29 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /matches/{matchId}/prematch:
+    get:
+      tags: [matches]
+      operationId: getMatchPreMatch
+      summary: '"Перед матчем": each team''s last matches, their meetings and the news'
+      description: |
+        Only a real match has it; a demo match answers 404. Flow is given only
+        for a match the season has read: one of the league's this season, not
+        a cup match nor one of an earlier season.
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchPreMatch'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        default:
+          $ref: '#/components/responses/Error'
+
   /matches/{matchId}/simulate:
     post:
       tags: [matches]
@@ -765,6 +788,103 @@ components:
         addedTime:
           type: [integer, 'null']
           example: 3
+
+    MatchPreMatch:
+      type: object
+      required: [matchId, home, away, meetings, news]
+      properties:
+        matchId:
+          type: string
+        home:
+          $ref: '#/components/schemas/TeamForm'
+        away:
+          $ref: '#/components/schemas/TeamForm'
+        meetings:
+          $ref: '#/components/schemas/Meetings'
+        news:
+          type: array
+          description: The league's news, newest first
+          items:
+            $ref: '#/components/schemas/NewsItem'
+
+    TeamForm:
+      type: object
+      required: [matches, flow, flowGames]
+      properties:
+        matches:
+          type: array
+          description: The team's last matches of any competition, oldest first
+          items:
+            $ref: '#/components/schemas/FormMatch'
+        flow:
+          type: [number, 'null']
+          description: The team's Flow averaged over the flowGames of them the season has read
+        flowGames:
+          type: integer
+
+    FormMatch:
+      allOf:
+        - $ref: '#/components/schemas/PastMatch'
+        - type: object
+          required: [result]
+          properties:
+            result:
+              type: string
+              enum: [win, draw, loss]
+              description: For the team whose form it is
+
+    PastMatch:
+      type: object
+      required: [id, date, competition, home, away, score, flow]
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date-time
+        competition:
+          type: string
+          example: Premier League
+        home:
+          $ref: '#/components/schemas/Team'
+        away:
+          $ref: '#/components/schemas/Team'
+        score:
+          $ref: '#/components/schemas/Score'
+        flow:
+          description: Each team's Flow averaged over the match; null if the season has not read it
+          oneOf:
+            - $ref: '#/components/schemas/FlowValues'
+            - type: 'null'
+
+    Meetings:
+      type: object
+      required: [homeWins, draws, awayWins, matches]
+      description: The two teams' last meetings, counted for this match's home and away team
+      properties:
+        homeWins:
+          type: integer
+        draws:
+          type: integer
+        awayWins:
+          type: integer
+        matches:
+          type: array
+          description: Newest first
+          items:
+            $ref: '#/components/schemas/PastMatch'
+
+    NewsItem:
+      type: object
+      required: [headline, url, publishedAt]
+      properties:
+        headline:
+          type: string
+        url:
+          type: string
+        publishedAt:
+          type: string
+          format: date-time
 
     Probabilities:
       type: object

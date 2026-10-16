@@ -1,0 +1,373 @@
+{
+ "header": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "homeAway": "home",
+      "team": {
+       "id": "368",
+       "displayName": "Everton",
+       "abbreviation": "EVE"
+      }
+     },
+     {
+      "homeAway": "away",
+      "team": {
+       "id": "363",
+       "displayName": "Chelsea",
+       "abbreviation": "CHE"
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "lastFiveGames": [
+  {
+   "team": {
+    "id": "368",
+    "displayName": "Everton",
+    "abbreviation": "EVE"
+   },
+   "events": [
+    {
+     "id": "401879291",
+     "gameDate": "2026-09-06T13:00Z",
+     "homeTeamId": "368",
+     "awayTeamId": "360",
+     "homeTeamScore": "2",
+     "awayTeamScore": "2",
+     "gameResult": "D",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "360",
+      "displayName": "Manchester United",
+      "abbreviation": "MAN"
+     }
+    },
+    {
+     "id": "401879277",
+     "gameDate": "2026-09-12T16:30Z",
+     "homeTeamId": "367",
+     "awayTeamId": "368",
+     "homeTeamScore": "0",
+     "awayTeamScore": "0",
+     "gameResult": "D",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "367",
+      "displayName": "Tottenham Hotspur",
+      "abbreviation": "TOT"
+     }
+    },
+    {
+     "id": "401914282",
+     "gameDate": "2026-09-16T18:45Z",
+     "homeTeamId": "368",
+     "awayTeamId": "380",
+     "homeTeamScore": "1",
+     "awayTeamScore": "0",
+     "gameResult": "W",
+     "leagueAbbreviation": "Carabao Cup",
+     "opponent": {
+      "id": "380",
+      "displayName": "Wolverhampton Wanderers",
+      "abbreviation": "WOL"
+     }
+    },
+    {
+     "id": "401878778",
+     "gameDate": "2026-09-19T14:00Z",
+     "homeTeamId": "368",
+     "awayTeamId": "373",
+     "homeTeamScore": "1",
+     "awayTeamScore": "0",
+     "gameResult": "W",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "373",
+      "displayName": "Ipswich Town",
+      "abbreviation": "IPS"
+     }
+    },
+    {
+     "id": "401878774",
+     "gameDate": "2026-10-11T13:00Z",
+     "homeTeamId": "306",
+     "awayTeamId": "368",
+     "homeTeamScore": "2",
+     "awayTeamScore": "2",
+     "gameResult": "D",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "306",
+      "displayName": "Hull City",
+      "abbreviation": "HUL"
+     }
+    }
+   ]
+  },
+  {
+   "team": {
+    "id": "363",
+    "displayName": "Chelsea",
+    "abbreviation": "CHE"
+   },
+   "events": [
+    {
+     "id": "401879292",
+     "gameDate": "2026-09-06T15:30Z",
+     "homeTeamId": "359",
+     "awayTeamId": "363",
+     "homeTeamScore": "2",
+     "awayTeamScore": "1",
+     "gameResult": "L",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "359",
+      "displayName": "Arsenal",
+      "abbreviation": "ARS"
+     }
+    },
+    {
+     "id": "401914256",
+     "gameDate": "2026-09-09T19:15Z",
+     "homeTeamId": "363",
+     "awayTeamId": "357",
+     "homeTeamScore": "6",
+     "awayTeamScore": "3",
+     "gameResult": "W",
+     "leagueAbbreviation": "Carabao Cup",
+     "opponent": {
+      "id": "357",
+      "displayName": "Leeds United",
+      "abbreviation": "LEE"
+     }
+    },
+    {
+     "id": "401879283",
+     "gameDate": "2026-09-12T14:00Z",
+     "homeTeamId": "363",
+     "awayTeamId": "306",
+     "homeTeamScore": "2",
+     "awayTeamScore": "2",
+     "gameResult": "D",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "306",
+      "displayName": "Hull City",
+      "abbreviation": "HUL"
+     }
+    },
+    {
+     "id": "401879275",
+     "gameDate": "2026-09-18T19:00Z",
+     "homeTeamId": "337",
+     "awayTeamId": "363",
+     "homeTeamScore": "3",
+     "awayTeamScore": "0",
+     "gameResult": "L",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "337",
+      "displayName": "Brentford",
+      "abbreviation": "BRE"
+     }
+    },
+    {
+     "id": "401878775",
+     "gameDate": "2026-10-10T14:00Z",
+     "homeTeamId": "363",
+     "awayTeamId": "349",
+     "homeTeamScore": "5",
+     "awayTeamScore": "1",
+     "gameResult": "W",
+     "leagueAbbreviation": "Premier League",
+     "opponent": {
+      "id": "349",
+      "displayName": "AFC Bournemouth",
+      "abbreviation": "BOU"
+     }
+    }
+   ]
+  }
+ ],
+ "seasonseries": [
+  {
+   "type": "head-to-head",
+   "events": [
+    {
+     "id": "740899",
+     "date": "2026-03-21T17:30:00Z",
+     "status": "post",
+     "competitionName": "2025-26 English Premier League",
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "3",
+       "team": {
+        "id": "368",
+        "displayName": "Everton",
+        "abbreviation": "EVE"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "363",
+        "displayName": "Chelsea",
+        "abbreviation": "CHE"
+       }
+      }
+     ]
+    },
+    {
+     "id": "740750",
+     "date": "2025-12-13T15:00:00Z",
+     "status": "post",
+     "competitionName": "2025-26 English Premier League",
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "2",
+       "team": {
+        "id": "363",
+        "displayName": "Chelsea",
+        "abbreviation": "CHE"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "368",
+        "displayName": "Everton",
+        "abbreviation": "EVE"
+       }
+      }
+     ]
+    },
+    {
+     "id": "704611",
+     "date": "2025-04-26T11:30:00Z",
+     "status": "post",
+     "competitionName": "2024-25 English Premier League",
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "1",
+       "team": {
+        "id": "363",
+        "displayName": "Chelsea",
+        "abbreviation": "CHE"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "368",
+        "displayName": "Everton",
+        "abbreviation": "EVE"
+       }
+      }
+     ]
+    },
+    {
+     "id": "704447",
+     "date": "2024-12-22T14:00:00Z",
+     "status": "post",
+     "competitionName": "2024-25 English Premier League",
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "0",
+       "team": {
+        "id": "368",
+        "displayName": "Everton",
+        "abbreviation": "EVE"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "363",
+        "displayName": "Chelsea",
+        "abbreviation": "CHE"
+       }
+      }
+     ]
+    },
+    {
+     "id": "671354",
+     "date": "2024-04-15T19:00:00Z",
+     "status": "post",
+     "competitionName": "2023-24 English Premier League",
+     "competitors": [
+      {
+       "homeAway": "home",
+       "score": "6",
+       "team": {
+        "id": "363",
+        "displayName": "Chelsea",
+        "abbreviation": "CHE"
+       }
+      },
+      {
+       "homeAway": "away",
+       "score": "0",
+       "team": {
+        "id": "368",
+        "displayName": "Everton",
+        "abbreviation": "EVE"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "news": {
+  "articles": [
+   {
+    "headline": "Premier League Top 50: Ranking the best players so far this season",
+    "published": "2026-10-16T11:13:11Z",
+    "links": {
+     "web": {
+      "href": "https://www.espn.com/soccer/story/_/id/50191745/premier-league-top-50-ranked-best-players-2026-27-man-city-united-liverpool-arsenal-chelsea"
+     }
+    }
+   },
+   {
+    "headline": "Transfer rumors, news: Arsenal eye January move for Bayern Munich defender",
+    "published": "2026-10-16T11:36:20Z",
+    "links": {
+     "web": {
+      "href": "https://www.espn.com/soccer/story/_/id/50194612/transfer-rumors-news-arsenal-eye-january-move-bayern-munich-defender"
+     }
+    }
+   },
+   {
+    "headline": "Why do Liverpool's big-money transfers keep failing to deliver?",
+    "published": "2026-10-16T11:12:52Z",
+    "links": {
+     "web": {
+      "href": "https://www.espn.com/soccer/story/_/id/50176627/why-do-liverpool-big-money-transfers-keep-failing-deliver"
+     }
+    }
+   },
+   {
+    "headline": "Alvaro Arbeloa ignoring sack rumours to end Fulham plight",
+    "published": "2026-10-16T10:46:31Z",
+    "links": {
+     "web": {
+      "href": "https://www.espn.com/soccer/story/_/id/50195093/alvaro-arbeloa-ignoring-sack-rumours-fulham"
+     }
+    }
+   }
+  ]
+ }
+}

@@ -1,6 +1,7 @@
 package espn
 
 import (
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -34,7 +35,7 @@ func TestParseRosters(t *testing.T) {
 	if got := strings.Join(names, ", "); got != want {
 		t.Fatalf("starters %s\nwant %s", got, want)
 	}
-	if grimes := coventry.Players[5]; grimes.Pos.X != 32+2.0/3 || grimes.Pos.Y != 33 {
+	if grimes := coventry.Players[5]; math.Abs(grimes.Pos.X-25.67) > 0.01 || grimes.Pos.Y != 33 {
 		t.Errorf("Grimes at %+v", *grimes.Pos)
 	}
 

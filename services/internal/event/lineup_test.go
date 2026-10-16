@@ -30,10 +30,10 @@ func TestArrange(t *testing.T) {
 		if formation != "" {
 			continue
 		}
-		// Four lines: the keeper, the back three across the pitch, then a line
-		// every 12.7
+		// Four lines in the team's own half: the keeper, the back three across
+		// the pitch, then the lines evenly apart up to 45
 		lb, rb, st := p[1].Pos, p[3].Pos, p[5].Pos
-		if lb.X != 20 || lb.Y != 16 || rb.Y != 84 || !near(p[4].Pos.X, 32.67) || !near(st.X, 45.33) || st.Y != 50 {
+		if p[0].Pos.X != 5 || lb.X != 16 || lb.Y != 16 || rb.Y != 84 || !near(p[4].Pos.X, 30.5) || !near(st.X, 45) || st.Y != 50 {
 			t.Errorf("LB %+v, RB %+v, CM %+v, ST %+v", *lb, *rb, *p[4].Pos, *st)
 		}
 	}

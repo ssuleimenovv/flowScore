@@ -13,13 +13,16 @@ import MatchHero from '@/features/match/ui/MatchHero.vue'
 import MatchHeroCompact from '@/features/match/ui/MatchHeroCompact.vue'
 import MatchHeroSkeleton from '@/features/match/ui/MatchHeroSkeleton.vue'
 import MatchTabs, { type MatchTab } from '@/features/match/ui/MatchTabs.vue'
+import NewsCard from '@/features/match/ui/NewsCard.vue'
 import OutcomeCard from '@/features/match/ui/OutcomeCard.vue'
+import PreMatchCard from '@/features/match/ui/PreMatchCard.vue'
 import ShotMapCard from '@/features/match/ui/ShotMapCard.vue'
 import SimulatorCta from '@/features/match/ui/SimulatorCta.vue'
 import StatsCard from '@/features/match/ui/StatsCard.vue'
 import { useLineups } from '@/features/match/useLineups'
 import { useMatchClock } from '@/features/match/useMatchClock'
 import { useMatchLive } from '@/features/match/useMatchLive'
+import { usePreMatch } from '@/features/match/usePreMatch'
 import { ApiError } from '@/shared/api/http'
 import { resolveScreenState } from '@/shared/state/screenState'
 import { useMediaQuery } from '@/shared/state/useMediaQuery'
@@ -46,6 +49,8 @@ const {
 } = useMatchLive(String(route.params.matchId))
 const { online } = useNetwork()
 const { lineups, request: lineupsRequest } = useLineups(String(route.params.matchId), state)
+// The teams' form, their meetings and the news: a real match's only
+const { pre } = usePreMatch(String(route.params.matchId))
 
 const match = computed(() => state.value?.match)
 const { seconds } = useMatchClock(match)
@@ -154,11 +159,17 @@ onUnmounted(() => setTitle(null))
         <div v-if="lineupsRequest === 'success'" class="panel" :class="{ active: tab === 'stats' }">
           <LineupsCard :live="state" :lineups />
         </div>
+        <div v-if="pre" class="panel" :class="{ active: tab === 'stats' }">
+          <PreMatchCard :live="state" :pre />
+        </div>
       </div>
       <aside class="side">
         <div class="panel" v-bind="panel('events')"><ChronicleCard :live="state" /></div>
         <div class="panel" :class="{ active: tab === 'flow' }">
           <SimulatorCta :match-id="state.match.id" />
+        </div>
+        <div v-if="pre?.news.length" class="panel" :class="{ active: tab === 'stats' }">
+          <NewsCard :pre />
         </div>
         <!-- The phone's AI tab: every factor; the desktop shows them under the wave -->
         <div class="panel narrow-only" v-bind="panel('ai')">

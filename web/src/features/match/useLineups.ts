@@ -43,8 +43,11 @@ export function useLineups(matchId: string, live: Ref<MatchLive | null>) {
     () => live.value?.events.filter((e) => e.type === 'substitution').length ?? 0,
   )
   // A new kick-off of a replay starts it again without them, and the final
-  // whistle shows all of them
-  watch([substitutions, status], () => void load())
+  // whistle shows all of them. The first snapshot itself is no news: the
+  // first load is already on its way
+  watch([substitutions, status], (_, [, before]) => {
+    if (before !== null) void load()
+  })
 
   void load()
   const timer = setInterval(() => {

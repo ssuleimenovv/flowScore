@@ -1,5 +1,12 @@
 import { apiGet } from '@/shared/api/http'
-import type { EventList, FlowSeries, Insight, Match, MatchLineups } from '@/shared/api/types'
+import type {
+  EventList,
+  FlowSeries,
+  Insight,
+  Match,
+  MatchLineups,
+  MatchPreMatch,
+} from '@/shared/api/types'
 
 const path = (id: string) => `/matches/${encodeURIComponent(id)}`
 
@@ -10,4 +17,6 @@ export const matchApi = {
   insight: (id: string, signal?: AbortSignal) => apiGet<Insight>(`${path(id)}/insight`, signal),
   lineups: (id: string, signal?: AbortSignal) =>
     apiGet<MatchLineups>(`${path(id)}/lineups`, signal),
+  prematch: (id: string, signal?: AbortSignal) =>
+    apiGet<MatchPreMatch>(`${path(id)}/prematch`, signal),
 }

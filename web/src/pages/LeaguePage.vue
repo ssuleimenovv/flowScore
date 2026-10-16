@@ -10,6 +10,7 @@ import FlowRecords from '@/features/league/ui/FlowRecords.vue'
 import RoundMatches from '@/features/league/ui/RoundMatches.vue'
 import StandingsTable from '@/features/league/ui/StandingsTable.vue'
 import { useLeague, useLeagues, useRound } from '@/features/league/useLeague'
+import { leagueLogo } from '@/shared/media/logos'
 import { resolveScreenState } from '@/shared/state/screenState'
 import { useNetwork } from '@/shared/state/useNetwork'
 import AppCard from '@/shared/ui/AppCard.vue'
@@ -99,6 +100,10 @@ function retryAll() {
           :aria-pressed="l.id === leagueId"
           @click="pick(l.id)"
         >
+          <template v-if="leagueLogo(l.id, 18)">
+            <img class="chip-logo on-light" :src="leagueLogo(l.id, 18)!" alt="" />
+            <img class="chip-logo on-dark" :src="leagueLogo(l.id, 18, 'dark')!" alt="" />
+          </template>
           {{ l.name }}
         </button>
       </div>
@@ -217,7 +222,10 @@ function retryAll() {
 
 /* The picked chip is filled with the text color, as on the board */
 .chip {
+  display: inline-flex;
   flex-shrink: 0;
+  gap: var(--fs-space-8);
+  align-items: center;
   height: 40px;
   padding: 0 var(--fs-space-16);
   border: 1px solid var(--fs-line);
@@ -228,6 +236,30 @@ function retryAll() {
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+}
+
+.chip-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* The logo drawn for the chip's background: a chip is dark in the dark
+   theme and light once picked, the other way round in the light theme */
+.chip .on-light,
+.chip[aria-pressed='true'] .on-dark,
+:root[data-theme='light'] .chip[aria-pressed='true'] .on-light {
+  display: none;
+}
+
+.chip[aria-pressed='true'] .on-light,
+:root[data-theme='light'] .chip .on-light,
+:root[data-theme='light'] .chip[aria-pressed='true'] .on-dark {
+  display: block;
+}
+
+:root[data-theme='light'] .chip .on-dark {
+  display: none;
 }
 
 .chip[aria-pressed='true'] {

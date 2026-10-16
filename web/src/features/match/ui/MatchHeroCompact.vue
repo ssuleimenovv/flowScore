@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { matchTeamLogo } from '@/shared/media/logos'
 import { useTweenedNumber } from '@/shared/motion/useTweenedNumber'
 import { flowShare, formatMinute } from '../format'
 import type { MatchLive } from '../matchState'
@@ -26,14 +27,24 @@ const minute = computed(() => formatMinute(seconds, match.value.clock.period))
 
     <div class="scoreboard">
       <div class="team">
-        <TeamBadge :code="match.home.code" side="home" size="md" />
+        <TeamBadge
+          :code="match.home.code"
+          side="home"
+          size="md"
+          :logo="matchTeamLogo(match, 'home', 52)"
+        />
         <span class="name">{{ match.home.name }}</span>
       </div>
       <div class="score" :aria-label="`Счёт ${live.score.home}:${live.score.away}`">
         {{ live.score.home }}<span class="colon" aria-hidden="true">:</span>{{ live.score.away }}
       </div>
       <div class="team">
-        <TeamBadge :code="match.away.code" side="away" size="md" />
+        <TeamBadge
+          :code="match.away.code"
+          side="away"
+          size="md"
+          :logo="matchTeamLogo(match, 'away', 52)"
+        />
         <span class="name">{{ match.away.name }}</span>
       </div>
     </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { MatchSummary } from '@/shared/api/types'
+import { matchTeamLogo } from '@/shared/media/logos'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import LiveBadge from '../../match/ui/LiveBadge.vue'
 import TeamBadge from '../../match/ui/TeamBadge.vue'
@@ -26,12 +27,22 @@ const insight = computed(() => insightLine(match))
 
     <div class="teams">
       <div class="team">
-        <TeamBadge :code="match.home.code" side="home" size="sm" />
+        <TeamBadge
+          :code="match.home.code"
+          side="home"
+          size="sm"
+          :logo="matchTeamLogo(match, 'home', 32)"
+        />
         <span class="name">{{ match.home.name }}</span>
         <span class="goals">{{ match.score.home }}</span>
       </div>
       <div class="team">
-        <TeamBadge :code="match.away.code" side="away" size="sm" />
+        <TeamBadge
+          :code="match.away.code"
+          side="away"
+          size="sm"
+          :logo="matchTeamLogo(match, 'away', 32)"
+        />
         <span class="name">{{ match.away.name }}</span>
         <span class="goals">{{ match.score.away }}</span>
       </div>

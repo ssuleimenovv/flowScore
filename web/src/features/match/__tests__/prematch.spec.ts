@@ -60,6 +60,8 @@ describe('pre-match', () => {
       flow: '44',
       flowNote: 'ср. Flow, 1 матч',
     })
+    // A real match's crest, by the team's ESPN id
+    expect(home!.logo).toContain('/i/teamlogos/soccer/500/368.png')
     expect(home!.results.map((r) => r.letter)).toEqual(['Н', 'В'])
     expect(home!.results[0]!.title).toBe(
       'Tottenham Hotspur 0:0 Everton, 12 сен 2026 · Premier League',

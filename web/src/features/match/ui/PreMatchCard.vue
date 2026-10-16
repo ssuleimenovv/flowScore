@@ -5,6 +5,7 @@ import AppCard from '@/shared/ui/AppCard.vue'
 import AppSegmented from '@/shared/ui/AppSegmented.vue'
 import type { MatchLive } from '../matchState'
 import { formRows, headToHead, meetingRows } from '../prematch'
+import TeamBadge from './TeamBadge.vue'
 
 // "Перед матчем" from the MatchExtended boards: each team's last five
 // matches with its Flow in them, or how the two teams' meetings went.
@@ -32,7 +33,7 @@ const meetings = computed(() => meetingRows(pre))
     <ul v-if="tab === 'form'" class="rows">
       <li v-for="f in form" :key="f.side" class="form-row">
         <span class="team">
-          <span class="badge" :class="f.side">{{ f.code }}</span>
+          <TeamBadge :code="f.code" :side="f.side" :logo="f.logo" size="sm" />
           <span class="name">{{ f.name }}</span>
         </span>
         <span
@@ -134,29 +135,6 @@ const meetings = computed(() => meetingRows(pre))
   gap: var(--fs-space-12);
   align-items: center;
   min-width: 0;
-}
-
-.badge {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  font-family: var(--fs-font-display);
-  font-size: var(--fs-text-caption);
-  font-weight: 800;
-}
-
-.badge.home {
-  background: var(--fs-home-soft);
-  color: var(--fs-home);
-}
-
-.badge.away {
-  background: var(--fs-away-soft);
-  color: var(--fs-away);
 }
 
 .name {

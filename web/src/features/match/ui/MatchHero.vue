@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { matchTeamLogo } from '@/shared/media/logos'
 import { useTweenedNumber } from '@/shared/motion/useTweenedNumber'
 import AppCard from '@/shared/ui/AppCard.vue'
 import { flowShare, formatClock, formatDelta, formatMeta, formatMinute } from '../format'
@@ -35,7 +36,7 @@ const clockLine = computed(() => {
 
     <div class="scoreboard">
       <div class="team">
-        <TeamBadge :code="match.home.code" side="home" />
+        <TeamBadge :code="match.home.code" side="home" :logo="matchTeamLogo(match, 'home', 72)" />
         <div class="team-body">
           <span class="name">{{ match.home.name }}</span>
           <div class="flow-line">
@@ -54,7 +55,7 @@ const clockLine = computed(() => {
       </div>
 
       <div class="team away-team">
-        <TeamBadge :code="match.away.code" side="away" />
+        <TeamBadge :code="match.away.code" side="away" :logo="matchTeamLogo(match, 'away', 72)" />
         <div class="team-body end">
           <span class="name">{{ match.away.name }}</span>
           <div class="flow-line away-line">

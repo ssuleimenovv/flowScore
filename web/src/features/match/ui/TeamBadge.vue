@@ -1,17 +1,47 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import type { Side } from '@/shared/api/types'
 
-// "lg" is the desktop scoreboard, "md" the phone one, "sm" a card on the home screen.
+// A team's crest, or its three letters when there is none: a demo match's
+// teams have no crest, and a crest that fails to load falls back as well.
+// "lg" is the desktop scoreboard, "md" the phone one, "sm" a card on the home
+// screen, "xs" a row of the league table. Without a side the tile is neutral.
 const {
   code,
   side,
+  logo = null,
   size = 'lg',
-} = defineProps<{ code: string; side: Side; size?: 'lg' | 'md' | 'sm' }>()
+} = defineProps<{
+  code: string
+  side?: Side
+  logo?: string | null
+  size?: 'lg' | 'md' | 'sm' | 'xs'
+}>()
 
+const failed = ref(false)
+watch(
+  () => logo,
+  () => (failed.value = false),
+)
 </script>
 
 <template>
-  <span class="badge" :class="[side, size]" aria-hidden="true">{{ code }}</span>
+  <span
+    class="badge"
+    :class="[side ?? 'neutral', size, { crest: logo && !failed }]"
+    aria-hidden="true"
+  >
+    <img
+      v-if="logo && !failed"
+      class="logo"
+      :src="logo"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      @error="failed = true"
+    />
+    <template v-else>{{ code }}</template>
+  </span>
 </template>
 
 <style scoped>
@@ -46,6 +76,13 @@ const {
   font-size: 10px;
 }
 
+.xs {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--fs-radius-sm);
+  font-size: 11px;
+}
+
 .home {
   background: var(--fs-home-soft);
   color: var(--fs-home);
@@ -54,5 +91,21 @@ const {
 .away {
   background: var(--fs-away-soft);
   color: var(--fs-away);
+}
+
+.neutral {
+  background: var(--fs-surface-2);
+  color: var(--fs-text);
+}
+
+/* A crest stands on its own, as in FotMob: no colored tile behind it */
+.badge.crest {
+  background: transparent;
+}
+
+.logo {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
 }
 </style>

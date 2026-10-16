@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import TeamBadge from '@/features/match/ui/TeamBadge.vue'
 import type { Standing } from '@/shared/api/types'
+import { teamLogo } from '@/shared/media/logos'
 import AppCard from '@/shared/ui/AppCard.vue'
 import { flowText, flowWidth, goals, zoneMark } from '../league'
 
@@ -27,7 +29,12 @@ const { rows } = defineProps<{ rows: Standing[] }>()
         <span class="num">{{ r.rank }}</span>
       </span>
       <span class="team">
-        <span class="code wide" aria-hidden="true">{{ r.team.code }}</span>
+        <TeamBadge
+          class="code wide"
+          :code="r.team.code"
+          :logo="teamLogo(r.team.id, 30)"
+          size="xs"
+        />
         <span class="name">{{ r.team.name }}</span>
       </span>
       <span class="num muted" :aria-label="`игр: ${r.played}`">{{ r.played }}</span>
@@ -142,17 +149,10 @@ const { rows } = defineProps<{ rows: Standing[] }>()
   text-overflow: ellipsis;
 }
 
-.code {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--fs-radius-sm);
-  background: var(--fs-surface-2);
-  font-family: var(--fs-font-display);
-  font-size: 11px;
-  font-weight: 800;
+/* The crest is a desktop column, as on League; MobileLeague has none. Two
+   classes, so it outweighs TeamBadge's own display */
+.code.wide {
+  display: none;
 }
 
 .flow .value {

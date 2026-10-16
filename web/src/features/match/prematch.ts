@@ -1,4 +1,5 @@
 import type { Match, MatchPreMatch, PastMatch, Side } from '@/shared/api/types'
+import { teamLogo } from '@/shared/media/logos'
 
 // "Перед матчем" and "Новости" from the MatchExtended boards.
 
@@ -7,6 +8,7 @@ export type Outcome = 'win' | 'draw' | 'loss'
 export interface FormRow {
   side: Side
   code: string // "EVE"
+  logo: string // the team's crest
   name: string
   results: Array<{ id: string; letter: string; outcome: Outcome; title: string }> // oldest first
   flow: string | null // "49": the team's average Flow over the matches the season read
@@ -56,6 +58,7 @@ export function formRows(pre: MatchPreMatch, match: Match): FormRow[] {
     return {
       side,
       code: match[side].code,
+      logo: teamLogo(match[side].id, 32),
       name: match[side].name,
       results: form.matches.map((m) => ({
         id: m.id,

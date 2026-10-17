@@ -98,7 +98,7 @@ export function sparkline(m: MatchSummary, side: Side): string {
 
 export interface Peak {
   id: string
-  match: string // "Manchester City — Arsenal"
+  summary: MatchSummary // the teams and their crests
   side: Side // the team that rose
   rise: number // Flow points gained over the window
   flow: number // its Flow now
@@ -120,7 +120,7 @@ export function flowPeaks(live: MatchSummary[], minutes = 5, limit = 3): Peak[] 
     if (rises[side] <= 0) continue
     peaks.push({
       id: m.id,
-      match: `${m.home.name} — ${m.away.name}`,
+      summary: m,
       side,
       rise: Math.round(rises[side]),
       flow: Math.round(last[side]),

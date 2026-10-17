@@ -4,6 +4,8 @@ import AppButton from '@/shared/ui/AppButton.vue'
 import AppCard from '@/shared/ui/AppCard.vue'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import { kickoffTime } from '../home'
+import MatchTeams from '@/features/match/ui/MatchTeams.vue'
+import { matchTeamLogo } from '@/shared/media/logos'
 
 // "AI-прогноз дня" from the Main board: the next match the outcome model is
 // surest about, and the way into its simulator.
@@ -20,7 +22,14 @@ const { match, text } = defineProps<{ match: MatchSummary; text: string }>()
       <span class="time">{{ kickoffTime(match) }}</span>
     </div>
     <div class="teams">
-      <h2 id="forecast-title" class="names">{{ match.home.name }} — {{ match.away.name }}</h2>
+      <h2 id="forecast-title" class="names">
+        <MatchTeams
+          :home="match.home"
+          :away="match.away"
+          :home-logo="matchTeamLogo(match, 'home', 18)"
+          :away-logo="matchTeamLogo(match, 'away', 18)"
+        />
+      </h2>
       <span class="league">
         {{ match.competition.name }}
         <template v-if="match.competition.round">· {{ match.competition.round }}-й тур</template>

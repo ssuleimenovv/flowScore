@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import AppCard from '@/shared/ui/AppCard.vue'
 import type { Peak } from '../home'
+import MatchTeams from '@/features/match/ui/MatchTeams.vue'
+import { matchTeamLogo } from '@/shared/media/logos'
 
 // "Пики потока" from the Main boards: the live matches where a team's Flow
 // rose the most over the last five minutes.
@@ -21,7 +23,14 @@ const { peaks } = defineProps<{ peaks: Peak[] }>()
     >
       <span class="rank">{{ String(i + 1).padStart(2, '0') }}</span>
       <div class="what">
-        <span class="match">{{ peak.match }}</span>
+        <MatchTeams
+          class="match"
+          :home="peak.summary.home"
+          :away="peak.summary.away"
+          :home-logo="matchTeamLogo(peak.summary, 'home', 18)"
+          :away-logo="matchTeamLogo(peak.summary, 'away', 18)"
+        />
+
         <span class="rise" :class="peak.side">+{{ peak.rise }} за 5′</span>
       </div>
       <span class="flow" :class="peak.side">{{ peak.flow }}</span>
@@ -82,11 +91,8 @@ const { peaks } = defineProps<{ peaks: Peak[] }>()
 }
 
 .match {
-  overflow: hidden;
   font-size: var(--fs-text-subheadline);
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .rise {

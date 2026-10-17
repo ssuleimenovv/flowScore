@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/api"
+	"github.com/ssuleimenovv/flowscore/services/internal/db"
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/insight"
@@ -72,6 +73,17 @@ func main() {
 	agent, err := newAgent(ctx, os.Getenv("GEMINI_API_KEY"), *llmModel, *llmGap, *insights)
 	if err != nil {
 		log.Fatalf("analysis agent: %v", err)
+	}
+
+	// Postgres keeps what must outlive a restart; without DATABASE_URL the
+	// server runs as before, from memory only
+	if url := os.Getenv("DATABASE_URL"); url != "" {
+		pool, err := db.Open(ctx, url)
+		if err != nil {
+			log.Fatalf("database: %v", err)
+		}
+		defer pool.Close()
+		log.Print("database: connected, schema up to date")
 	}
 
 	hub := live.NewHub()

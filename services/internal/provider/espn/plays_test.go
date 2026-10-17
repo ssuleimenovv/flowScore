@@ -71,3 +71,35 @@ func TestParsePlays(t *testing.T) {
 		t.Errorf("stoppage time: %+v", b)
 	}
 }
+
+// Plays from the recordings of 17 October 2026 that the first parser lost:
+// a headed goal, a shot off the bar and a handball
+func TestParsePlaysKinds(t *testing.T) {
+	const body = `{"commentary": [
+		{"play": {"id": "1", "type": {"type": "goal---header"}, "period": {"number": 1}, "clock": {"value": 1200, "displayValue": "20'"},
+			"team": {"displayName": "Aston Villa"}, "participants": [{"athlete": {"displayName": "Johan Manzambi"}}],
+			"text": "Goal! Newcastle United 0, Aston Villa 1. Johan Manzambi (Aston Villa) header from very close range to the bottom left corner."}},
+		{"play": {"id": "2", "type": {"type": "shot-hit-woodwork"}, "period": {"number": 1}, "clock": {"value": 1500, "displayValue": "25'"},
+			"team": {"displayName": "Newcastle United"}, "participants": [{"athlete": {"displayName": "Anthony Gordon"}}],
+			"text": "Anthony Gordon (Newcastle United) hits the bar with a right footed shot from the centre of the box."}},
+		{"play": {"id": "3", "type": {"type": "handball"}, "period": {"number": 2}, "clock": {"value": 3000, "displayValue": "50'"},
+			"team": {"displayName": "Aston Villa"}, "participants": [{"athlete": {"displayName": "Boubacar Kamara"}}]}}
+	]}`
+	m := event.Match{ID: "401879258", Home: event.Team{Name: "Newcastle United"}, Away: event.Team{Name: "Aston Villa"}}
+	plays, err := ParsePlays([]byte(body), m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plays) != 3 {
+		t.Fatalf("%d plays: %+v", len(plays), plays)
+	}
+	if g := plays[0]; g.Type != event.Goal || g.Side != event.Away || !g.Header || g.Situation != "open_play" {
+		t.Errorf("headed goal: %+v", g)
+	}
+	if w := plays[1]; w.Type != event.ShotOffTarget || w.Side != event.Home {
+		t.Errorf("woodwork: %+v", w)
+	}
+	if h := plays[2]; h.Type != event.Foul || h.Side != event.Away {
+		t.Errorf("handball: %+v", h)
+	}
+}

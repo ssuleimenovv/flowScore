@@ -11,23 +11,35 @@ import (
 
 // playTypes are ESPN's play types that are events of ours. Kick-off, delays
 // and the whistles are not here: the summary's clock already tells them.
-// Own goal, missed and saved penalties and the red card are named the way
-// ESPN names the rest; no recording has had one yet.
+// The own goal is named the way ESPN names the rest; no recording has had
+// one yet.
 var playTypes = map[string]event.Type{
-	"goal":             event.Goal,
-	"own-goal":         event.Goal,
-	"penalty---scored": event.Goal,
-	"penalty---saved":  event.ShotOnTarget,
-	"penalty---missed": event.ShotOffTarget,
-	"shot-on-target":   event.ShotOnTarget,
-	"shot-off-target":  event.ShotOffTarget,
-	"shot-blocked":     event.ShotBlocked,
-	"corner-awarded":   event.Corner,
-	"yellow-card":      event.YellowCard,
-	"red-card":         event.RedCard,
-	"substitution":     event.Substitution,
-	"foul":             event.Foul,
-	"offside":          event.Offside,
+	"goal":              event.Goal,
+	"own-goal":          event.Goal,
+	"penalty---scored":  event.Goal,
+	"penalty---saved":   event.ShotOnTarget,
+	"penalty---missed":  event.ShotOffTarget,
+	"shot-on-target":    event.ShotOnTarget,
+	"shot-off-target":   event.ShotOffTarget,
+	"shot-blocked":      event.ShotBlocked,
+	"shot-hit-woodwork": event.ShotOffTarget, // the bar or the post: not on target, as Opta counts it
+	"corner-awarded":    event.Corner,
+	"yellow-card":       event.YellowCard,
+	"red-card":          event.RedCard,
+	"substitution":      event.Substitution,
+	"foul":              event.Foul,
+	"handball":          event.Foul,
+	"offside":           event.Offside,
+}
+
+// typeOf is our event for an ESPN play type. A goal comes in kinds,
+// "goal---header", "goal---volley", and more than the recordings have shown.
+func typeOf(play string) (event.Type, bool) {
+	if strings.HasPrefix(play, "goal---") {
+		return event.Goal, true
+	}
+	t, ok := playTypes[play]
+	return t, ok
 }
 
 // ParsePlays reads the commentary of a summary: every play that is an event
@@ -80,7 +92,7 @@ func ParsePlays(body []byte, m event.Match) ([]event.Event, error) {
 		}
 		seen[p.ID] = true
 
-		t, ok := playTypes[p.Type.Type]
+		t, ok := typeOf(p.Type.Type)
 		if !ok {
 			continue
 		}

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import MatchTeams from '@/features/match/ui/MatchTeams.vue'
 import type { RoundMatch } from '@/shared/api/types'
+import { teamLogo } from '@/shared/media/logos'
 import AppCard from '@/shared/ui/AppCard.vue'
 import AppSegmented from '@/shared/ui/AppSegmented.vue'
 import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
-import { pairing, roundStatus, scoreText } from '../league'
+import { roundStatus, scoreText } from '../league'
 
 // "Матчи тура" from the League boards: the round tabs and the round's matches.
 // A match under way opens its screen; the gateway follows only those live.
@@ -45,7 +47,13 @@ defineEmits<{ retry: [] }>()
         :class="{ 'fs-link': m.state === 'in' }"
       >
         <div class="what">
-          <span class="match">{{ pairing(m) }}</span>
+          <MatchTeams
+            class="match"
+            :home="m.home"
+            :away="m.away"
+            :home-logo="teamLogo(m.home.id, 18)"
+            :away-logo="teamLogo(m.away.id, 18)"
+          />
           <span class="score">{{ scoreText(m) }}</span>
         </div>
         <span v-if="m.state === 'in'" class="live">

@@ -5,7 +5,8 @@ import type { Side } from '@/shared/api/types'
 // A team's crest, or its three letters when there is none: a demo match's
 // teams have no crest, and a crest that fails to load falls back as well.
 // "lg" is the desktop scoreboard, "md" the phone one, "sm" a card on the home
-// screen, "xs" a row of the league table. Without a side the tile is neutral.
+// screen, "xs" a row of the league table, "mini" a team's name in a list.
+// Without a side the tile is neutral.
 const {
   code,
   side,
@@ -15,7 +16,7 @@ const {
   code: string
   side?: Side
   logo?: string | null
-  size?: 'lg' | 'md' | 'sm' | 'xs'
+  size?: 'lg' | 'md' | 'sm' | 'xs' | 'mini'
 }>()
 
 const failed = ref(false)
@@ -81,6 +82,13 @@ watch(
   height: 30px;
   border-radius: var(--fs-radius-sm);
   font-size: 11px;
+}
+
+.mini {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  font-size: 7px;
 }
 
 .home {

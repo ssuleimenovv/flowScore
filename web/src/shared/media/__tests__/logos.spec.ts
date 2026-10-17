@@ -14,12 +14,15 @@ describe('logos', () => {
     expect(leagueLogo('uefa.champions', 18)).toBeNull()
   })
 
-  it('gives a crest only to a real match: a demo one has StatsBomb ids', () => {
+  it("finds a real team's crest by its ESPN id and a demo team's by its name", () => {
     const teams = {
-      home: { id: '368', code: 'EVE', name: 'Everton' },
+      home: { id: '36', code: 'MCI', name: 'Manchester City' },
       away: { id: '363', code: 'CHE', name: 'Chelsea' },
     }
     expect(matchTeamLogo({ source: 'espn', ...teams }, 'away', 52)).toContain('/363.png&w=104')
-    expect(matchTeamLogo({ source: 'replay', ...teams }, 'home', 52)).toBeNull()
+    // A StatsBomb id means nothing to ESPN: Manchester City is 382 there
+    expect(matchTeamLogo({ source: 'replay', ...teams }, 'home', 52)).toContain('/382.png')
+    // Chelsea is not one of the demo teams
+    expect(matchTeamLogo({ source: 'replay', ...teams }, 'away', 52)).toBeNull()
   })
 })

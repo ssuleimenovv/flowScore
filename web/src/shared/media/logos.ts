@@ -36,11 +36,25 @@ export function leagueLogo(
   return n === undefined ? null : image(`/i/leaguelogos/soccer/${folder}/${n}.png`, px)
 }
 
-// A team of a match: only a real match's ids are ESPN's
+// The demo matches are the Premier League's of 2015/16, whose teams have
+// StatsBomb ids: their crests are found by name. Norwich and Leicester are
+// not in the league now, but ESPN keeps their crests.
+const DEMO_TEAMS: Record<string, string> = {
+  Arsenal: '359',
+  'Leicester City': '375',
+  Liverpool: '364',
+  'Manchester City': '382',
+  'Manchester United': '360',
+  'Norwich City': '381',
+}
+
+// A team of a match: a real match's id is ESPN's, a demo team is found by name
 export function matchTeamLogo(
   match: Pick<Match, 'source' | 'home' | 'away'>,
   side: Side,
   px: number,
 ): string | null {
-  return match.source === 'espn' ? teamLogo(match[side].id, px) : null
+  const team = match[side]
+  const id = match.source === 'espn' ? team.id : DEMO_TEAMS[team.name]
+  return id ? teamLogo(id, px) : null
 }

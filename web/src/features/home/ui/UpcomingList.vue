@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import MatchTeams from '@/features/match/ui/MatchTeams.vue'
 import type { MatchSummary } from '@/shared/api/types'
+import { matchTeamLogo } from '@/shared/media/logos'
 import { kickoffTime } from '../home'
 
 // "Позже сегодня" from the Main boards: kick-off time, the teams and the
@@ -20,7 +22,13 @@ const { matches, empty = 'Больше матчей сегодня нет' } = d
     >
       <span class="time">{{ kickoffTime(m) }}</span>
       <div class="teams">
-        <span class="names">{{ m.home.name }} — {{ m.away.name }}</span>
+        <MatchTeams
+          class="names"
+          :home="m.home"
+          :away="m.away"
+          :home-logo="matchTeamLogo(m, 'home', 18)"
+          :away-logo="matchTeamLogo(m, 'away', 18)"
+        />
         <span class="league">{{ m.competition.name }}</span>
       </div>
       <div v-if="m.prediction" class="chances">
@@ -86,11 +94,8 @@ const { matches, empty = 'Больше матчей сегодня нет' } = d
 }
 
 .names {
-  overflow: hidden;
   font-size: var(--fs-text-subheadline);
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .league {

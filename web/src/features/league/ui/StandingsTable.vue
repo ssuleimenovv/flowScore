@@ -29,12 +29,7 @@ const { rows } = defineProps<{ rows: Standing[] }>()
         <span class="num">{{ r.rank }}</span>
       </span>
       <span class="team">
-        <TeamBadge
-          class="code wide"
-          :code="r.team.code"
-          :logo="teamLogo(r.team.id, 30)"
-          size="xs"
-        />
+        <TeamBadge :code="r.team.code" :logo="teamLogo(r.team.id, 30)" size="xs" />
         <span class="name">{{ r.team.name }}</span>
       </span>
       <span class="num muted" :aria-label="`игр: ${r.played}`">{{ r.played }}</span>
@@ -149,12 +144,6 @@ const { rows } = defineProps<{ rows: Standing[] }>()
   text-overflow: ellipsis;
 }
 
-/* The crest is a desktop column, as on League; MobileLeague has none. Two
-   classes, so it outweighs TeamBadge's own display */
-.code.wide {
-  display: none;
-}
-
 .flow .value {
   color: var(--fs-home);
 }
@@ -176,10 +165,6 @@ const { rows } = defineProps<{ rows: Standing[] }>()
 
   .wide {
     display: inline;
-  }
-
-  .code.wide {
-    display: flex;
   }
 
   .head {

@@ -12,6 +12,7 @@ security:
 tags:
   - name: matches
   - name: leagues
+  - name: auth
 
 paths:
   /matches:
@@ -314,6 +315,83 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WsMessage'
+
+  /auth/register:
+    post:
+      tags: [auth]
+      operationId: register
+      summary: Sign up with a name, an email and a password
+      description: |
+        The email is kept lower-cased and trimmed. The password follows the
+        rule of the sign-up form: at least 8 characters, one of them a digit,
+        at most 72 bytes. Answers with a session, as signing in does.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUp'
+      responses:
+        '201':
+          description: Signed up and in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Not a JSON body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Someone signed up with this email already
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: No name, no email, or a password that breaks the rule
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Sign in with an email and a password
+      description: |
+        A wrong password and an unknown email get the same answer, and take
+        as long, so neither tells which emails are signed up.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignIn'
+      responses:
+        '200':
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Not a JSON body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Wrong email or password
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 
 components:
   securitySchemes:
@@ -1273,3 +1351,52 @@ components:
             - $ref: '#/components/schemas/FlowValues'
             - type: 'null'
           description: Each team's Flow averaged over the match; null until it is over and read
+
+    SignUp:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          example: Аян
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          example: flowscore1
+
+    SignIn:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    Session:
+      description: 'The access token to send as "Authorization: Bearer" from now on, and who it is'
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+          description: JWT (HS256), counts for 15 minutes
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      required: [id, email, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string

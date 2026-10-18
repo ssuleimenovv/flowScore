@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/api"
+	"github.com/ssuleimenovv/flowscore/services/internal/auth"
 	"github.com/ssuleimenovv/flowscore/services/internal/db"
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
@@ -78,6 +79,7 @@ func main() {
 	// Postgres keeps what must outlive a restart; without DATABASE_URL the
 	// server runs as before, from memory only
 	var archive *db.Matches
+	var users *db.Users
 	if url := os.Getenv("DATABASE_URL"); url != "" {
 		pool, err := db.Open(ctx, url)
 		if err != nil {
@@ -85,6 +87,7 @@ func main() {
 		}
 		defer pool.Close()
 		archive = &db.Matches{Pool: pool}
+		users = &db.Users{Pool: pool}
 		log.Print("database: connected, schema up to date")
 	}
 
@@ -175,6 +178,14 @@ func main() {
 	api.Register(mux, store)
 	api.RegisterLeagues(mux, seasons, leagues)
 	api.RegisterPreMatch(mux, store, seasons)
+	// Signing up and in need the database to keep the users in
+	if users != nil {
+		secret := os.Getenv("FLOWSCORE_JWT_SECRET")
+		if len(secret) < 32 {
+			log.Fatal("FLOWSCORE_JWT_SECRET: set a random secret ot at least 32 characters")
+		}
+		api.RegisterAuth(mux, users, auth.Tokens{Secret: []byte(secret), TTL: 15 * time.Minute})
+	}
 
 	srv := &http.Server{
 		Addr:              *addr,

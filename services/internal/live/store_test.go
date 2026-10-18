@@ -173,3 +173,27 @@ func read[T any](t *testing.T, c *Client, kind string, match func(T) bool) T {
 		}
 	}
 }
+
+type fakeArchive map[string]Snapshot
+
+func (a fakeArchive) Get(matchID string) (Snapshot, bool) {
+	s, ok := a[matchID]
+	return s, ok
+}
+
+func TestStoreFallsBackToArchive(t *testing.T) {
+	store := NewStore()
+	store.UseArchive(fakeArchive{"old": {Match: event.Match{ID: "old"}, Status: "finished"}})
+	store.Start(event.Match{ID: "m1"}, 0)
+
+	// Memory first, the archive for a match memory does not have
+	if s, ok := store.Get("m1"); !ok || s.Status != "live" {
+		t.Errorf("m1 = %+v, %v; want the live match", s, ok)
+	}
+	if s, ok := store.Get("old"); !ok || s.Status != "finished" {
+		t.Errorf("old = %+v, %v; want the archived match", s, ok)
+	}
+	if _, ok := store.Get("none"); ok {
+		t.Error("a match neither has was found")
+	}
+}

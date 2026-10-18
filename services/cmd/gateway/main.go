@@ -77,17 +77,22 @@ func main() {
 
 	// Postgres keeps what must outlive a restart; without DATABASE_URL the
 	// server runs as before, from memory only
+	var archive *db.Matches
 	if url := os.Getenv("DATABASE_URL"); url != "" {
 		pool, err := db.Open(ctx, url)
 		if err != nil {
 			log.Fatalf("database: %v", err)
 		}
 		defer pool.Close()
+		archive = &db.Matches{Pool: pool}
 		log.Print("database: connected, schema up to date")
 	}
 
 	hub := live.NewHub()
 	store := live.NewStore()
+	if archive != nil {
+		store.UseArchive(archive)
+	}
 	params := flow.DefaultParams()
 
 	// Every match gets its own Publisher with the same models
@@ -147,6 +152,8 @@ func main() {
 			hub:     hub,
 			store:   store,
 			params:  params,
+			archive: archive,
+
 			// A real match predicts from this season's ratings; the demo
 			// matches are of 2015/16 and keep the model's own
 			newPublisher: func(matchID string) *live.Publisher {

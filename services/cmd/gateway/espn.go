@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/ssuleimenovv/flowscore/services/internal/db"
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
@@ -23,6 +24,7 @@ type liveESPN struct {
 	store        *live.Store
 	params       flow.Params
 	newPublisher func(matchID string) *live.Publisher
+	archive      *db.Matches // nil without a database
 
 	games map[string]*liveGame // by match ID; only run's goroutine touches it
 }
@@ -159,6 +161,15 @@ func (l *liveESPN) play(ctx context.Context, g *liveGame) {
 	log.Printf("espn: %s — %s kicked off", g.info.Home.Name, g.info.Away.Name)
 	g.publisher.Run(engine.Run(ctx, g.info.ID, events))
 	log.Printf("espn: %s — %s finished", g.info.Home.Name, g.info.Away.Name)
+	// The match outlives the server: it opens after a restart too. Run also
+	// returns when the server stops, so only a match that is over is kept
+	if l.archive != nil {
+		if snap, ok := l.store.Get(g.info.ID); ok && snap.Status == "finished" {
+			if err := l.archive.Save(ctx, snap); err != nil {
+				log.Printf("espn %s: archive: %v", g.info.ID, err)
+			}
+		}
+	}
 }
 
 // playing reports whether the match kicked off and is not over yet.

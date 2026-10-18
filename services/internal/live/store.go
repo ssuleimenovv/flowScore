@@ -41,15 +41,28 @@ type Score struct {
 	Away int `json:"away"`
 }
 
+// Archive has the matches that are over and gone from memory, as a database
+// keeps them. Get answers false for a match id does not have
+type Archive interface {
+	Get(matchID string) (Snapshot, bool)
+}
+
 // Store keeps the latest snapshot of every match. The Publisher writes while
 // HTTP handlers read at the same time, so access goes through an RWMutex.
 type Store struct {
 	mu      sync.RWMutex
 	matches map[string]*Snapshot
+	archive Archive // nil without a database
 }
 
 func NewStore() *Store {
 	return &Store{matches: map[string]*Snapshot{}}
+}
+
+// UseArchive makes Get look in a for a match no longer in memory. Call it
+// before the server starts
+func (s *Store) UseArchive(a Archive) {
+	s.archive = a
 }
 
 // Schedule registers a match that has not started yet. seq works as in Start:
@@ -80,6 +93,18 @@ func (s *Store) Remove(matchID string) {
 // Get returns a copy of the snapshot. The caller may keep reading it
 // after the lock is released while the Publisher goes on appending.
 func (s *Store) Get(matchID string) (Snapshot, bool) {
+	if snap, ok := s.memory(matchID); ok {
+		return snap, true
+	}
+	// A finished match gone from memory; the database is asked past the
+	// lock, so a slow answer holds up no one else
+	if s.archive != nil {
+		return s.archive.Get(matchID)
+	}
+	return Snapshot{}, false
+}
+
+func (s *Store) memory(matchID string) (Snapshot, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 

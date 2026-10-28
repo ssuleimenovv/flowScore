@@ -393,6 +393,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
 
+  /me:
+    get:
+      tags: [auth]
+      operationId: me
+      summary: Who the access token belongs to
+      description: |
+        Needs "Authorization: Bearer <token>". A missing, expired or forged
+        token, or one of an account that is gone, gets 401: sign in again.
+      responses:
+        '200':
+          description: The signed-in user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
 components:
   securitySchemes:
     bearerAuth:

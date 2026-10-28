@@ -18,12 +18,14 @@ import (
 type Accounts interface {
 	Create(ctx context.Context, email, name, hash string) (db.User, error)
 	ByEmail(ctx context.Context, email string) (db.User, string, error)
+	ByID(ctx context.Context, id string) (db.User, error)
 }
 
 // RegisterAuth adds signing up and signing in.
 func RegisterAuth(mux *http.ServeMux, users Accounts, tokens auth.Tokens) {
 	mux.HandleFunc("POST /api/v1/auth/register", registerHandler(users, tokens))
 	mux.HandleFunc("POST /api/v1/auth/login", loginHandler(users, tokens))
+	mux.HandleFunc("GET /api/v1/me", signedIn(tokens, meHandler(users)))
 }
 
 type user struct {
@@ -128,4 +130,38 @@ func writeSession(w http.ResponseWriter, status int, u db.User, tokens auth.Toke
 func serverError(w http.ResponseWriter, what string, err error) {
 	log.Printf("auth: %s: %v", what, err)
 	writeProblem(w, http.StatusInternalServerError, "Something went wrong")
+}
+
+// signedIn lets through a request with a valid access token, telling next
+// whose it is; any other request gets 401, and the client signs in again.
+func signedIn(tokens auth.Tokens, next func(w http.ResponseWriter, r *http.Request, userID string)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if !ok {
+			writeProblem(w, http.StatusUnauthorized, "Sign in first")
+			return
+		}
+		id, err := tokens.UserID(token)
+		if err != nil {
+			writeProblem(w, http.StatusUnauthorized, "Session expired")
+			return
+		}
+		next(w, r, id)
+	}
+}
+
+func meHandler(users Accounts) func(http.ResponseWriter, *http.Request, string) {
+	return func(w http.ResponseWriter, r *http.Request, userID string) {
+		u, err := users.ByID(r.Context(), userID)
+		// A token outlives an account deleted after it was issued
+		if errors.Is(err, db.ErrNoUser) {
+			writeProblem(w, http.StatusUnauthorized, "Sign in first")
+			return
+		}
+		if err != nil {
+			serverError(w, "me", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, user{ID: u.ID, Email: u.Email, Name: u.Name})
+	}
 }

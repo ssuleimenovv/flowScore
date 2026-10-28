@@ -40,4 +40,11 @@ func TestUsers(t *testing.T) {
 	if _, _, err := u.ByEmail(ctx, "nobody@flowscore.dev"); !errors.Is(err, ErrNoUser) {
 		t.Errorf("unknown email: %v, want ErrNoUser", err)
 	}
+	if got, err := u.ByID(ctx, made.ID); err != nil || got.Email != "test@flowscore.dev" {
+		t.Errorf("by ID: %+v, %v", got, err)
+	}
+	// A well-formed ID no one has
+	if _, err := u.ByID(ctx, "00000000-0000-0000-0000-000000000000"); !errors.Is(err, ErrNoUser) {
+		t.Errorf("unknown ID: %v, want ErrNoUser", err)
+	}
 }

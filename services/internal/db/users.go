@@ -64,3 +64,18 @@ func (u *Users) ByEmail(ctx context.Context, email string) (User, string, error)
 	}
 	return user, hash, nil
 }
+
+// ByID finds a user by the ID an access token names.
+func (u *Users) ByID(ctx context.Context, id string) (User, error) {
+	user := User{ID: id}
+	err := u.Pool.QueryRow(ctx, `
+		SELECT email, name, created_at FROM users WHERE id = $1`,
+		id).Scan(&user.Email, &user.Name, &user.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return User{}, ErrNoUser
+	}
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
+}

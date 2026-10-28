@@ -47,7 +47,7 @@ func TestCORSAnswersPreflight(t *testing.T) {
 	srv := corsServer(t)
 
 	res := send(t, http.MethodOptions, srv.URL, "https://flowscore.vercel.app")
-	if res.StatusCode != http.StatusNoContent || res.Header.Get("Access-Control-Allow-Headers") != "Content-Type" {
+	if res.StatusCode != http.StatusNoContent || res.Header.Get("Access-Control-Allow-Headers") != "Content-Type, Authorization" {
 		t.Errorf("preflight: status %d, headers %v", res.StatusCode, res.Header)
 	}
 }

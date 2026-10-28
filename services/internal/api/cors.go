@@ -23,10 +23,11 @@ func CORS(next http.Handler, origins []string) http.Handler {
 		h.Set("Access-Control-Allow-Origin", origin)
 		h.Add("Vary", "Origin")
 
-		// The browser asks first before a POST with a JSON body (the simulator)
+		// The browser asks first before a POST with a JSON body (the
+		// simulator, signing in) and before a request with a token
 		if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
 			h.Set("Access-Control-Allow-Methods", "GET, POST")
-			h.Set("Access-Control-Allow-Headers", "Content-Type")
+			h.Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			h.Set("Access-Control-Max-Age", "600")
 			w.WriteHeader(http.StatusNoContent)
 			return

@@ -256,7 +256,8 @@ export interface paths {
      * Sign up with a name, an email and a password
      * @description The email is kept lower-cased and trimmed. The password follows the
      *     rule of the sign-up form: at least 8 characters, one of them a digit,
-     *     at most 72 bytes. Answers with a session, as signing in does.
+     *     at most 72 bytes. No token yet: a 6-digit code goes to the email, and
+     *     /auth/verify with it signs in.
      */
     post: operations['register']
     delete?: never
@@ -280,6 +281,47 @@ export interface paths {
      *     as long, so neither tells which emails are signed up.
      */
     post: operations['login']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/verify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Confirm the email with the code from it, and sign in
+     * @description A code counts for 10 minutes and takes 5 wrong tries. It works once.
+     */
+    post: operations['verify']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/resend': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Send a new code
+     * @description An unknown or already confirmed email gets the same 202 and no email,
+     *     so the answer does not tell which emails are signed up.
+     */
+    post: operations['resend']
     delete?: never
     options?: never
     head?: never
@@ -828,6 +870,25 @@ export interface components {
       email: string
       name: string
     }
+    /** @description The answer while a code is on its way */
+    Pending: {
+      /** Format: email */
+      email: string
+    }
+    Verify: {
+      /** Format: email */
+      email: string
+      /** @example 482193 */
+      code: string
+    }
+    Resend: {
+      /** Format: email */
+      email: string
+    }
+    WrongCode: components['schemas']['Problem'] & {
+      /** @description Tries left for this code; at 0 ask for a new one */
+      attemptsLeft: number
+    }
   }
   responses: {
     /** @description Access token missing or expired */
@@ -864,6 +925,15 @@ export interface components {
       headers: {
         /** @description Seconds to wait */
         'Retry-After'?: number
+        [name: string]: unknown
+      }
+      content: {
+        'application/problem+json': components['schemas']['Problem']
+      }
+    }
+    /** @description The email with the code could not be sent; ask for it again */
+    MailFailed: {
+      headers: {
         [name: string]: unknown
       }
       content: {
@@ -1257,13 +1327,13 @@ export interface operations {
       }
     }
     responses: {
-      /** @description Signed up and in */
-      201: {
+      /** @description Signed up; the code is on its way */
+      202: {
         headers: {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['Session']
+          'application/json': components['schemas']['Pending']
         }
       }
       /** @description Not a JSON body */
@@ -1293,6 +1363,7 @@ export interface operations {
           'application/problem+json': components['schemas']['Problem']
         }
       }
+      502: components['responses']['MailFailed']
     }
   }
   login: {
@@ -1335,6 +1406,115 @@ export interface operations {
           'application/problem+json': components['schemas']['Problem']
         }
       }
+      /**
+       * @description The right password, but the email is not confirmed yet. A new code
+       *     goes out (unless one did less than a minute ago): open the code screen
+       */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      502: components['responses']['MailFailed']
+    }
+  }
+  verify: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Verify']
+      }
+    }
+    responses: {
+      /** @description Confirmed and signed in */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Session']
+        }
+      }
+      /** @description Not a JSON body */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description No code to check (never sent, used, expired or out of tries): ask for a new one */
+      410: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description Wrong code */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['WrongCode']
+        }
+      }
+    }
+  }
+  resend: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Resend']
+      }
+    }
+    responses: {
+      /** @description A new code is on its way, if the email waits for one */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Pending']
+        }
+      }
+      /** @description Not a JSON body */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description A code went out less than a minute ago */
+      429: {
+        headers: {
+          /** @description Seconds to wait */
+          'Retry-After'?: number
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      502: components['responses']['MailFailed']
     }
   }
   me: {

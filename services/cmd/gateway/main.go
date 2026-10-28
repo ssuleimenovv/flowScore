@@ -21,6 +21,7 @@ import (
 	"github.com/ssuleimenovv/flowscore/services/internal/flow"
 	"github.com/ssuleimenovv/flowscore/services/internal/insight"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
+	"github.com/ssuleimenovv/flowscore/services/internal/mail"
 	"github.com/ssuleimenovv/flowscore/services/internal/predict"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/espn"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/statsbomb"
@@ -80,6 +81,7 @@ func main() {
 	// server runs as before, from memory only
 	var archive *db.Matches
 	var users *db.Users
+	var codes *db.Codes
 	if url := os.Getenv("DATABASE_URL"); url != "" {
 		pool, err := db.Open(ctx, url)
 		if err != nil {
@@ -88,6 +90,7 @@ func main() {
 		defer pool.Close()
 		archive = &db.Matches{Pool: pool}
 		users = &db.Users{Pool: pool}
+		codes = &db.Codes{Pool: pool}
 		log.Print("database: connected, schema up to date")
 	}
 
@@ -141,7 +144,6 @@ func main() {
 	// The league screens and the ratings of the real matches: each league's
 	// season, read once at start and then again now and then, since a match
 	// over stays over
-	// again now and then, since a match over stays over
 	seasons := &season.Seasons{Client: espn.NewClient(), Params: params, XG: &xgModel}
 	if len(leagues) > 0 && *seasonEvery > 0 {
 		go seasons.Run(ctx, leagues, *seasonEvery)
@@ -182,9 +184,15 @@ func main() {
 	if users != nil {
 		secret := os.Getenv("FLOWSCORE_JWT_SECRET")
 		if len(secret) < 32 {
-			log.Fatal("FLOWSCORE_JWT_SECRET: set a random secret ot at least 32 characters")
+			log.Fatal("FLOWSCORE_JWT_SECRET: set a random secret of at least 32 characters")
 		}
-		api.RegisterAuth(mux, users, auth.Tokens{Secret: []byte(secret), TTL: 15 * time.Minute})
+		api.Auth{
+			Users:  users,
+			Codes:  codes,
+			Hasher: auth.Codes{Secret: []byte(secret)},
+			Mail:   mailer(),
+			Tokens: auth.Tokens{Secret: []byte(secret), TTL: 15 * time.Minute},
+		}.Register(mux)
 	}
 
 	srv := &http.Server{
@@ -312,4 +320,15 @@ func replayOnce(ctx context.Context, publisher *live.Publisher, params flow.Para
 	publisher.Run(engine.Run(ctx, matchID, events))
 	log.Printf("match %s finished", matchID)
 	return nil
+}
+
+// mailer sends the codes through Brevo once it is set up; until then, and
+// locally, they go to this log
+func mailer() mail.Sender {
+	key, from := os.Getenv("BREVO_API_KEY"), os.Getenv("FLOWSCORE_MAIL_FROM")
+	if key == "" || from == "" {
+		log.Print("mail: BREVO_API_KEY or FLOWSCORE_MAIL_FROM is not set, codes go to this log")
+		return mail.Log{}
+	}
+	return mail.Brevo{Key: key, From: from}
 }

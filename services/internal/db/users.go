@@ -15,6 +15,7 @@ type User struct {
 	ID        string
 	Email     string
 	Name      string
+	Verified  bool // the email is confirmed by a code
 	CreatedAt time.Time
 }
 
@@ -54,8 +55,10 @@ func (u *Users) ByEmail(ctx context.Context, email string) (User, string, error)
 	var user User
 	var hash string
 	err := u.Pool.QueryRow(ctx, `
-		SELECT id::text, email, name, created_at, password_hash FROM users WHERE email = $1`,
-		email).Scan(&user.ID, &user.Email, &user.Name, &user.CreatedAt, &hash)
+		SELECT id::text, email, name, created_at, email_verified_at IS NOT NULL, password_hash
+		FROM users WHERE email = $1`,
+		email).Scan(&user.ID, &user.Email, &user.Name, &user.CreatedAt, &user.Verified, &hash)
+
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, "", ErrNoUser
 	}
@@ -69,8 +72,9 @@ func (u *Users) ByEmail(ctx context.Context, email string) (User, string, error)
 func (u *Users) ByID(ctx context.Context, id string) (User, error) {
 	user := User{ID: id}
 	err := u.Pool.QueryRow(ctx, `
-		SELECT email, name, created_at FROM users WHERE id = $1`,
-		id).Scan(&user.Email, &user.Name, &user.CreatedAt)
+		SELECT email, name, created_at, email_verified_at IS NOT NULL FROM users WHERE id = $1`,
+		id).Scan(&user.Email, &user.Name, &user.CreatedAt, &user.Verified)
+
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrNoUser
 	}
@@ -78,4 +82,11 @@ func (u *Users) ByID(ctx context.Context, id string) (User, error) {
 		return User{}, err
 	}
 	return user, nil
+}
+
+// MarkVerified records that the user's email is confirmed.
+func (u *Users) MarkVerified(ctx context.Context, id string) error {
+	_, err := u.Pool.Exec(ctx, `
+		UPDATE users SET email_verified_at = now() WHERE id = $1 AND email_verified_at IS NULL`, id)
+	return err
 }

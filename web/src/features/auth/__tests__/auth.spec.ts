@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError } from '@/shared/api/http'
 import { authError, formReady, passwordOk } from '../auth'
+import { flowBars } from '../auth'
 
 describe('passwordOk', () => {
   it('follows the rule the form tells', () => {
@@ -26,5 +27,18 @@ describe('authError', () => {
     expect(authError(new ApiError(409, null))).toBe('Эта почта уже зарегистрирована')
     expect(authError(new ApiError(0, null))).toBe('Нет связи с сервером')
     expect(authError(new Error('boom'))).toBe('Что-то пошло не так')
+  })
+})
+
+describe('flowBars', () => {
+  it('draws the wave of the Auth board', () => {
+    const bars = flowBars()
+    expect(bars).toHaveLength(40)
+    // Every bar shows, and a bar is never both teams'
+    expect(bars.every((b) => b.up >= 2 && b.down >= 2 && !(b.home && b.away))).toBe(true)
+    // Home pulls ahead after bar 26, as the board draws it; the wave dips
+    // back to away only at the very end
+    expect(bars.slice(27, 37).every((b) => b.home)).toBe(true)
+    expect(bars[37]!.away).toBe(true)
   })
 })

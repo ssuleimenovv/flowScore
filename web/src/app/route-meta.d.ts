@@ -7,5 +7,6 @@ declare module 'vue-router' {
     tab?: TabId // which tab or section is active
     inner?: boolean // pushed screen: "Назад" and a title instead of the logo
     stubTitle?: string // temporary, for screens that are not built yet
+    bare?: boolean // a screen of its own: no header, tab bar or credit (Вход)
   }
 }

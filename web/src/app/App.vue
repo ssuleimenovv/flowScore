@@ -9,34 +9,39 @@ import ToastHost from '@/shared/toast/ToastHost.vue'
 const route = useRoute()
 const active = computed(() => route.meta.tab)
 const inner = computed(() => route.meta.inner === true)
+const bare = computed(() => route.meta.bare === true)
 </script>
 
 <template>
-  <!-- Both layouts are in the DOM; CSS shows one of them at the 768 px breakpoint -->
-  <div class="desktop-only">
-    <DesktopHeader :active />
-  </div>
-  <div class="mobile-only">
-    <MobileNavBar :inner />
-  </div>
+  <!-- Вход is a screen of its own, as on the Auth boards -->
+  <RouterView v-if="bare" />
+  <template v-else>
+    <!-- Both layouts are in the DOM; CSS shows one of them at the 768 px breakpoint -->
+    <div class="desktop-only">
+      <DesktopHeader :active />
+    </div>
+    <div class="mobile-only">
+      <MobileNavBar :inner />
+    </div>
 
-  <main class="content">
-    <!-- The key remounts the page when only the id changes (/matches/1 → /matches/2) -->
-    <RouterView :key="route.path" />
+    <main class="content">
+      <!-- The key remounts the page when only the id changes (/matches/1 → /matches/2) -->
+      <RouterView :key="route.path" />
 
-    <!-- The real matches come from ESPN; the StatsBomb Open Data licence asks
-         for this credit wherever its data, the demo matches, is shown -->
-    <p class="credit">
-      Данные матчей: ESPN ·
-      <a href="https://github.com/statsbomb/open-data" target="_blank" rel="noopener">
-        StatsBomb Open Data
-      </a>
-    </p>
-  </main>
+      <!-- The real matches come from ESPN; the StatsBomb Open Data licence asks
+           for this credit wherever its data, the demo matches, is shown -->
+      <p class="credit">
+        Данные матчей: ESPN ·
+        <a href="https://github.com/statsbomb/open-data" target="_blank" rel="noopener">
+          StatsBomb Open Data
+        </a>
+      </p>
+    </main>
 
-  <div class="mobile-only">
-    <TabBar :active />
-  </div>
+    <div class="mobile-only">
+      <TabBar :active />
+    </div>
+  </template>
   <ToastHost />
 </template>
 

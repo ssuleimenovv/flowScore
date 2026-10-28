@@ -30,3 +30,24 @@ export function authError(err: unknown): string {
       return 'Сервер ответил ошибкой, попробуй ещё раз'
   }
 }
+
+export interface Bar {
+  up: number // px above the line
+  down: number // px below it
+  home: boolean // the bar above is the home team's color
+  away: boolean // the bar below is the away team's
+}
+
+// The Flow wave of the left panel, as the Auth board draws it: 40 bars,
+// home above the line and away below, home pulling ahead at the end
+export function flowBars(n = 40): Bar[] {
+  return Array.from({ length: n }, (_, i) => {
+    const v = Math.sin(i / 3.2) * 38 + Math.sin(i / 1.3) * 14 + (i > 26 ? 30 : 0)
+    return {
+      up: Math.max(2, Math.round(Math.max(v, 0) * 1.4)),
+      down: Math.max(2, Math.round(Math.max(-v, 0) * 1.4)),
+      home: v > 0,
+      away: v < 0,
+    }
+  })
+}

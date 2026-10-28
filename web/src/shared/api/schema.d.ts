@@ -4,1331 +4,1358 @@
  */
 
 export interface paths {
-    "/matches": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Every match for the home screen, by kick-off time */
-        get: operations["listMatches"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/matches/{matchId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Match header, score and stats */
-        get: operations["getMatch"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/matches/{matchId}/flow": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Current Flow and per-minute history */
-        get: operations["getMatchFlow"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/matches/{matchId}/events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Match timeline, newest first */
-        get: operations["getMatchEvents"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/matches/{matchId}/insight": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** AI output — explanation, outcome prediction, fan sentiment */
-        get: operations["getMatchInsight"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/matches/{matchId}/lineups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Both teams' players, where the starters stand and the substitutions so far
-         * @description 404 until the source has the lineups: ESPN shows them about an hour
-         *     before kick-off. A substitution is in only once the match has reached
-         *     it, so a demo replay does not tell the future.
-         */
-        get: operations["getMatchLineups"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/matches/{matchId}/prematch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * "Перед матчем": each team's last matches, their meetings and the news
-         * @description Only a real match has it; a demo match answers 404. Flow is given only
-         *     for a match the season has read: one of the league's this season, not
-         *     a cup match nor one of an earlier season.
-         */
-        get: operations["getMatchPreMatch"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/matches/{matchId}/simulate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * "What if?": the outcome chances with changes later in the match
-         * @description Predicts the rest of the match from the current moment, once as it
-         *     stands and once with the changes (docs/PREDICTION.md). Nothing is stored.
-         */
-        post: operations["simulateMatch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/leagues": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The leagues the gateway follows, in the order the screens show them */
-        get: operations["listLeagues"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/leagues/{leagueId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Season, the round being played and the Flow records */
-        get: operations["getLeague"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/leagues/{leagueId}/standings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The table, with each team's average Flow */
-        get: operations["getStandings"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/leagues/{leagueId}/rounds/{round}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** The matches of one round */
-        get: operations["getRound"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/ws/matches/{matchId}/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * WebSocket — live updates for one match
-         * @description Upgrades to WebSocket. The server pushes WsMessage frames (JSON).
-         *     On a gap in `seq` the client refetches the REST resources.
-         */
-        get: operations["streamMatch"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Sign up with a name, an email and a password
-         * @description The email is kept lower-cased and trimmed. The password follows the
-         *     rule of the sign-up form: at least 8 characters, one of them a digit,
-         *     at most 72 bytes. Answers with a session, as signing in does.
-         */
-        post: operations["register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Sign in with an email and a password
-         * @description A wrong password and an unknown email get the same answer, and take
-         *     as long, so neither tells which emails are signed up.
-         */
-        post: operations["login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Who the access token belongs to
-         * @description Needs "Authorization: Bearer <token>". A missing, expired or forged
-         *     token, or one of an account that is gone, gets 401: sign in again.
-         */
-        get: operations["me"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-}
-export type webhooks = Record<string, never>;
-export interface components {
-    schemas: {
-        /** @description RFC 9457 Problem Details */
-        Problem: {
-            /** Format: uri-reference */
-            type: string;
-            title: string;
-            status: number;
-            detail?: string;
-            instance?: string;
-            /** @description Shown in the error card ("req 7f3a91") */
-            requestId?: string;
-        };
-        /** @enum {string} */
-        Side: "home" | "away";
-        Team: {
-            id: string;
-            /** @description Three-letter code, e.g. MCI */
-            code: string;
-            name: string;
-        };
-        Score: {
-            home: number;
-            away: number;
-        };
-        Match: {
-            id: string;
-            /**
-             * @description espn for a real match followed live, replay for a demo match played again
-             * @enum {string}
-             */
-            source: "espn" | "replay";
-            /** @enum {string} */
-            status: "scheduled" | "live" | "halftime" | "finished" | "postponed";
-            /** Format: date-time */
-            kickoffAt: string;
-            competition: {
-                id: string;
-                name: string;
-                round?: string;
-            };
-            venue?: {
-                name?: string;
-                city?: string;
-            };
-            home: components["schemas"]["Team"];
-            away: components["schemas"]["Team"];
-            score: components["schemas"]["Score"];
-            halftimeScore?: components["schemas"]["Score"] | null;
-            clock: components["schemas"]["Clock"];
-            stats: components["schemas"]["StatRow"][];
-            seq: components["schemas"]["SnapshotSeq"];
-        };
-        MatchList: {
-            items: components["schemas"]["MatchSummary"][];
-        };
-        /**
-         * @description One card of the home screen: the match plus what the card draws. The
-         *     list is polled, so seq here does not count as a stream position.
-         */
-        MatchSummary: components["schemas"]["Match"] & {
-            flow: components["schemas"]["FlowValues"];
-            delta10: components["schemas"]["FlowValues"];
-            factors: components["schemas"]["FlowFactor"][];
-            points: components["schemas"]["FlowPoint"][];
-            prediction: components["schemas"]["Prediction"] | null;
-            explanation: components["schemas"]["Explanation"] | null;
-        };
-        Clock: {
-            /** @description Match time in seconds (72:14 → 4334) */
-            elapsedSeconds: number;
-            /** @enum {string} */
-            period: "first_half" | "second_half" | "extra_time" | "penalties";
-            /**
-             * Format: date-time
-             * @description Server time when elapsedSeconds was measured; the client keeps ticking from here
-             */
-            observedAt: string;
-        };
-        StatRow: {
-            /** @description possession (percent), shots, shots_on_target, xg, key_passes, pressure_tackles (tackles won or lost), in the order of the Match board */
-            key: string;
-            home: number;
-            away: number;
-        };
-        FlowValues: {
-            home: number;
-            away: number;
-        };
-        FlowPoint: {
-            minute: number;
-            home: number;
-            away: number;
-        };
-        FlowSeries: {
-            matchId: string;
-            current: components["schemas"]["FlowValues"];
-            /** @description Flow now minus Flow 10 match minutes ago */
-            delta10: {
-                home: number;
-                away: number;
-            };
-            /** @description One point per played minute. The client derives the wave and 1/5/15 windows. */
-            points: components["schemas"]["FlowPoint"][];
-            factors: components["schemas"]["FlowFactor"][];
-            /** Format: date-time */
-            updatedAt: string;
-            seq: components["schemas"]["SnapshotSeq"];
-        };
-        /** @description What one group of events adds to a team's impulse right now (docs/FLOW.md, section 6). The factors of a team add up to its impulse, so they explain its Flow exactly; groups under half a point are left out. */
-        FlowFactor: {
-            side: components["schemas"]["Side"];
-            /**
-             * @description cards are the opponent's yellow cards, red_cards the team's own
-             * @enum {string}
-             */
-            key: "shots" | "goals" | "key_passes" | "possession" | "corners" | "cards" | "red_cards" | "substitutions" | "other";
-            /** @description Impulse points, the scale of the Flow-эффект in the chronicle; negative when it holds the team back */
-            value: number;
-            /** @description Events of the group in the last 10 minutes of the period; for possession, minutes */
-            count: number;
-            /** @description Minutes since the first of them, rounded up; 0 when count is 0 */
-            minutes: number;
-            /** @description Possession only, the team's share of the ball over those minutes */
-            share?: number;
-        };
-        MatchEvent: {
-            id: string;
-            /** @enum {string} */
-            type: "goal" | "shot_on_target" | "shot_off_target" | "shot_blocked" | "corner" | "yellow_card" | "red_card" | "substitution" | "foul" | "offside" | "take_on" | "halftime" | "fulltime";
-            side: components["schemas"]["Side"] | null;
-            /** @description The minute on the clock, as the live badge shows it (72:14 → 72) */
-            minute: number;
-            /** @description 45+2 → minute 45, addedTime 2 */
-            addedTime?: number | null;
-            player?: components["schemas"]["PersonRef"];
-            assist?: components["schemas"]["PersonRef"];
-            /** @description StatsBomb's xG of the shot */
-            xG?: number | null;
-            /** @description Our own xG model's (docs/XG.md), from where and how the shot was taken */
-            modelXG?: number | null;
-            /** @description 0–100, attacking left to right */
-            position?: {
-                x?: number;
-                y?: number;
-            };
-            scoreAfter?: components["schemas"]["Score"];
-            /** @description The event's weight w(e) from docs/FLOW.md */
-            flowImpact?: number | null;
-        };
-        PersonRef: {
-            id: string;
-            name: string;
-        } | null;
-        EventList: {
-            items: components["schemas"]["MatchEvent"][];
-            seq: components["schemas"]["SnapshotSeq"];
-        };
-        /**
-         * @description Seq of the last stream message already included in this response.
-         *     Apply only stream messages with a greater seq.
-         */
-        SnapshotSeq: number;
-        MatchLineups: {
-            matchId: string;
-            home: components["schemas"]["TeamLineup"];
-            away: components["schemas"]["TeamLineup"];
-        };
-        TeamLineup: {
-            /**
-             * @description "4-2-3-1"; null when the source does not say
-             * @example 4-2-3-1
-             */
-            formation: string | null;
-            /** @description From the keeper forward, each line from the left wing to the right one */
-            starters: components["schemas"]["LineupPlayer"][];
-            /** @description The players who came on first, by when */
-            bench: components["schemas"]["LineupPlayer"][];
-        };
-        LineupPlayer: {
-            /** @description The same as the player id of the match events */
-            id: string;
-            name: string;
-            /** @description Shirt number */
-            number: string | null;
-            /**
-             * @description Where a starter stands, 0–100 attacking left to right like the
-             *     event positions; null on the bench
-             */
-            position: {
-                x: number;
-                y: number;
-            } | null;
-            on: components["schemas"]["LineupMinute"];
-            off: components["schemas"]["LineupMinute"];
-        };
-        /** @description When the player came on or went off; null if not, or not yet */
-        LineupMinute: {
-            /** @example 90 */
-            minute: number;
-            /** @example 3 */
-            addedTime: number | null;
-        } | null;
-        MatchPreMatch: {
-            matchId: string;
-            home: components["schemas"]["TeamForm"];
-            away: components["schemas"]["TeamForm"];
-            meetings: components["schemas"]["Meetings"];
-            /** @description The league's news, newest first */
-            news: components["schemas"]["NewsItem"][];
-        };
-        TeamForm: {
-            /** @description The team's last matches of any competition, oldest first */
-            matches: components["schemas"]["FormMatch"][];
-            /** @description The team's Flow averaged over the flowGames of them the season has read */
-            flow: number | null;
-            flowGames: number;
-        };
-        FormMatch: components["schemas"]["PastMatch"] & {
-            /**
-             * @description For the team whose form it is
-             * @enum {string}
-             */
-            result: "win" | "draw" | "loss";
-        };
-        PastMatch: {
-            id: string;
-            /** Format: date-time */
-            date: string;
-            /** @example Premier League */
-            competition: string;
-            home: components["schemas"]["Team"];
-            away: components["schemas"]["Team"];
-            score: components["schemas"]["Score"];
-            /** @description Each team's Flow averaged over the match; null if the season has not read it */
-            flow: components["schemas"]["FlowValues"] | null;
-        };
-        /** @description The two teams' last meetings, counted for this match's home and away team */
-        Meetings: {
-            homeWins: number;
-            draws: number;
-            awayWins: number;
-            /** @description Newest first */
-            matches: components["schemas"]["PastMatch"][];
-        };
-        NewsItem: {
-            headline: string;
-            url: string;
-            /** Format: date-time */
-            publishedAt: string;
-        };
-        /** @description Whole percents of a home win, a draw and an away win; they add up to 100 */
-        Probabilities: {
-            home: number;
-            draw: number;
-            away: number;
-        };
-        Insight: {
-            matchId: string;
-            /** @description Null until the Explainability agent answers */
-            explanation?: components["schemas"]["Explanation"] | null;
-            prediction: components["schemas"]["Prediction"];
-            sentiment?: components["schemas"]["Sentiment"] | null;
-            seq: components["schemas"]["SnapshotSeq"];
-        };
-        /**
-         * @description Chances of the result from the outcome model (docs/PREDICTION.md).
-         *     current changes with prediction.update; preMatch is fixed at kick-off.
-         */
-        Prediction: {
-            current: components["schemas"]["Probabilities"];
-            preMatch: components["schemas"]["Probabilities"];
-            /** @example Poisson v1 */
-            model: string;
-        };
-        SimulationRequest: {
-            reds: components["schemas"]["SimulatedRed"][];
-        };
-        /** @description A red card later in the match; a minute already past counts from now */
-        SimulatedRed: {
-            side: components["schemas"]["Side"];
-            minute: number;
-        };
-        Simulation: {
-            /** @description Match minute on the clock the simulation starts from */
-            minute: number;
-            current: components["schemas"]["Probabilities"];
-            scenario: components["schemas"]["Probabilities"];
-        };
-        /**
-         * @description The analysis the AI agent wrote for one moment of the match: a goal, a
-         *     red card or every tenth minute. The factors on the card come from the
-         *     flow, so the analysis itself is text only.
-         */
-        Explanation: {
-            /** @example Арсенал забирает инициативу */
-            title: string;
-            text: string;
-            /** @description The match minute the analysis was written for */
-            minute: number;
-            /** Format: date-time */
-            generatedAt: string;
-        };
-        Sentiment: {
-            messagesPerMinute: number;
-            home: components["schemas"]["FanMood"];
-            away: components["schemas"]["FanMood"];
-        };
-        FanMood: {
-            score: number;
-            /** @example эйфория */
-            mood: string;
-        };
-        WsMessage: components["schemas"]["WsMatchEvent"] | components["schemas"]["WsFlowUpdate"] | components["schemas"]["WsMatchStats"] | components["schemas"]["WsPredictionUpdate"] | components["schemas"]["WsInsightUpdate"];
-        WsEnvelope: {
-            type: string;
-            matchId: string;
-            /** @description Increases by 1 per message within a match; a gap means messages were lost */
-            seq: number;
-            /** Format: date-time */
-            sentAt: string;
-        };
-        WsMatchEvent: components["schemas"]["WsEnvelope"] & {
-            /** @constant */
-            type?: "match.event";
-            data: components["schemas"]["MatchEvent"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "match.event";
-        };
-        WsFlowUpdate: components["schemas"]["WsEnvelope"] & {
-            /** @constant */
-            type?: "flow.update";
-            data: {
-                current: components["schemas"]["FlowValues"];
-                delta10: components["schemas"]["FlowValues"];
-                point: components["schemas"]["FlowPoint"];
-                /** @description Match time at this update; the client resyncs its ticking clock to it */
-                clock: components["schemas"]["Clock"];
-                factors: components["schemas"]["FlowFactor"][];
-            };
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "flow.update";
-        };
-        WsMatchStats: components["schemas"]["WsEnvelope"] & {
-            /** @constant */
-            type?: "match.stats";
-            /** @description Every row, not a diff; the client replaces what it has */
-            data: {
-                stats: components["schemas"]["StatRow"][];
-            };
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "match.stats";
-        };
-        WsPredictionUpdate: components["schemas"]["WsEnvelope"] & {
-            /** @constant */
-            type?: "prediction.update";
-            data: components["schemas"]["Probabilities"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "prediction.update";
-        };
-        WsInsightUpdate: components["schemas"]["WsEnvelope"] & {
-            /** @constant */
-            type?: "insight.update";
-            data: components["schemas"]["Explanation"];
-        } & {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "insight.update";
-        };
-        LeagueList: {
-            items: {
-                /** @example eng.1 */
-                id: string;
-                /** @example Премьер-лига */
-                name: string;
-                /** @description false while the season is still being read */
-                ready: boolean;
-            }[];
-        };
-        League: {
-            id: string;
-            name: string;
-            /** @example 2026/27 */
-            season: string;
-            /** @description The round being played, or the next one */
-            round: number;
-            /** @description Rounds in the season */
-            rounds: number;
-            /** @description The matches where one team's Flow was highest on average, best first, at most 3 */
-            records: components["schemas"]["FlowRecord"][];
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        FlowRecord: {
-            matchId: string;
-            round: number;
-            home: components["schemas"]["Team"];
-            away: components["schemas"]["Team"];
-            score: components["schemas"]["Score"];
-            side: components["schemas"]["Side"];
-            /** @description That team's Flow averaged over the match, 0–100 */
-            flow: number;
-            /** @description The highest Flow of the match, of either team */
-            peak: number;
-        };
-        StandingList: {
-            leagueId: string;
-            items: components["schemas"]["Standing"][];
-        };
-        Standing: {
-            rank: number;
-            team: components["schemas"]["Team"];
-            played: number;
-            won: number;
-            drawn: number;
-            lost: number;
-            goalsFor: number;
-            goalsAgainst: number;
-            points: number;
-            /**
-             * @description What the place leads to
-             * @enum {string|null}
-             */
-            zone: "champions" | "europa" | "conference" | "relegation" | null;
-            /** @description The team's Flow averaged over its matches; null before any is read */
-            flow: number | null;
-        };
-        RoundList: {
-            leagueId: string;
-            round: number;
-            items: components["schemas"]["RoundMatch"][];
-        };
-        RoundMatch: {
-            /** @description The match's ID on ESPN, the same as on the match screen while it is live */
-            id: string;
-            /** Format: date-time */
-            kickoffAt: string;
-            /** @enum {string} */
-            state: "pre" | "in" | "post";
-            /** @description The minute as ESPN shows it while in play ("72'"); empty otherwise */
-            clock: string;
-            home: components["schemas"]["Team"];
-            away: components["schemas"]["Team"];
-            /** @description null before kick-off */
-            score: components["schemas"]["Score"] | null;
-            /** @description Each team's Flow averaged over the match; null until it is over and read */
-            flow: components["schemas"]["FlowValues"] | null;
-        };
-        SignUp: {
-            /** @example Аян */
-            name: string;
-            /** Format: email */
-            email: string;
-            /** @example flowscore1 */
-            password: string;
-        };
-        SignIn: {
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        /** @description The access token to send as "Authorization: Bearer" from now on, and who it is */
-        Session: {
-            /** @description JWT (HS256), counts for 15 minutes */
-            token: string;
-            user: components["schemas"]["User"];
-        };
-        User: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string;
-            name: string;
-        };
-    };
-    responses: {
-        /** @description Access token missing or expired */
-        Unauthorized: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Match not found */
-        NotFound: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Rate limit exceeded */
-        TooManyRequests: {
-            headers: {
-                /** @description Seconds to wait */
-                "Retry-After"?: number;
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description The league is followed, but its season is still being read (about a minute after start) */
-        SeasonNotReady: {
-            headers: {
-                /** @description Seconds to wait */
-                "Retry-After"?: number;
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-        /** @description Unexpected error */
-        Error: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/problem+json": components["schemas"]["Problem"];
-            };
-        };
-    };
+  '/matches': {
     parameters: {
-        /** @example m_01J8ZQ4T7K */
-        MatchId: string;
-        /** @example eng.1 */
-        LeagueId: string;
-    };
-    requestBodies: never;
-    headers: {
-        ETag: string;
-    };
-    pathItems: never;
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Every match for the home screen, by kick-off time */
+    get: operations['listMatches']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/matches/{matchId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Match header, score and stats */
+    get: operations['getMatch']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/matches/{matchId}/flow': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Current Flow and per-minute history */
+    get: operations['getMatchFlow']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/matches/{matchId}/events': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Match timeline, newest first */
+    get: operations['getMatchEvents']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/matches/{matchId}/insight': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** AI output — explanation, outcome prediction, fan sentiment */
+    get: operations['getMatchInsight']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/matches/{matchId}/lineups': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Both teams' players, where the starters stand and the substitutions so far
+     * @description 404 until the source has the lineups: ESPN shows them about an hour
+     *     before kick-off. A substitution is in only once the match has reached
+     *     it, so a demo replay does not tell the future.
+     */
+    get: operations['getMatchLineups']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/matches/{matchId}/prematch': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * "Перед матчем": each team's last matches, their meetings and the news
+     * @description Only a real match has it; a demo match answers 404. Flow is given only
+     *     for a match the season has read: one of the league's this season, not
+     *     a cup match nor one of an earlier season.
+     */
+    get: operations['getMatchPreMatch']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/matches/{matchId}/simulate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * "What if?": the outcome chances with changes later in the match
+     * @description Predicts the rest of the match from the current moment, once as it
+     *     stands and once with the changes (docs/PREDICTION.md). Nothing is stored.
+     */
+    post: operations['simulateMatch']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/leagues': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The leagues the gateway follows, in the order the screens show them */
+    get: operations['listLeagues']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/leagues/{leagueId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Season, the round being played and the Flow records */
+    get: operations['getLeague']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/leagues/{leagueId}/standings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The table, with each team's average Flow */
+    get: operations['getStandings']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/leagues/{leagueId}/rounds/{round}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The matches of one round */
+    get: operations['getRound']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/ws/matches/{matchId}/stream': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * WebSocket — live updates for one match
+     * @description Upgrades to WebSocket. The server pushes WsMessage frames (JSON).
+     *     On a gap in `seq` the client refetches the REST resources.
+     */
+    get: operations['streamMatch']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/register': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Sign up with a name, an email and a password
+     * @description The email is kept lower-cased and trimmed. The password follows the
+     *     rule of the sign-up form: at least 8 characters, one of them a digit,
+     *     at most 72 bytes. Answers with a session, as signing in does.
+     */
+    post: operations['register']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/login': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Sign in with an email and a password
+     * @description A wrong password and an unknown email get the same answer, and take
+     *     as long, so neither tells which emails are signed up.
+     */
+    post: operations['login']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/me': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Who the access token belongs to
+     * @description Needs "Authorization: Bearer <token>". A missing, expired or forged
+     *     token, or one of an account that is gone, gets 401: sign in again.
+     */
+    get: operations['me']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type $defs = Record<string, never>;
+export type webhooks = Record<string, never>
+export interface components {
+  schemas: {
+    /** @description RFC 9457 Problem Details */
+    Problem: {
+      /** Format: uri-reference */
+      type: string
+      title: string
+      status: number
+      detail?: string
+      instance?: string
+      /** @description Shown in the error card ("req 7f3a91") */
+      requestId?: string
+    }
+    /** @enum {string} */
+    Side: 'home' | 'away'
+    Team: {
+      id: string
+      /** @description Three-letter code, e.g. MCI */
+      code: string
+      name: string
+    }
+    Score: {
+      home: number
+      away: number
+    }
+    Match: {
+      id: string
+      /**
+       * @description espn for a real match followed live, replay for a demo match played again
+       * @enum {string}
+       */
+      source: 'espn' | 'replay'
+      /** @enum {string} */
+      status: 'scheduled' | 'live' | 'halftime' | 'finished' | 'postponed'
+      /** Format: date-time */
+      kickoffAt: string
+      competition: {
+        id: string
+        name: string
+        round?: string
+      }
+      venue?: {
+        name?: string
+        city?: string
+      }
+      home: components['schemas']['Team']
+      away: components['schemas']['Team']
+      score: components['schemas']['Score']
+      halftimeScore?: components['schemas']['Score'] | null
+      clock: components['schemas']['Clock']
+      stats: components['schemas']['StatRow'][]
+      seq: components['schemas']['SnapshotSeq']
+    }
+    MatchList: {
+      items: components['schemas']['MatchSummary'][]
+    }
+    /**
+     * @description One card of the home screen: the match plus what the card draws. The
+     *     list is polled, so seq here does not count as a stream position.
+     */
+    MatchSummary: components['schemas']['Match'] & {
+      flow: components['schemas']['FlowValues']
+      delta10: components['schemas']['FlowValues']
+      factors: components['schemas']['FlowFactor'][]
+      points: components['schemas']['FlowPoint'][]
+      prediction: components['schemas']['Prediction'] | null
+      explanation: components['schemas']['Explanation'] | null
+    }
+    Clock: {
+      /** @description Match time in seconds (72:14 → 4334) */
+      elapsedSeconds: number
+      /** @enum {string} */
+      period: 'first_half' | 'second_half' | 'extra_time' | 'penalties'
+      /**
+       * Format: date-time
+       * @description Server time when elapsedSeconds was measured; the client keeps ticking from here
+       */
+      observedAt: string
+    }
+    StatRow: {
+      /** @description possession (percent), shots, shots_on_target, xg, key_passes, pressure_tackles (tackles won or lost), in the order of the Match board */
+      key: string
+      home: number
+      away: number
+    }
+    FlowValues: {
+      home: number
+      away: number
+    }
+    FlowPoint: {
+      minute: number
+      home: number
+      away: number
+    }
+    FlowSeries: {
+      matchId: string
+      current: components['schemas']['FlowValues']
+      /** @description Flow now minus Flow 10 match minutes ago */
+      delta10: {
+        home: number
+        away: number
+      }
+      /** @description One point per played minute. The client derives the wave and 1/5/15 windows. */
+      points: components['schemas']['FlowPoint'][]
+      factors: components['schemas']['FlowFactor'][]
+      /** Format: date-time */
+      updatedAt: string
+      seq: components['schemas']['SnapshotSeq']
+    }
+    /** @description What one group of events adds to a team's impulse right now (docs/FLOW.md, section 6). The factors of a team add up to its impulse, so they explain its Flow exactly; groups under half a point are left out. */
+    FlowFactor: {
+      side: components['schemas']['Side']
+      /**
+       * @description cards are the opponent's yellow cards, red_cards the team's own
+       * @enum {string}
+       */
+      key:
+        | 'shots'
+        | 'goals'
+        | 'key_passes'
+        | 'possession'
+        | 'corners'
+        | 'cards'
+        | 'red_cards'
+        | 'substitutions'
+        | 'other'
+      /** @description Impulse points, the scale of the Flow-эффект in the chronicle; negative when it holds the team back */
+      value: number
+      /** @description Events of the group in the last 10 minutes of the period; for possession, minutes */
+      count: number
+      /** @description Minutes since the first of them, rounded up; 0 when count is 0 */
+      minutes: number
+      /** @description Possession only, the team's share of the ball over those minutes */
+      share?: number
+    }
+    MatchEvent: {
+      id: string
+      /** @enum {string} */
+      type:
+        | 'goal'
+        | 'shot_on_target'
+        | 'shot_off_target'
+        | 'shot_blocked'
+        | 'corner'
+        | 'yellow_card'
+        | 'red_card'
+        | 'substitution'
+        | 'foul'
+        | 'offside'
+        | 'take_on'
+        | 'halftime'
+        | 'fulltime'
+      side: components['schemas']['Side'] | null
+      /** @description The minute on the clock, as the live badge shows it (72:14 → 72) */
+      minute: number
+      /** @description 45+2 → minute 45, addedTime 2 */
+      addedTime?: number | null
+      player?: components['schemas']['PersonRef']
+      assist?: components['schemas']['PersonRef']
+      /** @description StatsBomb's xG of the shot */
+      xG?: number | null
+      /** @description Our own xG model's (docs/XG.md), from where and how the shot was taken */
+      modelXG?: number | null
+      /** @description 0–100, attacking left to right */
+      position?: {
+        x?: number
+        y?: number
+      }
+      scoreAfter?: components['schemas']['Score']
+      /** @description The event's weight w(e) from docs/FLOW.md */
+      flowImpact?: number | null
+    }
+    PersonRef: {
+      id: string
+      name: string
+    } | null
+    EventList: {
+      items: components['schemas']['MatchEvent'][]
+      seq: components['schemas']['SnapshotSeq']
+    }
+    /**
+     * @description Seq of the last stream message already included in this response.
+     *     Apply only stream messages with a greater seq.
+     */
+    SnapshotSeq: number
+    MatchLineups: {
+      matchId: string
+      home: components['schemas']['TeamLineup']
+      away: components['schemas']['TeamLineup']
+    }
+    TeamLineup: {
+      /**
+       * @description "4-2-3-1"; null when the source does not say
+       * @example 4-2-3-1
+       */
+      formation: string | null
+      /** @description From the keeper forward, each line from the left wing to the right one */
+      starters: components['schemas']['LineupPlayer'][]
+      /** @description The players who came on first, by when */
+      bench: components['schemas']['LineupPlayer'][]
+    }
+    LineupPlayer: {
+      /** @description The same as the player id of the match events */
+      id: string
+      name: string
+      /** @description Shirt number */
+      number: string | null
+      /**
+       * @description Where a starter stands, 0–100 attacking left to right like the
+       *     event positions; null on the bench
+       */
+      position: {
+        x: number
+        y: number
+      } | null
+      on: components['schemas']['LineupMinute']
+      off: components['schemas']['LineupMinute']
+    }
+    /** @description When the player came on or went off; null if not, or not yet */
+    LineupMinute: {
+      /** @example 90 */
+      minute: number
+      /** @example 3 */
+      addedTime: number | null
+    } | null
+    MatchPreMatch: {
+      matchId: string
+      home: components['schemas']['TeamForm']
+      away: components['schemas']['TeamForm']
+      meetings: components['schemas']['Meetings']
+      /** @description The league's news, newest first */
+      news: components['schemas']['NewsItem'][]
+    }
+    TeamForm: {
+      /** @description The team's last matches of any competition, oldest first */
+      matches: components['schemas']['FormMatch'][]
+      /** @description The team's Flow averaged over the flowGames of them the season has read */
+      flow: number | null
+      flowGames: number
+    }
+    FormMatch: components['schemas']['PastMatch'] & {
+      /**
+       * @description For the team whose form it is
+       * @enum {string}
+       */
+      result: 'win' | 'draw' | 'loss'
+    }
+    PastMatch: {
+      id: string
+      /** Format: date-time */
+      date: string
+      /** @example Premier League */
+      competition: string
+      home: components['schemas']['Team']
+      away: components['schemas']['Team']
+      score: components['schemas']['Score']
+      /** @description Each team's Flow averaged over the match; null if the season has not read it */
+      flow: components['schemas']['FlowValues'] | null
+    }
+    /** @description The two teams' last meetings, counted for this match's home and away team */
+    Meetings: {
+      homeWins: number
+      draws: number
+      awayWins: number
+      /** @description Newest first */
+      matches: components['schemas']['PastMatch'][]
+    }
+    NewsItem: {
+      headline: string
+      url: string
+      /** Format: date-time */
+      publishedAt: string
+    }
+    /** @description Whole percents of a home win, a draw and an away win; they add up to 100 */
+    Probabilities: {
+      home: number
+      draw: number
+      away: number
+    }
+    Insight: {
+      matchId: string
+      /** @description Null until the Explainability agent answers */
+      explanation?: components['schemas']['Explanation'] | null
+      prediction: components['schemas']['Prediction']
+      sentiment?: components['schemas']['Sentiment'] | null
+      seq: components['schemas']['SnapshotSeq']
+    }
+    /**
+     * @description Chances of the result from the outcome model (docs/PREDICTION.md).
+     *     current changes with prediction.update; preMatch is fixed at kick-off.
+     */
+    Prediction: {
+      current: components['schemas']['Probabilities']
+      preMatch: components['schemas']['Probabilities']
+      /** @example Poisson v1 */
+      model: string
+    }
+    SimulationRequest: {
+      reds: components['schemas']['SimulatedRed'][]
+    }
+    /** @description A red card later in the match; a minute already past counts from now */
+    SimulatedRed: {
+      side: components['schemas']['Side']
+      minute: number
+    }
+    Simulation: {
+      /** @description Match minute on the clock the simulation starts from */
+      minute: number
+      current: components['schemas']['Probabilities']
+      scenario: components['schemas']['Probabilities']
+    }
+    /**
+     * @description The analysis the AI agent wrote for one moment of the match: a goal, a
+     *     red card or every tenth minute. The factors on the card come from the
+     *     flow, so the analysis itself is text only.
+     */
+    Explanation: {
+      /** @example Арсенал забирает инициативу */
+      title: string
+      text: string
+      /** @description The match minute the analysis was written for */
+      minute: number
+      /** Format: date-time */
+      generatedAt: string
+    }
+    Sentiment: {
+      messagesPerMinute: number
+      home: components['schemas']['FanMood']
+      away: components['schemas']['FanMood']
+    }
+    FanMood: {
+      score: number
+      /** @example эйфория */
+      mood: string
+    }
+    WsMessage:
+      | components['schemas']['WsMatchEvent']
+      | components['schemas']['WsFlowUpdate']
+      | components['schemas']['WsMatchStats']
+      | components['schemas']['WsPredictionUpdate']
+      | components['schemas']['WsInsightUpdate']
+    WsEnvelope: {
+      type: string
+      matchId: string
+      /** @description Increases by 1 per message within a match; a gap means messages were lost */
+      seq: number
+      /** Format: date-time */
+      sentAt: string
+    }
+    WsMatchEvent: components['schemas']['WsEnvelope'] & {
+      /** @constant */
+      type?: 'match.event'
+      data: components['schemas']['MatchEvent']
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'match.event'
+    }
+    WsFlowUpdate: components['schemas']['WsEnvelope'] & {
+      /** @constant */
+      type?: 'flow.update'
+      data: {
+        current: components['schemas']['FlowValues']
+        delta10: components['schemas']['FlowValues']
+        point: components['schemas']['FlowPoint']
+        /** @description Match time at this update; the client resyncs its ticking clock to it */
+        clock: components['schemas']['Clock']
+        factors: components['schemas']['FlowFactor'][]
+      }
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'flow.update'
+    }
+    WsMatchStats: components['schemas']['WsEnvelope'] & {
+      /** @constant */
+      type?: 'match.stats'
+      /** @description Every row, not a diff; the client replaces what it has */
+      data: {
+        stats: components['schemas']['StatRow'][]
+      }
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'match.stats'
+    }
+    WsPredictionUpdate: components['schemas']['WsEnvelope'] & {
+      /** @constant */
+      type?: 'prediction.update'
+      data: components['schemas']['Probabilities']
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'prediction.update'
+    }
+    WsInsightUpdate: components['schemas']['WsEnvelope'] & {
+      /** @constant */
+      type?: 'insight.update'
+      data: components['schemas']['Explanation']
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'insight.update'
+    }
+    LeagueList: {
+      items: {
+        /** @example eng.1 */
+        id: string
+        /** @example Премьер-лига */
+        name: string
+        /** @description false while the season is still being read */
+        ready: boolean
+      }[]
+    }
+    League: {
+      id: string
+      name: string
+      /** @example 2026/27 */
+      season: string
+      /** @description The round being played, or the next one */
+      round: number
+      /** @description Rounds in the season */
+      rounds: number
+      /** @description The matches where one team's Flow was highest on average, best first, at most 3 */
+      records: components['schemas']['FlowRecord'][]
+      /** Format: date-time */
+      updatedAt: string
+    }
+    FlowRecord: {
+      matchId: string
+      round: number
+      home: components['schemas']['Team']
+      away: components['schemas']['Team']
+      score: components['schemas']['Score']
+      side: components['schemas']['Side']
+      /** @description That team's Flow averaged over the match, 0–100 */
+      flow: number
+      /** @description The highest Flow of the match, of either team */
+      peak: number
+    }
+    StandingList: {
+      leagueId: string
+      items: components['schemas']['Standing'][]
+    }
+    Standing: {
+      rank: number
+      team: components['schemas']['Team']
+      played: number
+      won: number
+      drawn: number
+      lost: number
+      goalsFor: number
+      goalsAgainst: number
+      points: number
+      /**
+       * @description What the place leads to
+       * @enum {string|null}
+       */
+      zone: 'champions' | 'europa' | 'conference' | 'relegation' | null
+      /** @description The team's Flow averaged over its matches; null before any is read */
+      flow: number | null
+    }
+    RoundList: {
+      leagueId: string
+      round: number
+      items: components['schemas']['RoundMatch'][]
+    }
+    RoundMatch: {
+      /** @description The match's ID on ESPN, the same as on the match screen while it is live */
+      id: string
+      /** Format: date-time */
+      kickoffAt: string
+      /** @enum {string} */
+      state: 'pre' | 'in' | 'post'
+      /** @description The minute as ESPN shows it while in play ("72'"); empty otherwise */
+      clock: string
+      home: components['schemas']['Team']
+      away: components['schemas']['Team']
+      /** @description null before kick-off */
+      score: components['schemas']['Score'] | null
+      /** @description Each team's Flow averaged over the match; null until it is over and read */
+      flow: components['schemas']['FlowValues'] | null
+    }
+    SignUp: {
+      /** @example Аян */
+      name: string
+      /** Format: email */
+      email: string
+      /** @example flowscore1 */
+      password: string
+    }
+    SignIn: {
+      /** Format: email */
+      email: string
+      password: string
+    }
+    /** @description The access token to send as "Authorization: Bearer" from now on, and who it is */
+    Session: {
+      /** @description JWT (HS256), counts for 15 minutes */
+      token: string
+      user: components['schemas']['User']
+    }
+    User: {
+      /** Format: uuid */
+      id: string
+      /** Format: email */
+      email: string
+      name: string
+    }
+  }
+  responses: {
+    /** @description Access token missing or expired */
+    Unauthorized: {
+      headers: {
+        [name: string]: unknown
+      }
+      content: {
+        'application/problem+json': components['schemas']['Problem']
+      }
+    }
+    /** @description Match not found */
+    NotFound: {
+      headers: {
+        [name: string]: unknown
+      }
+      content: {
+        'application/problem+json': components['schemas']['Problem']
+      }
+    }
+    /** @description Rate limit exceeded */
+    TooManyRequests: {
+      headers: {
+        /** @description Seconds to wait */
+        'Retry-After'?: number
+        [name: string]: unknown
+      }
+      content: {
+        'application/problem+json': components['schemas']['Problem']
+      }
+    }
+    /** @description The league is followed, but its season is still being read (about a minute after start) */
+    SeasonNotReady: {
+      headers: {
+        /** @description Seconds to wait */
+        'Retry-After'?: number
+        [name: string]: unknown
+      }
+      content: {
+        'application/problem+json': components['schemas']['Problem']
+      }
+    }
+    /** @description Unexpected error */
+    Error: {
+      headers: {
+        [name: string]: unknown
+      }
+      content: {
+        'application/problem+json': components['schemas']['Problem']
+      }
+    }
+  }
+  parameters: {
+    /** @example m_01J8ZQ4T7K */
+    MatchId: string
+    /** @example eng.1 */
+    LeagueId: string
+  }
+  requestBodies: never
+  headers: {
+    ETag: string
+  }
+  pathItems: never
+}
+export type $defs = Record<string, never>
 export interface operations {
-    listMatches: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MatchList"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    getMatch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    ETag: components["headers"]["ETag"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Match"];
-                };
-            };
-            /** @description Not modified (If-None-Match matched) */
-            304: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["TooManyRequests"];
-            default: components["responses"]["Error"];
-        };
-    };
-    getMatchFlow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FlowSeries"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["TooManyRequests"];
-            default: components["responses"]["Error"];
-        };
-    };
-    getMatchEvents: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EventList"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["TooManyRequests"];
-            default: components["responses"]["Error"];
-        };
-    };
-    getMatchInsight: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Insight"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-            429: components["responses"]["TooManyRequests"];
-            default: components["responses"]["Error"];
-        };
-    };
-    getMatchLineups: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MatchLineups"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            default: components["responses"]["Error"];
-        };
-    };
-    getMatchPreMatch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MatchPreMatch"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            default: components["responses"]["Error"];
-        };
-    };
-    simulateMatch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SimulationRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Simulation"];
-                };
-            };
-            /** @description A change the model cannot take */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            default: components["responses"]["Error"];
-        };
-    };
-    listLeagues: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LeagueList"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    getLeague: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example eng.1 */
-                leagueId: components["parameters"]["LeagueId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["League"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            503: components["responses"]["SeasonNotReady"];
-            default: components["responses"]["Error"];
-        };
-    };
-    getStandings: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example eng.1 */
-                leagueId: components["parameters"]["LeagueId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StandingList"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            503: components["responses"]["SeasonNotReady"];
-            default: components["responses"]["Error"];
-        };
-    };
-    getRound: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example eng.1 */
-                leagueId: components["parameters"]["LeagueId"];
-                round: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoundList"];
-                };
-            };
-            404: components["responses"]["NotFound"];
-            503: components["responses"]["SeasonNotReady"];
-            default: components["responses"]["Error"];
-        };
-    };
-    streamMatch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example m_01J8ZQ4T7K */
-                matchId: components["parameters"]["MatchId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Switching protocols. Frames follow the WsMessage schema. */
-            101: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WsMessage"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-            404: components["responses"]["NotFound"];
-        };
-    };
-    register: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignUp"];
-            };
-        };
-        responses: {
-            /** @description Signed up and in */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"];
-                };
-            };
-            /** @description Not a JSON body */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Someone signed up with this email already */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description No name, no email, or a password that breaks the rule */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignIn"];
-            };
-        };
-        responses: {
-            /** @description Signed in */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Session"];
-                };
-            };
-            /** @description Not a JSON body */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Wrong email or password */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The signed-in user */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["User"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-        };
-    };
+  listMatches: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MatchList']
+        }
+      }
+      default: components['responses']['Error']
+    }
+  }
+  getMatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          ETag: components['headers']['ETag']
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Match']
+        }
+      }
+      /** @description Not modified (If-None-Match matched) */
+      304: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      401: components['responses']['Unauthorized']
+      404: components['responses']['NotFound']
+      429: components['responses']['TooManyRequests']
+      default: components['responses']['Error']
+    }
+  }
+  getMatchFlow: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FlowSeries']
+        }
+      }
+      401: components['responses']['Unauthorized']
+      404: components['responses']['NotFound']
+      429: components['responses']['TooManyRequests']
+      default: components['responses']['Error']
+    }
+  }
+  getMatchEvents: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['EventList']
+        }
+      }
+      401: components['responses']['Unauthorized']
+      404: components['responses']['NotFound']
+      429: components['responses']['TooManyRequests']
+      default: components['responses']['Error']
+    }
+  }
+  getMatchInsight: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Insight']
+        }
+      }
+      401: components['responses']['Unauthorized']
+      404: components['responses']['NotFound']
+      429: components['responses']['TooManyRequests']
+      default: components['responses']['Error']
+    }
+  }
+  getMatchLineups: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MatchLineups']
+        }
+      }
+      404: components['responses']['NotFound']
+      default: components['responses']['Error']
+    }
+  }
+  getMatchPreMatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MatchPreMatch']
+        }
+      }
+      404: components['responses']['NotFound']
+      default: components['responses']['Error']
+    }
+  }
+  simulateMatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SimulationRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Simulation']
+        }
+      }
+      /** @description A change the model cannot take */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      404: components['responses']['NotFound']
+      default: components['responses']['Error']
+    }
+  }
+  listLeagues: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LeagueList']
+        }
+      }
+      default: components['responses']['Error']
+    }
+  }
+  getLeague: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example eng.1 */
+        leagueId: components['parameters']['LeagueId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['League']
+        }
+      }
+      404: components['responses']['NotFound']
+      503: components['responses']['SeasonNotReady']
+      default: components['responses']['Error']
+    }
+  }
+  getStandings: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example eng.1 */
+        leagueId: components['parameters']['LeagueId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['StandingList']
+        }
+      }
+      404: components['responses']['NotFound']
+      503: components['responses']['SeasonNotReady']
+      default: components['responses']['Error']
+    }
+  }
+  getRound: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example eng.1 */
+        leagueId: components['parameters']['LeagueId']
+        round: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoundList']
+        }
+      }
+      404: components['responses']['NotFound']
+      503: components['responses']['SeasonNotReady']
+      default: components['responses']['Error']
+    }
+  }
+  streamMatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example m_01J8ZQ4T7K */
+        matchId: components['parameters']['MatchId']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Switching protocols. Frames follow the WsMessage schema. */
+      101: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WsMessage']
+        }
+      }
+      401: components['responses']['Unauthorized']
+      404: components['responses']['NotFound']
+    }
+  }
+  register: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignUp']
+      }
+    }
+    responses: {
+      /** @description Signed up and in */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Session']
+        }
+      }
+      /** @description Not a JSON body */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description Someone signed up with this email already */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description No name, no email, or a password that breaks the rule */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+    }
+  }
+  login: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignIn']
+      }
+    }
+    responses: {
+      /** @description Signed in */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Session']
+        }
+      }
+      /** @description Not a JSON body */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description Wrong email or password */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+    }
+  }
+  me: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description The signed-in user */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['User']
+        }
+      }
+      401: components['responses']['Unauthorized']
+    }
+  }
 }

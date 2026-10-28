@@ -63,7 +63,6 @@ function xgLine(e: MatchEvent): string | null {
   return parts.length ? parts.join(' · ') : null
 }
 
-
 function describe(e: MatchEvent, match: Match, score: string) {
   const who = e.player ? surname(e.player.name) : null
   const team = e.side ? match[e.side].name : null

@@ -27,7 +27,7 @@ const explanation = computed(() => explain(live, variant === 'brief' ? 3 : 5))
 // built from Flow. The factor lines always come from Flow, so they stay live.
 const summary = computed(() => live.analysis ?? explanation.value)
 // The agent's text is as old as its answer, the one from Flow as the data
-const stamp = computed(() => (live.analysis ? new Date(live.analysis.generatedAt): updatedAt))
+const stamp = computed(() => (live.analysis ? new Date(live.analysis.generatedAt) : updatedAt))
 
 // "обновлено 12 с назад", kept current between updates
 const now = ref(Date.now())
@@ -67,7 +67,6 @@ const ago = computed(() => {
       <h3 :id="titleId" class="title">{{ summary.title }}</h3>
       <p class="text">{{ summary.text }}</p>
     </div>
-
 
     <ul v-if="explanation.lines.length" class="factors">
       <li v-for="line in explanation.lines" :key="line.key" class="factor">

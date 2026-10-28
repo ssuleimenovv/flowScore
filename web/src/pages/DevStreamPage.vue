@@ -166,7 +166,6 @@ function signed(n: number): string {
   color: var(--fs-muted);
 }
 
-
 .meta {
   color: var(--fs-muted);
 }

@@ -66,8 +66,6 @@ describe('after the final whistle', () => {
   })
 })
 
-
-
 describe('prediction in the match state', () => {
   const flow = {
     matchId: 'm1',

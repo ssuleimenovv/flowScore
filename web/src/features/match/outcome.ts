@@ -59,7 +59,6 @@ export function resultOf(score: Score): keyof Probabilities {
   return 'draw'
 }
 
-
 // "До матча: 38 · 30 · 32"
 export function formatPreMatch({ preMatch }: Prediction): string {
   return `До матча: ${preMatch.home} · ${preMatch.draw} · ${preMatch.away}`

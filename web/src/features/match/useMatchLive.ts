@@ -115,5 +115,3 @@ function withoutInsight(err: unknown): null {
   if (err instanceof ApiError && err.status === 404) return null
   throw err
 }
-
-

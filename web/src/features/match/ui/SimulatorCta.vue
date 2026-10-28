@@ -4,7 +4,6 @@ import AppIcon from '@/shared/ui/AppIcon.vue'
 
 // "Что, если…?" from the Match boards: the way from a live match into the simulator.
 const { matchId } = defineProps<{ matchId: string }>()
-
 </script>
 
 <template>
@@ -13,8 +12,7 @@ const { matchId } = defineProps<{ matchId: string }>()
     <p class="text">
       Убери игрока, добавь красную на 75′ или включи дождь — AI пересчитает исход и поток.
     </p>
-        <AppButton :to="{ name: 'simulator', params: { matchId } }" class="go">
-
+    <AppButton :to="{ name: 'simulator', params: { matchId } }" class="go">
       Открыть симулятор
       <AppIcon name="arrow" :size="18" class="arrow" />
     </AppButton>

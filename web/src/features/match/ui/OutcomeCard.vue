@@ -189,7 +189,6 @@ const shown = computed(() => (finished.value ? prediction.preMatch : prediction.
   line-height: 1.45;
 }
 
-
 .home .value,
 .home .change {
   color: var(--fs-home);

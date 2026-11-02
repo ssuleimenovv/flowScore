@@ -24,6 +24,7 @@ export type IconName =
   | 'pulse'
   | 'target'
   | 'eye'
+  | 'mail'
 
 interface Shape {
   paths: string[]
@@ -80,6 +81,12 @@ const icons: Record<IconName, Shape> = {
   },
   pulse: { paths: ['M3 12h4l3-8 4 16 3-8h4'] },
   eye: { paths: ['M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'], circles: [[12, 12, 3]] },
+  mail: {
+    paths: [
+      'M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z',
+      'M3 7l9 6 9-6',
+    ],
+  },
 
   target: {
     paths: [],

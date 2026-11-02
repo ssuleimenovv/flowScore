@@ -90,4 +90,22 @@ describe('AuthForm', () => {
 
     expect(router.currentRoute.value.fullPath).toBe('/')
   })
+
+  it('asks for the code after signing up and for an unconfirmed email', async () => {
+    respond(202, { email: 'ayan@mail.com' })
+    const { wrapper } = await mountAt('/login')
+    await wrapper.findAll('[role=tab]')[1]!.trigger('click')
+    await wrapper.find('input[autocomplete=name]').setValue('Аян')
+    await wrapper.find('input[type=email]').setValue('ayan@mail.com')
+    await wrapper.find('input[type=password]').setValue('flowscore1')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.emitted('code')).toEqual([['ayan@mail.com']])
+
+    respond(403, { type: 'about:blank', title: 'Email not verified', status: 403 })
+    await wrapper.findAll('[role=tab]')[0]!.trigger('click')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.emitted('code')).toHaveLength(2)
+  })
 })

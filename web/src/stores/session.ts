@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { ApiError, apiGet, apiPost } from '@/shared/api/http'
-import type { Session, User } from '@/shared/api/types'
+import type { Pending, Session, User } from '@/shared/api/types'
 
 const KEY = 'fs-session'
 
@@ -23,8 +23,18 @@ export const useSessionStore = defineStore('session', () => {
     keep(await apiPost<Session>('/auth/login', { email, password }))
   }
 
-  async function signUp(name: string, email: string, password: string) {
-    keep(await apiPost<Session>('/auth/register', { name, email, password }))
+  // Signing up sends a code to the email; the session comes with verify().
+  // The answer is the email the code went to
+  async function signUp(name: string, email: string, password: string): Promise<string> {
+    return (await apiPost<Pending>('/auth/register', { name, email, password })).email
+  }
+
+  async function verify(email: string, code: string) {
+    keep(await apiPost<Session>('/auth/verify', { email, code }))
+  }
+
+  async function resend(email: string) {
+    await apiPost<Pending>('/auth/resend', { email })
   }
 
   function signOut() {
@@ -44,7 +54,7 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  return { token, user, signedIn, signIn, signUp, signOut, check }
+  return { token, user, signedIn, signIn, signUp, verify, resend, signOut, check }
 })
 
 // localStorage can throw (private mode, blocked storage): then the session

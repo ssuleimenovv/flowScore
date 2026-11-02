@@ -5,7 +5,8 @@ import { useToast } from '@/shared/toast/useToast'
 import AppButton from '@/shared/ui/AppButton.vue'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import { useSessionStore } from '@/stores/session'
-import { authError, formReady, type AuthMode } from '../auth'
+import { ApiError } from '@/shared/api/http'
+import { authError, formReady, nextPath, type AuthMode } from '../auth'
 
 // The form of the Auth board: "Вход", or "Регистрация" with a name and the
 // password rule added. The button stays off until the form can be sent.
@@ -13,6 +14,8 @@ const session = useSessionStore()
 const { show } = useToast()
 const route = useRoute()
 const router = useRouter()
+// A code went to this email: the page shows the code screen
+const emit = defineEmits<{ code: [email: string] }>()
 
 const mode = ref<AuthMode>('login')
 const name = ref('')
@@ -27,22 +30,20 @@ const tabs: Array<{ value: AuthMode; label: string }> = [
 ]
 const ready = computed(() => formReady(mode.value, name.value, email.value, password.value))
 
-// Back where the user came from (the session-expired dialog sends
-// ?redirect=), else home. Only a path of this site: "//other.site" is not one
-function next(): string {
-  const r = route.query.redirect
-  return typeof r === 'string' && r.startsWith('/') && !r.startsWith('//') ? r : '/'
-}
-
 async function submit() {
   if (!ready.value || busy.value) return
   busy.value = true
   try {
-    if (mode.value === 'login') await session.signIn(email.value, password.value)
-    else await session.signUp(name.value, email.value, password.value)
-    await router.replace(next())
+    if (mode.value === 'login') {
+      await session.signIn(email.value, password.value)
+      await router.replace(nextPath(route.query.redirect))
+    } else {
+      emit('code', await session.signUp(name.value, email.value, password.value))
+    }
   } catch (err) {
-    show({ icon: 'warning', tone: 'accent', title: authError(err) })
+    // The right password, the email not confirmed yet: a new code is on its way
+    if (err instanceof ApiError && err.status === 403) emit('code', email.value)
+    else show({ icon: 'warning', tone: 'accent', title: authError(err) })
   } finally {
     busy.value = false
   }

@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError } from '@/shared/api/http'
-import { authError, formReady, passwordOk } from '../auth'
-import { flowBars } from '../auth'
+import {
+  attemptsLeft,
+  authError,
+  countdown,
+  flowBars,
+  formReady,
+  nextPath,
+  passwordOk,
+  triesLeft,
+} from '../auth'
 
 describe('passwordOk', () => {
   it('follows the rule the form tells', () => {
@@ -40,5 +48,29 @@ describe('flowBars', () => {
     // back to away only at the very end
     expect(bars.slice(27, 37).every((b) => b.home)).toBe(true)
     expect(bars[37]!.away).toBe(true)
+  })
+})
+
+describe('the code screen', () => {
+  it('reads the tries left from a wrong code', () => {
+    const wrong = new ApiError(422, {
+      type: 'about:blank',
+      title: 'Wrong code',
+      status: 422,
+      attemptsLeft: 3,
+    } as never)
+    expect(attemptsLeft(wrong)).toBe(3)
+    expect(attemptsLeft(new ApiError(410, null))).toBeNull()
+    expect(triesLeft(3)).toBe('Неверный код. Осталось 3 попытки.')
+    expect(triesLeft(1)).toBe('Неверный код. Осталась 1 попытка.')
+    expect(triesLeft(0)).toBe('Попытки закончились, отправь новый код.')
+  })
+
+  it('counts down and goes back only within the site', () => {
+    expect(countdown(42)).toBe('0:42')
+    expect(countdown(60)).toBe('1:00')
+    expect(nextPath('/matches/1')).toBe('/matches/1')
+    expect(nextPath('//evil.example')).toBe('/')
+    expect(nextPath(undefined)).toBe('/')
   })
 })

@@ -3,6 +3,11 @@ import ThemeToggle from '@/app/layout/ThemeToggle.vue'
 import AuthForm from '@/features/auth/ui/AuthForm.vue'
 import AuthPromo from '@/features/auth/ui/AuthPromo.vue'
 import AppLogo from '@/shared/ui/AppLogo.vue'
+import { ref } from 'vue'
+import CodeStep from '@/features/auth/ui/CodeStep.vue'
+
+// the email the code went to: the page shows the code screen instead of the form
+const pending = ref<string | null>(null)
 
 // "Вход" from the Auth boards. A desktop has the promo on the left and the
 // form on the right; a phone has the logo, the title and the form.
@@ -24,8 +29,12 @@ import AppLogo from '@/shared/ui/AppLogo.vue'
         <ThemeToggle variant="boxed" />
       </div>
       <div class="column fs-in">
-        <h1 class="title">Почувствуй, кто <span class="accent">владеет игрой</span></h1>
-        <AuthForm />
+        <h1 v-if="!pending" class="title">
+          Почувствуй, кто <span class="accent">владеет игрой</span>
+        </h1>
+        <!-- v-show keeps the form's fields: "Изменить почту" comes back to them -->
+        <AuthForm v-show="!pending" @code="pending = $event" />
+        <CodeStep v-if="pending" class="fs-in" :email="pending" @back="pending = null" />
       </div>
     </section>
   </div>

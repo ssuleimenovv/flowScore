@@ -70,4 +70,14 @@ describe('session', () => {
 
     expect(store.signedIn).toBe(true)
   })
+  it('signs up without a session and signs in with the code', async () => {
+    respond(202, { email: 'ayan@mail.com' })
+    const store = useSessionStore()
+    await expect(store.signUp('Аян', 'ayan@mail.com', 'flowscore1')).resolves.toBe('ayan@mail.com')
+    expect(store.signedIn).toBe(false)
+
+    respond(200, session)
+    await store.verify('ayan@mail.com', '482193')
+    expect(store.user?.name).toBe('Аян')
+  })
 })

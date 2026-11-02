@@ -66,6 +66,50 @@ func (b Brevo) Send(ctx context.Context, m Message) error {
 	return nil
 }
 
+// Mailjet sends through Mailjet's HTTP API. Its free plan sends 200 emails a
+// day from a sender address confirmed in its dashboard; no domain of our own
+// is needed
+type Mailjet struct {
+	Key    string // the API key
+	Secret string // the secret key
+	From   string // the confirmed sender address
+	URL    string // empty for Mailjet's own; a test server in tests
+}
+
+func (m Mailjet) Send(ctx context.Context, msg Message) error {
+	body, err := json.Marshal(map[string]any{
+		"Messages": []map[string]any{{
+			"From":     map[string]string{"Email": m.From, "Name": "FlowScore"},
+			"To":       []map[string]string{{"Email": msg.To}},
+			"Subject":  msg.Subject,
+			"TextPart": msg.Text,
+			"HTMLPart": msg.HTML,
+		}},
+	})
+	if err != nil {
+		return err
+	}
+	url := cmp.Or(m.URL, "https://api.mailjet.com/v3.1/send")
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	// The key and the secret as a user name and a password
+	req.SetBasicAuth(m.Key, m.Secret)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode >= 300 {
+		why, _ := io.ReadAll(io.LimitReader(res.Body, 512))
+		return fmt.Errorf("mailjet: %s: %s", res.Status, why)
+	}
+	return nil
+}
+
 // Log writes the email to the server's log instead of sending it: locally
 // the code is read from the terminal
 type Log struct{}

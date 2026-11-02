@@ -52,3 +52,41 @@ func TestCodeMail(t *testing.T) {
 		t.Errorf("mail %+v", m)
 	}
 }
+
+func TestMailjetSends(t *testing.T) {
+	var got struct {
+		Messages []struct {
+			From    struct{ Email string }
+			To      []struct{ Email string }
+			Subject string
+		}
+	}
+	var user, pass string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, pass, _ = r.BasicAuth()
+		json.NewDecoder(r.Body).Decode(&got)
+		w.Write([]byte(`{"Messages":[{"Status":"success"}]}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	m := Mailjet{Key: "k1", Secret: "s1", From: "flowscore@gmail.com", URL: srv.URL}
+	if err := m.Send(context.Background(), CodeMail("ayan@mail.kz", "482193", false)); err != nil {
+		t.Fatal(err)
+	}
+	if user != "k1" || pass != "s1" || len(got.Messages) != 1 || got.Messages[0].From.Email != "flowscore@gmail.com" ||
+		got.Messages[0].To[0].Email != "ayan@mail.kz" || got.Messages[0].Subject != "Код FlowScore: 482193" {
+		t.Errorf("sent %+v as %q:%q", got, user, pass)
+	}
+}
+
+func TestMailjetReportsRefusal(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, `{"ErrorMessage":"sender not validated"}`, http.StatusBadRequest)
+	}))
+	t.Cleanup(srv.Close)
+
+	err := Mailjet{Key: "k1", Secret: "s1", From: "x@gmail.com", URL: srv.URL}.Send(context.Background(), CodeMail("a@b.kz", "1", false))
+	if err == nil || !strings.Contains(err.Error(), "sender not validated") {
+		t.Errorf("err = %v", err)
+	}
+}

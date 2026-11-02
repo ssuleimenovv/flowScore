@@ -322,13 +322,18 @@ func replayOnce(ctx context.Context, publisher *live.Publisher, params flow.Para
 	return nil
 }
 
-// mailer sends the codes through Brevo once it is set up; until then, and
-// locally, they go to this log
+// mailer sends the codes through Mailjet or Brevo, whichever is set up;
+// until then, and locally, they go to this log
 func mailer() mail.Sender {
-	key, from := os.Getenv("BREVO_API_KEY"), os.Getenv("FLOWSCORE_MAIL_FROM")
-	if key == "" || from == "" {
-		log.Print("mail: BREVO_API_KEY or FLOWSCORE_MAIL_FROM is not set, codes go to this log")
-		return mail.Log{}
+	from := os.Getenv("FLOWSCORE_MAIL_FROM")
+	if key, secret := os.Getenv("MAILJET_API_KEY"), os.Getenv("MAILJET_SECRET_KEY"); key != "" && secret != "" && from != "" {
+		log.Print("mail: codes go out through Mailjet")
+		return mail.Mailjet{Key: key, Secret: secret, From: from}
 	}
-	return mail.Brevo{Key: key, From: from}
+	if key := os.Getenv("BREVO_API_KEY"); key != "" && from != "" {
+		log.Print("mail: codes go out through Brevo")
+		return mail.Brevo{Key: key, From: from}
+	}
+	log.Print("mail: no mail service is set up, codes go to this log")
+	return mail.Log{}
 }

@@ -44,12 +44,19 @@ type Game struct {
 	Clock      string // "72'" as ESPN shows it; while in play it is the minute
 	Home, Away Side
 	Market     *Market // nil when ESPN shows no odds
+	Stage      string  // a cup's stage: "league-phase", "round-of-16", "final"; a league's season
+	Leg        int     // 1 or 2 in a tie of two matches; 0 for a single match
+	Finish     string  // "aet" after extra time, "pens" after a shootout; "" otherwise
 }
 
 // Side is one team of a game and its goals, "" before kick-off.
 type Side struct {
-	Team  event.Team
-	Score string
+	Team      event.Team
+	Score     string
+	Winner    bool // won the match, on penalties too
+	Shootout  *int // its goals in a shootout; nil without one
+	Aggregate *int // its goals over both legs of a tie; nil for a single match
+	Through   bool // went through a tie of two legs that is over
 }
 
 // Board is a league's scoreboard of one day: its matches, and every day of
@@ -100,17 +107,33 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 			ID     string `json:"id"`
 			Name   string `json:"name"`
 			Date   string `json:"date"` // "2026-10-10T11:30Z"
+			Season struct {
+				Slug string `json:"slug"`
+			} `json:"season"`
 			Status struct {
 				DisplayClock string `json:"displayClock"`
 				Type         struct {
 					State string `json:"state"`
+					Name  string `json:"name"` // "STATUS_FINAL_PEN"
 				} `json:"type"`
 			} `json:"status"`
 			Competitions []struct {
+				Leg struct {
+					Value int `json:"value"`
+				} `json:"leg"`
+				Series struct {
+					Competitors []struct {
+						ID             string   `json:"id"`
+						Winner         bool     `json:"winner"`
+						AggregateScore *float64 `json:"aggregateScore"` // 7.0
+					} `json:"competitors"`
+				} `json:"series"`
 				Competitors []struct {
-					HomeAway string `json:"homeAway"`
-					Score    string `json:"score"`
-					Team     struct {
+					HomeAway      string   `json:"homeAway"`
+					Score         string   `json:"score"`
+					Winner        bool     `json:"winner"`
+					ShootoutScore *float64 `json:"shootoutScore"`
+					Team          struct {
 						ID           string `json:"id"`
 						Abbreviation string `json:"abbreviation"`
 						DisplayName  string `json:"displayName"`
@@ -155,15 +178,23 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 		if err != nil {
 			return Board{}, fmt.Errorf("scoreboard %s, match %s: %w", league, e.ID, err)
 		}
-		g := Game{ID: e.ID, Name: e.Name, Start: start, State: e.Status.Type.State, Clock: e.Status.DisplayClock}
+		g := Game{ID: e.ID, Name: e.Name, Start: start, State: e.Status.Type.State, Clock: e.Status.DisplayClock,
+			Stage: e.Season.Slug, Finish: finish(e.Status.Type.Name)}
 		if len(e.Competitions) > 0 {
 			c := e.Competitions[0]
+			g.Leg = c.Leg.Value
 			if len(c.Odds) > 0 {
 				ml := c.Odds[0].Moneyline
 				g.Market = market(ml.Home, ml.Draw, ml.Away)
 			}
 			for _, t := range c.Competitors {
-				side := Side{Team: event.Team{ID: t.Team.ID, Code: t.Team.Abbreviation, Name: t.Team.DisplayName}, Score: t.Score}
+				side := Side{Team: event.Team{ID: t.Team.ID, Code: t.Team.Abbreviation, Name: t.Team.DisplayName}, Score: t.Score,
+					Winner: t.Winner, Shootout: whole(t.ShootoutScore)}
+				for _, s := range c.Series.Competitors {
+					if s.ID == t.Team.ID {
+						side.Aggregate, side.Through = whole(s.AggregateScore), s.Winner
+					}
+				}
 				if t.HomeAway == "home" {
 					g.Home = side
 				} else {
@@ -174,6 +205,26 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 		b.Games = append(b.Games, g)
 	}
 	return b, nil
+}
+
+// finish names how a match over was decided past the 90 minutes
+func finish(status string) string {
+	switch status {
+	case "STATUS_FINAL_AET":
+		return "aet"
+	case "STATUS_FINAL_PEN":
+		return "pens"
+	}
+	return ""
+}
+
+// whole turns ESPN's 7.0 into 7; nil stays nil
+func whole(f *float64) *int {
+	if f == nil {
+		return nil
+	}
+	n := int(*f)
+	return &n
 }
 
 // ESPN's dates have no seconds

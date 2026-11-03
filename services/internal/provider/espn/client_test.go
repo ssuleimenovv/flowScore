@@ -164,3 +164,44 @@ func TestYear(t *testing.T) {
 		t.Errorf("asked %s, want %s", *path, want)
 	}
 }
+
+// A cup's knockouts as ESPN sends them: the second leg of a tie, and a
+// single match settled on penalties
+func TestBoardOfKnockouts(t *testing.T) {
+	c, _ := fake(t, http.StatusOK, `{"events": [
+		{"id": "1", "date": "2026-02-24T17:45Z", "season": {"slug": "knockout-round-playoffs"},
+			"status": {"type": {"state": "post", "name": "STATUS_FULL_TIME"}},
+			"competitions": [{"leg": {"value": 2},
+				"series": {"competitors": [{"id": "1068", "winner": true, "aggregateScore": 7.0}, {"id": "570", "winner": false, "aggregateScore": 4.0}]},
+				"competitors": [
+					{"homeAway": "home", "score": "4", "winner": true, "team": {"id": "1068", "displayName": "Atlético Madrid"}},
+					{"homeAway": "away", "score": "1", "team": {"id": "570", "displayName": "Club Brugge"}}]}]},
+		{"id": "2", "date": "2026-02-10T20:00Z", "season": {"slug": "quarterfinals"},
+			"status": {"type": {"state": "post", "name": "STATUS_FINAL_PEN"}},
+			"competitions": [{"competitors": [
+				{"homeAway": "home", "score": "1", "shootoutScore": 6, "team": {"id": "114", "displayName": "Napoli"}},
+				{"homeAway": "away", "score": "1", "shootoutScore": 7, "winner": true, "team": {"id": "2572", "displayName": "Como"}}]}]}]}`)
+	b, err := c.Board(context.Background(), "uefa.champions", time.Time{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(b.Games) != 2 {
+		t.Fatalf("games %+v", b.Games)
+	}
+	tie, pens := b.Games[0], b.Games[1]
+	if tie.Stage != "knockout-round-playoffs" || tie.Leg != 2 || tie.Finish != "" {
+		t.Errorf("second leg %+v", tie)
+	}
+	if h := tie.Home; h.Aggregate == nil || *h.Aggregate != 7 || !h.Through || !h.Winner {
+		t.Errorf("Atlético %+v", h)
+	}
+	if a := tie.Away; a.Aggregate == nil || *a.Aggregate != 4 || a.Through {
+		t.Errorf("Brugge %+v", a)
+	}
+	if pens.Leg != 0 || pens.Finish != "pens" || pens.Home.Aggregate != nil {
+		t.Errorf("shootout %+v", pens)
+	}
+	if h, a := pens.Home, pens.Away; h.Shootout == nil || *h.Shootout != 6 || a.Shootout == nil || *a.Shootout != 7 || !a.Winner || h.Winner {
+		t.Errorf("shootout %+v : %+v", h, a)
+	}
+}

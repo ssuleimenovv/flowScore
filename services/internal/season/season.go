@@ -72,7 +72,9 @@ func (s *Seasons) Run(ctx context.Context, leagues []string, every time.Duration
 
 // Refresh reads a league again: its table, every day of its calendar (a
 // cup's whole season, a year at a time) and the matches over since the
-// last time. A match that cannot be read is left for the next time.
+// last time. A match that cannot be read is
+// left for the next time.
+
 func (s *Seasons) Refresh(ctx context.Context, id string) error {
 	table, err := s.Client.Standings(ctx, id)
 	if err != nil {
@@ -178,12 +180,30 @@ func (s *Seasons) read(ctx context.Context, league, matchID string) (MatchFlow, 
 
 // numberRounds gives each match its round: one more than the last round
 // either team has played. A match put off to later gets a later round,
-// which is where it is played.
+// which is where it is played. A knockout match has none: its stage tells
+// where it is.
 func numberRounds(games []Game) {
 	last := map[string]int{} // by team ID
 	for i := range games {
 		g := &games[i]
+		if Knockout(g.Stage) {
+			continue
+		}
 		g.Round = max(last[g.Home.Team.ID], last[g.Away.Team.ID]) + 1
 		last[g.Home.Team.ID], last[g.Away.Team.ID] = g.Round, g.Round
+
 	}
+}
+
+// Stages are ESPN's knockout stages, in the order a cup plays them
+var Stages = []string{
+	"preliminary-round", "qualifying-round",
+	"first-round", "second-round", "third-round", "fourth-round", "fifth-round",
+	"round-of-64", "round-of-32", "knockout-round-playoffs", "round-of-16",
+	"quarterfinals", "semifinals", "final",
+}
+
+// Knockout tells a knockout stage from a league's season or a cup's league phase
+func Knockout(stage string) bool {
+	return slices.Contains(Stages, stage)
 }

@@ -50,6 +50,17 @@ func TestNumberRounds(t *testing.T) {
 	}
 }
 
+func TestKnockoutsHaveNoRound(t *testing.T) {
+	game := func(stage, home, away string) Game {
+		return Game{Game: espn.Game{Stage: stage, Home: espn.Side{Team: event.Team{ID: home}}, Away: espn.Side{Team: event.Team{ID: away}}}}
+	}
+	games := []Game{game("league-phase", "A", "B"), game("round-of-16", "A", "C"), game("league-phase", "C", "D")}
+	numberRounds(games)
+	if games[0].Round != 1 || games[1].Round != 0 || games[2].Round != 1 {
+		t.Errorf("rounds %d, %d, %d; want 1, 0, 1", games[0].Round, games[1].Round, games[2].Round)
+	}
+}
+
 func equal(a, b []int) bool {
 	if len(a) != len(b) {
 		return false

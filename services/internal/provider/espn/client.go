@@ -78,7 +78,9 @@ func (c *Client) Board(ctx context.Context, league string, day time.Time) (Board
 	}
 	var raw struct {
 		Leagues []struct {
-			Calendar []string `json:"calendar"` // "2026-08-21T07:00Z"
+			// A league's match days, "2026-08-21T07:00Z"; a cup's stages
+			// instead ({label: "League Phase", ...}), so it is read below
+			Calendar json.RawMessage `json:"calendar"`
 		} `json:"leagues"`
 		Events []struct {
 			ID     string `json:"id"`
@@ -114,14 +116,19 @@ func (c *Client) Board(ctx context.Context, league string, day time.Time) (Board
 
 	var b Board
 	if len(raw.Leagues) > 0 {
-		for _, d := range raw.Leagues[0].Calendar {
-			t, err := time.Parse(dateLayout, d)
-			if err != nil {
-				return Board{}, fmt.Errorf("scoreboard %s, calendar: %w", league, err)
+		// A cup's calendar is not a list of days: it has none to give
+		var days []string
+		if json.Unmarshal(raw.Leagues[0].Calendar, &days) == nil {
+			for _, d := range days {
+				t, err := time.Parse(dateLayout, d)
+				if err != nil {
+					return Board{}, fmt.Errorf("scoreboard %s, calendar: %w", league, err)
+				}
+				b.Days = append(b.Days, t)
 			}
-			b.Days = append(b.Days, t)
 		}
 	}
+
 	for _, e := range raw.Events {
 		start, err := time.Parse(dateLayout, e.Date)
 		if err != nil {

@@ -125,3 +125,29 @@ func TestErrorStatus(t *testing.T) {
 		t.Error("a 404 came back as a scoreboard")
 	}
 }
+
+// A cup's calendar lists its stages, not its days: the board still reads,
+// with its matches and no days
+func TestBoardOfACup(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte(`{
+			"leagues": [{"calendar": [{"label": "UEFA Champions League", "entries": [
+				{"label": "League Phase", "startDate": "2026-08-27T07:00Z", "endDate": "2027-02-15T07:59Z"}]}]}],
+			"events": [{"id": "401915386", "name": "Bayern Munich at Atlético Madrid", "date": "2026-11-03T20:00Z",
+				"status": {"type": {"state": "pre"}},
+				"competitions": [{"competitors": [
+					{"homeAway": "home", "team": {"id": "1068", "abbreviation": "ATM", "displayName": "Atlético Madrid"}},
+					{"homeAway": "away", "team": {"id": "132", "abbreviation": "BAY", "displayName": "Bayern Munich"}}]}]}]
+		}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	c := &Client{HTTP: srv.Client(), BaseURL: srv.URL}
+	b, err := c.Board(context.Background(), "uefa.champions", time.Time{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(b.Days) != 0 || len(b.Games) != 1 || b.Games[0].Home.Team.Name != "Atlético Madrid" {
+		t.Errorf("board %+v", b)
+	}
+}

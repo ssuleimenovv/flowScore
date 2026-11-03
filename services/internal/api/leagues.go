@@ -21,14 +21,21 @@ type Seasons interface {
 
 // leagueNames are the names the screens give the leagues, by ESPN's ID
 var leagueNames = map[string]string{
-	"eng.1":            "Премьер-лига",
-	"esp.1":            "Ла Лига",
-	"ita.1":            "Серия A",
-	"ger.1":            "Бундеслига",
-	"fra.1":            "Лига 1",
-	"uefa.champions":   "Лига чемпионов",
-	"uefa.europa":      "Лига Европы",
-	"uefa.europa.conf": "Лига конференций",
+	"eng.1":               "Премьер-лига",
+	"esp.1":               "Ла Лига",
+	"ita.1":               "Серия A",
+	"ger.1":               "Бундеслига",
+	"fra.1":               "Лига 1",
+	"uefa.champions":      "Лига чемпионов",
+	"uefa.europa":         "Лига Европы",
+	"uefa.europa.conf":    "Лига конференций",
+	"uefa.super_cup":      "Суперкубок УЕФА",
+	"eng.fa":              "Кубок Англии",
+	"eng.league_cup":      "Кубок лиги",
+	"ger.dfb_pokal":       "Кубок Германии",
+	"esp.copa_del_rey":    "Кубок Испании",
+	"ita.coppa_italia":    "Кубок Италии",
+	"fra.coupe_de_france": "Кубок Франции",
 }
 
 // RegisterLeagues adds the league routes of api/openapi.yaml for the leagues

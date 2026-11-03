@@ -15,7 +15,17 @@ const LEAGUE_LOGOS: Record<string, number> = {
   'uefa.champions': 2,
   'uefa.europa': 2310,
   'uefa.europa.conf': 20296,
+  'uefa.super_cup': 1272,
+  'eng.fa': 40,
+  'eng.league_cup': 41,
+  'ger.dfb_pokal': 2061,
+  'esp.copa_del_rey': 80,
+  'ita.coppa_italia': 2192,
+  'fra.coupe_de_france': 182,
 }
+
+// Logos ESPN draws once, for a light background only: the dark one is a 404
+const LIGHT_ONLY = new Set(['ita.coppa_italia'])
 
 // Twice the size on screen, so the edges stay sharp on a retina display
 function image(path: string, px: number): string {
@@ -35,7 +45,7 @@ export function leagueLogo(
   on: 'light' | 'dark' = 'light',
 ): string | null {
   const n = LEAGUE_LOGOS[leagueId]
-  const folder = on === 'dark' ? '500-dark' : '500'
+  const folder = on === 'dark' && !LIGHT_ONLY.has(leagueId) ? '500-dark' : '500'
   return n === undefined ? null : image(`/i/leaguelogos/soccer/${folder}/${n}.png`, px)
 }
 

@@ -12,6 +12,11 @@ describe('logos', () => {
     expect(leagueLogo('eng.1', 18)).toContain('/i/leaguelogos/soccer/500/23.png&w=36')
     expect(leagueLogo('eng.1', 18, 'dark')).toContain('/i/leaguelogos/soccer/500-dark/23.png')
     expect(leagueLogo('uefa.champions', 18)).toContain('/i/leaguelogos/soccer/500/2.png&w=36')
+    expect(leagueLogo('eng.fa', 18, 'dark')).toContain('/i/leaguelogos/soccer/500-dark/40.png')
+    // The Coppa Italia has no logo for a dark background: the light one stands in
+    expect(leagueLogo('ita.coppa_italia', 18, 'dark')).toContain(
+      '/i/leaguelogos/soccer/500/2192.png',
+    )
   })
 
   it("finds a real team's crest by its ESPN id and a demo team's by its name", () => {

@@ -91,6 +91,7 @@ describe('the records', () => {
     const r: FlowRecord = {
       matchId: '9',
       round: 2,
+      stage: '',
       home: team('MAN', 'Manchester United'),
       away: team('IPS', 'Ipswich Town'),
       score: { home: 5, away: 2 },

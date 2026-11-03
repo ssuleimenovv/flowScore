@@ -292,6 +292,34 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /leagues/{leagueId}/stages/{stage}/ties:
+    get:
+      tags: [leagues]
+      operationId: getTies
+      summary: The ties of a cup's knockout stage
+      description: The matches of the stage paired into ties, in the order their first legs are played
+      parameters:
+        - $ref: '#/components/parameters/LeagueId'
+        - name: stage
+          in: path
+          required: true
+          schema:
+            type: string
+            example: round-of-16
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TieList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/SeasonNotReady'
+        default:
+          $ref: '#/components/responses/Error'
+
   /ws/matches/{matchId}/stream:
     servers:
       - url: ws://localhost:8080
@@ -1339,7 +1367,7 @@ components:
 
     League:
       type: object
-      required: [id, name, season, round, rounds, records, updatedAt]
+      required: [id, name, season, round, rounds, stages, stage, records, updatedAt]
       properties:
         id:
           type: string
@@ -1350,10 +1378,19 @@ components:
           example: 2026/27
         round:
           type: integer
-          description: The round being played, or the next one
+          description: The round being played, or the next one; 0 for a cup of knockouts alone
         rounds:
           type: integer
-          description: Rounds in the season
+          description: Rounds in the season; a cup's knockouts have none
+        stages:
+          type: array
+          description: A cup's knockout stages that have matches, in the order they are played; empty for a league
+          items:
+            $ref: '#/components/schemas/Stage'
+        stage:
+          type: string
+          description: The knockout stage being played, or the last one; empty before the knockouts
+          example: round-of-16
         records:
           type: array
           description: The matches where one team's Flow was highest on average, best first, at most 3
@@ -1365,12 +1402,16 @@ components:
 
     FlowRecord:
       type: object
-      required: [matchId, round, home, away, score, side, flow, peak]
+      required: [matchId, round, stage, home, away, score, side, flow, peak]
       properties:
         matchId:
           type: string
         round:
           type: integer
+          description: 0 in a knockout stage
+        stage:
+          type: string
+          description: The knockout stage of the match; empty outside them
         home:
           $ref: '#/components/schemas/Team'
         away:
@@ -1385,6 +1426,88 @@ components:
         peak:
           type: number
           description: The highest Flow of the match, of either team
+
+    Stage:
+      type: object
+      required: [id, name, ties]
+      properties:
+        id:
+          type: string
+          example: round-of-16
+        name:
+          type: string
+          example: 1/8
+        ties:
+          type: integer
+
+    TieList:
+      type: object
+      required: [leagueId, stage, items]
+      properties:
+        leagueId:
+          type: string
+        stage:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tie'
+
+    Tie:
+      type: object
+      required: [home, away, legs, finish]
+      properties:
+        home:
+          $ref: '#/components/schemas/TieSide'
+          description: The home team of the first leg
+        away:
+          $ref: '#/components/schemas/TieSide'
+        legs:
+          type: array
+          description: One match, or two legs
+          items:
+            $ref: '#/components/schemas/TieLeg'
+        finish:
+          type: [string, 'null']
+          enum: [aet, pens, null]
+          description: How the deciding match went past the 90 minutes; null otherwise
+
+    TieSide:
+      type: object
+      required: [team, goals, total, shootout, through]
+      properties:
+        team:
+          $ref: '#/components/schemas/Team'
+        goals:
+          type: array
+          description: Its goals in each leg; null before the leg kicks off
+          items:
+            type: [integer, 'null']
+        total:
+          type: [integer, 'null']
+          description: Its goals over the legs played; null before the first
+        shootout:
+          type: [integer, 'null']
+          description: Its goals in a shootout; null without one
+        through:
+          type: [boolean, 'null']
+          description: Whether it went through; null until the tie is decided
+
+    TieLeg:
+      type: object
+      required: [matchId, kickoffAt, state, clock]
+      properties:
+        matchId:
+          type: string
+        kickoffAt:
+          type: string
+          format: date-time
+        state:
+          type: string
+          enum: [pre, in, post]
+        clock:
+          type: string
+          description: The minute as ESPN shows it while in play ("104'"); empty otherwise
 
     StandingList:
       type: object

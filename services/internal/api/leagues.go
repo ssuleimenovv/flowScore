@@ -38,6 +38,8 @@ func RegisterLeagues(mux *http.ServeMux, seasons Seasons, ids []string) {
 	mux.HandleFunc("GET /api/v1/leagues/{leagueId}", withLeague(seasons, ids, leagueResponse))
 	mux.HandleFunc("GET /api/v1/leagues/{leagueId}/standings", withLeague(seasons, ids, standingsResponse))
 	mux.HandleFunc("GET /api/v1/leagues/{leagueId}/rounds/{round}", roundHandler(seasons, ids))
+	mux.HandleFunc("GET /api/v1/leagues/{leagueId}/stages/{stage}/ties", tiesHandler(seasons, ids))
+
 }
 
 func nameOf(id string) string {
@@ -96,7 +98,8 @@ const records = 3
 
 type flowRecord struct {
 	MatchID string     `json:"matchId"`
-	Round   int        `json:"round"`
+	Round   int        `json:"round"` // 0 in a knockout stage
+	Stage   string     `json:"stage"` // the knockout stage, "round-of-16"; "" outside them
 	Home    team       `json:"home"`
 	Away    team       `json:"away"`
 	Score   live.Score `json:"score"`
@@ -111,6 +114,8 @@ type leagueHeader struct {
 	Season    string       `json:"season"` // "2026/27"
 	Round     int          `json:"round"`  // the round being played, or the next one
 	Rounds    int          `json:"rounds"`
+	Stages    []stageItem  `json:"stages"` // a cup's knockout stages so far
+	Stage     string       `json:"stage"`  // the one being played; "" before the knockouts
 	Records   []flowRecord `json:"records"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 }
@@ -121,12 +126,12 @@ func leagueResponse(l season.League) any {
 		Name:      nameOf(l.ID),
 		Season:    fmt.Sprintf("%d/%02d", l.Table.Season, (l.Table.Season+1)%100),
 		Round:     currentRound(l.Games),
+		Rounds:    lastRound(l.Games),
 		Records:   []flowRecord{},
 		UpdatedAt: l.UpdatedAt,
 	}
-	if n := len(l.Games); n > 0 {
-		h.Rounds = l.Games[n-1].Round
-	}
+	h.Stages, h.Stage = stagesOf(l.Games)
+
 	for _, g := range l.Games {
 		score := scoreOf(g)
 		if g.Flow == nil || score == nil {
@@ -138,6 +143,7 @@ func leagueResponse(l season.League) any {
 		}
 		h.Records = append(h.Records, flowRecord{
 			MatchID: g.ID, Round: g.Round, Home: toTeam(g.Home.Team), Away: toTeam(g.Away.Team),
+			Stage: knockoutStage(g),
 			Score: *score, Side: side, Flow: f, Peak: g.Flow.Peak,
 		})
 	}
@@ -147,17 +153,32 @@ func leagueResponse(l season.League) any {
 }
 
 // currentRound is the round of the first match not over yet, or the last
-// round once the season is.
+// round once they all are. A knockout match has no round, so it is not
+// counted.
 func currentRound(games []season.Game) int {
 	for _, g := range games {
-		if g.State != "post" {
+		if g.Round > 0 && g.State != "post" {
 			return g.Round
 		}
 	}
-	if n := len(games); n > 0 {
-		return games[n-1].Round
+	return lastRound(games)
+}
+
+// lastRound is the season's last round; 0 for a cup with knockouts alone
+func lastRound(games []season.Game) int {
+	n := 0
+	for _, g := range games {
+		n = max(n, g.Round)
 	}
-	return 0
+	return n
+}
+
+// knockoutStage is the stage of a knockout match; "" for any other
+func knockoutStage(g season.Game) string {
+	if season.Knockout(g.Stage) {
+		return g.Stage
+	}
+	return ""
 }
 
 type standing struct {
@@ -270,7 +291,7 @@ func roundHandler(seasons Seasons, ids []string) http.HandlerFunc {
 			return
 		}
 		n, err := strconv.Atoi(r.PathValue("round"))
-		if err != nil || n < 1 || len(l.Games) == 0 || n > l.Games[len(l.Games)-1].Round {
+		if err != nil || n < 1 || n > lastRound(l.Games) {
 			writeProblem(w, http.StatusNotFound, "Round not found")
 			return
 		}

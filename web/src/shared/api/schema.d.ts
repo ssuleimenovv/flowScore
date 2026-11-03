@@ -222,6 +222,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/leagues/{leagueId}/stages/{stage}/ties': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * The ties of a cup's knockout stage
+     * @description The matches of the stage paired into ties, in the order their first legs are played
+     */
+    get: operations['getTies']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/ws/matches/{matchId}/stream': {
     parameters: {
       query?: never
@@ -780,10 +800,17 @@ export interface components {
       name: string
       /** @example 2026/27 */
       season: string
-      /** @description The round being played, or the next one */
+      /** @description The round being played, or the next one; 0 for a cup of knockouts alone */
       round: number
-      /** @description Rounds in the season */
+      /** @description Rounds in the season; a cup's knockouts have none */
       rounds: number
+      /** @description A cup's knockout stages that have matches, in the order they are played; empty for a league */
+      stages: components['schemas']['Stage'][]
+      /**
+       * @description The knockout stage being played, or the last one; empty before the knockouts
+       * @example round-of-16
+       */
+      stage: string
       /** @description The matches where one team's Flow was highest on average, best first, at most 3 */
       records: components['schemas']['FlowRecord'][]
       /** Format: date-time */
@@ -791,7 +818,10 @@ export interface components {
     }
     FlowRecord: {
       matchId: string
+      /** @description 0 in a knockout stage */
       round: number
+      /** @description The knockout stage of the match; empty outside them */
+      stage: string
       home: components['schemas']['Team']
       away: components['schemas']['Team']
       score: components['schemas']['Score']
@@ -800,6 +830,50 @@ export interface components {
       flow: number
       /** @description The highest Flow of the match, of either team */
       peak: number
+    }
+    Stage: {
+      /** @example round-of-16 */
+      id: string
+      /** @example 1/8 */
+      name: string
+      ties: number
+    }
+    TieList: {
+      leagueId: string
+      stage: string
+      items: components['schemas']['Tie'][]
+    }
+    Tie: {
+      /** @description The home team of the first leg */
+      home: components['schemas']['TieSide']
+      away: components['schemas']['TieSide']
+      /** @description One match, or two legs */
+      legs: components['schemas']['TieLeg'][]
+      /**
+       * @description How the deciding match went past the 90 minutes; null otherwise
+       * @enum {string|null}
+       */
+      finish: 'aet' | 'pens' | null
+    }
+    TieSide: {
+      team: components['schemas']['Team']
+      /** @description Its goals in each leg; null before the leg kicks off */
+      goals: (number | null)[]
+      /** @description Its goals over the legs played; null before the first */
+      total: number | null
+      /** @description Its goals in a shootout; null without one */
+      shootout: number | null
+      /** @description Whether it went through; null until the tie is decided */
+      through: boolean | null
+    }
+    TieLeg: {
+      matchId: string
+      /** Format: date-time */
+      kickoffAt: string
+      /** @enum {string} */
+      state: 'pre' | 'in' | 'post'
+      /** @description The minute as ESPN shows it while in play ("104'"); empty otherwise */
+      clock: string
     }
     StandingList: {
       leagueId: string
@@ -1282,6 +1356,33 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['RoundList']
+        }
+      }
+      404: components['responses']['NotFound']
+      503: components['responses']['SeasonNotReady']
+      default: components['responses']['Error']
+    }
+  }
+  getTies: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @example eng.1 */
+        leagueId: components['parameters']['LeagueId']
+        stage: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TieList']
         }
       }
       404: components['responses']['NotFound']

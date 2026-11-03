@@ -191,3 +191,97 @@ func TestZoneOf(t *testing.T) {
 		}
 	}
 }
+
+// cup is a cup past its league phase: a tie of two legs over after a
+// shootout, one with its second leg to come, and a final
+func cup() season.League {
+	knockout := func(id, stage string, leg int, state, home, away, hs, as string) season.Game {
+		g := game(id, 0, state, home, away, hs, as, nil)
+		g.Stage, g.Leg = stage, leg
+		return g
+	}
+	first := knockout("11", "round-of-16", 1, "post", "INT", "ATM", "0", "0")
+	second := knockout("12", "round-of-16", 2, "post", "ATM", "INT", "1", "1")
+	second.Finish = "pens"
+	second.Home.Shootout, second.Away.Shootout = ptr(3), ptr(4)
+	second.Away.Through = true
+	return season.League{
+		ID:    "uefa.champions",
+		Table: espn.Table{Season: 2026},
+		Games: []season.Game{
+			game("1", 1, "post", "INT", "BAR", "2", "1", nil),
+			first,
+			knockout("13", "round-of-16", 1, "post", "LIV", "BVB", "3", "0"),
+			second,
+			knockout("14", "round-of-16", 2, "pre", "BVB", "LIV", "", ""),
+			knockout("15", "final", 0, "pre", "", "", "", ""),
+		},
+	}
+}
+
+func ptr(n int) *int { return &n }
+
+func TestStages(t *testing.T) {
+	var h struct {
+		Round, Rounds int
+		Stage         string
+		Stages        []struct {
+			ID, Name string
+			Ties     int
+		}
+	}
+	mux := http.NewServeMux()
+	RegisterLeagues(mux, seasons{"uefa.champions": cup()}, []string{"uefa.champions"})
+	getLeague(t, mux, "/api/v1/leagues/uefa.champions", http.StatusOK, &h)
+	// The league phase is over; the round of 16 is still played
+	if h.Round != 1 || h.Rounds != 1 || h.Stage != "round-of-16" {
+		t.Errorf("header %+v", h)
+	}
+	if len(h.Stages) != 2 || h.Stages[0].Name != "1/8" || h.Stages[0].Ties != 2 || h.Stages[1].Name != "Финал" {
+		t.Errorf("stages %+v", h.Stages)
+	}
+	getLeague(t, mux, "/api/v1/leagues/uefa.champions/stages/semifinals/ties", http.StatusNotFound, nil)
+}
+
+func TestTies(t *testing.T) {
+	type side struct {
+		Team     struct{ ID string }
+		Goals    []*int
+		Total    *int
+		Shootout *int
+		Through  *bool
+	}
+	var r struct {
+		Stage string
+		Items []struct {
+			Home, Away side
+			Legs       []struct{ MatchID, State string }
+			Finish     *string
+		}
+	}
+	mux := http.NewServeMux()
+	RegisterLeagues(mux, seasons{"uefa.champions": cup()}, []string{"uefa.champions"})
+	getLeague(t, mux, "/api/v1/leagues/uefa.champions/stages/round-of-16/ties", http.StatusOK, &r)
+	if r.Stage != "round-of-16" || len(r.Items) != 2 {
+		t.Fatalf("ties %+v", r)
+	}
+
+	// Inter–Atlético: 0:0 and 1:1 the other way round, then 3:4 on penalties
+	over := r.Items[0]
+	if over.Home.Team.ID != "INT" || len(over.Legs) != 2 || over.Legs[1].MatchID != "12" {
+		t.Fatalf("over %+v", over)
+	}
+	if h, a := over.Home, over.Away; *h.Goals[1] != 1 || *h.Total != 1 || *a.Total != 1 || *h.Shootout != 4 ||
+		*a.Shootout != 3 || !*h.Through || *a.Through {
+		t.Errorf("over %+v : %+v", h, a)
+	}
+	if over.Finish == nil || *over.Finish != "pens" {
+		t.Errorf("finish %v", over.Finish)
+	}
+
+	// Liverpool–Dortmund: 3:0, the second leg to come
+	open := r.Items[1]
+	if h := open.Home; *h.Total != 3 || len(h.Goals) != 2 || h.Goals[1] != nil || h.Through != nil || open.Finish != nil {
+		t.Errorf("to come %+v", open)
+	}
+}

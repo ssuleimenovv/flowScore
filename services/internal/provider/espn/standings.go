@@ -3,7 +3,6 @@ package espn
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
@@ -57,12 +56,13 @@ func (c *Client) Standings(ctx context.Context, league string) (Table, error) {
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return Table{}, fmt.Errorf("standings %s: %w", league, err)
 	}
-	// A league of one table has one child; groups are for cups, not read yet
+	// A league of one table has one child; a cup of knockouts alone has
+	// none, and its season is all there is
+	t := Table{Season: raw.Season.Year}
 	if len(raw.Children) == 0 {
-		return Table{}, fmt.Errorf("standing %s: %w", league, errors.New("no table"))
+		return t, nil
 	}
 
-	t := Table{Season: raw.Season.Year}
 	for _, e := range raw.Children[0].Standings.Entries {
 		stat := map[string]int{}
 		for _, s := range e.Stats {

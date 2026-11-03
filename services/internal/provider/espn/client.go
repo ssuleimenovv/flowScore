@@ -55,8 +55,9 @@ type Side struct {
 // Board is a league's scoreboard of one day: its matches, and every day of
 // the season that has any.
 type Board struct {
-	Games []Game
-	Days  []time.Time
+	Games       []Game
+	Days        []time.Time // none for a cup
+	SeasonStart time.Time   // zero when ESPN does not say
 }
 
 // Scoreboard returns today's matches of a league: "eng.1" is the Premier League.
@@ -68,11 +69,21 @@ func (c *Client) Scoreboard(ctx context.Context, league string) ([]Game, error) 
 // Board returns the scoreboard of a league on a day, by its date in UTC.
 // The zero day is today.
 func (c *Client) Board(ctx context.Context, league string, day time.Time) (Board, error) {
-	url := fmt.Sprintf("%s/%s/scoreboard", c.BaseURL, league)
+	query := ""
 	if !day.IsZero() {
-		url += "?dates=" + day.UTC().Format("20060102")
+		query = "?dates=" + day.UTC().Format("20060102")
 	}
-	body, err := c.get(ctx, url)
+	return c.board(ctx, league, query)
+}
+
+// Year returns every match of a league in a calendar year. A cup lists no
+// days to read one by one, so its season is read this way.
+func (c *Client) Year(ctx context.Context, league string, year int) (Board, error) {
+	return c.board(ctx, league, fmt.Sprintf("?dates=%d&limit=1000", year))
+}
+
+func (c *Client) board(ctx context.Context, league, query string) (Board, error) {
+	body, err := c.get(ctx, fmt.Sprintf("%s/%s/scoreboard%s", c.BaseURL, league, query))
 	if err != nil {
 		return Board{}, err
 	}
@@ -81,6 +92,9 @@ func (c *Client) Board(ctx context.Context, league string, day time.Time) (Board
 			// A league's match days, "2026-08-21T07:00Z"; a cup's stages
 			// instead ({label: "League Phase", ...}), so it is read below
 			Calendar json.RawMessage `json:"calendar"`
+			Season   struct {
+				StartDate string `json:"startDate"` // "2026-07-01T04:00Z"
+			} `json:"season"`
 		} `json:"leagues"`
 		Events []struct {
 			ID     string `json:"id"`
@@ -116,6 +130,13 @@ func (c *Client) Board(ctx context.Context, league string, day time.Time) (Board
 
 	var b Board
 	if len(raw.Leagues) > 0 {
+		if s := raw.Leagues[0].Season.StartDate; s != "" {
+			t, err := time.Parse(dateLayout, s)
+			if err != nil {
+				return Board{}, fmt.Errorf("scoreboard %s, season: %w", league, err)
+			}
+			b.SeasonStart = t
+		}
 		// A cup's calendar is not a list of days: it has none to give
 		var days []string
 		if json.Unmarshal(raw.Leagues[0].Calendar, &days) == nil {

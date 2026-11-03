@@ -21,15 +21,14 @@ type Seasons interface {
 
 // leagueNames are the names the screens give the leagues, by ESPN's ID
 var leagueNames = map[string]string{
-	"eng.1": "Премьер-лига",
-	"esp.1": "Ла Лига",
-	"ita.1": "Серия A",
-	"ger.1": "Бундеслига",
-	"fra.1": "Лига 1",
+	"eng.1":            "Премьер-лига",
+	"esp.1":            "Ла Лига",
+	"ita.1":            "Серия A",
+	"ger.1":            "Бундеслига",
+	"fra.1":            "Лига 1",
 	"uefa.champions":   "Лига чемпионов",
 	"uefa.europa":      "Лига Европы",
 	"uefa.europa.conf": "Лига конференций",
-
 }
 
 // RegisterLeagues adds the league routes of api/openapi.yaml for the leagues
@@ -171,7 +170,7 @@ type standing struct {
 	GoalsFor     int      `json:"goalsFor"`
 	GoalsAgainst int      `json:"goalsAgainst"`
 	Points       int      `json:"points"`
-	Zone         *string  `json:"zone"` // champions, europa, conference, relegation; null for none
+	Zone         *string  `json:"zone"` // champions, europa, conference, relegation, last16, playoff; null for none
 	Flow         *float64 `json:"flow"` // the team's Flow averaged over its matches; null before any is read
 }
 
@@ -221,7 +220,8 @@ func standingsResponse(l season.League) any {
 }
 
 // zoneOf names what ESPN says a place leads to: "Champions League",
-// "Europa League", "Conference League qualifying", "Relegation playoff"
+// "Europa League", "Conference League qualifying", "Relegation playoff";
+// in a cup, "Qualifies for round of 16" and "Knockout phase playoffs - seeded"
 func zoneOf(note string) *string {
 	n := strings.ToLower(note)
 	var z string
@@ -230,12 +230,16 @@ func zoneOf(note string) *string {
 		return nil
 	case strings.Contains(n, "relegation"):
 		z = "relegation"
+	case strings.Contains(n, "round of 16"):
+		z = "last16"
 	case strings.Contains(n, "champions"):
 		z = "champions"
 	case strings.Contains(n, "europa"):
 		z = "europa"
 	case strings.Contains(n, "conference"):
 		z = "conference"
+	case strings.Contains(n, "playoff"):
+		z = "playoff"
 	default:
 		return nil
 	}

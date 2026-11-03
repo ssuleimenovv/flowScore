@@ -816,10 +816,10 @@ export interface components {
       goalsAgainst: number
       points: number
       /**
-       * @description What the place leads to
+       * @description What the place leads to; in a cup, last16 is straight to the round of 16 and playoff is the knockout playoffs
        * @enum {string|null}
        */
-      zone: 'champions' | 'europa' | 'conference' | 'relegation' | null
+      zone: 'champions' | 'europa' | 'conference' | 'relegation' | 'last16' | 'playoff' | null
       /** @description The team's Flow averaged over its matches; null before any is read */
       flow: number | null
     }

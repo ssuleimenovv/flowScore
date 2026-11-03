@@ -1421,8 +1421,8 @@ components:
           type: integer
         zone:
           type: [string, 'null']
-          enum: [champions, europa, conference, relegation, null]
-          description: What the place leads to
+          enum: [champions, europa, conference, relegation, last16, playoff, null]
+          description: "What the place leads to; in a cup, last16 is straight to the round of 16 and playoff is the knockout playoffs"
         flow:
           type: [number, 'null']
           description: The team's Flow averaged over its matches; null before any is read

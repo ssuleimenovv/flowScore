@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -130,5 +131,41 @@ func TestRefresh(t *testing.T) {
 	// A match over is read once, not on every refresh
 	if n := summaries.Load(); n != 1 {
 		t.Errorf("summary read %d times", n)
+	}
+}
+
+// A cup lists stages, not days: its season is read a year at a time,
+// without the last season's final that the year still has
+func TestRefreshCup(t *testing.T) {
+	final := `{"id": "0", "date": "2026-05-30T19:00Z", "status": {"type": {"state": "post"}}, "competitions": [{"competitors": [
+		{"homeAway": "home", "score": "2", "team": {"id": "83", "displayName": "Barcelona"}},
+		{"homeAway": "away", "score": "1", "team": {"id": "160", "displayName": "Paris Saint-Germain"}}]}]},`
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.String() {
+		case "/uefa.champions/standings":
+			io.WriteString(w, table)
+		case "/uefa.champions/scoreboard":
+			io.WriteString(w, `{"leagues": [{"season": {"startDate": "2026-07-01T04:00Z"}, "calendar": [{"label": "League Phase"}]}], "events": []}`)
+		case "/uefa.champions/scoreboard?dates=2026&limit=1000":
+			io.WriteString(w, strings.Replace(day, `"events": [`, `"events": [`+final, 1))
+		case "/uefa.champions/summary?event=1":
+			io.WriteString(w, summary)
+		default:
+			if strings.HasSuffix(r.URL.RawQuery, "limit=1000") {
+				io.WriteString(w, `{"events": []}`) // a year with nothing yet
+				return
+			}
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	s := &Seasons{Client: &espn.Client{HTTP: srv.Client(), BaseURL: srv.URL, StandingsURL: srv.URL}, Params: flow.DefaultParams()}
+	if err := s.Refresh(context.Background(), "uefa.champions"); err != nil {
+		t.Fatal(err)
+	}
+	l, _ := s.League("uefa.champions")
+	if len(l.Games) != 2 || l.Games[0].ID != "1" || l.Games[0].Flow == nil || l.Games[0].Round != 1 {
+		t.Errorf("games %+v", l.Games)
 	}
 }

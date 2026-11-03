@@ -70,9 +70,9 @@ func (s *Seasons) Run(ctx context.Context, leagues []string, every time.Duration
 	}
 }
 
-// Refresh reads a league again: its table, every day of its calendar and
-// the matches over since the last time. A match that cannot be read is
-// left for the next time.
+// Refresh reads a league again: its table, every day of its calendar (a
+// cup's whole season, a year at a time) and the matches over since the
+// last time. A match that cannot be read is left for the next time.
 func (s *Seasons) Refresh(ctx context.Context, id string) error {
 	table, err := s.Client.Standings(ctx, id)
 	if err != nil {
@@ -85,17 +85,33 @@ func (s *Seasons) Refresh(ctx context.Context, id string) error {
 
 	seen := map[string]bool{}
 	var games []Game
-	for _, day := range today.Days {
-		b, err := s.Client.Board(ctx, id, day)
-		if err != nil {
-			return err
-		}
+	add := func(b espn.Board) {
 		for _, g := range b.Games {
 			// A day of ESPN's runs into the next one: a late match is on both
 			if !seen[g.ID] {
 				seen[g.ID] = true
 				games = append(games, Game{Game: g})
 			}
+		}
+	}
+	if len(today.Days) > 0 {
+		for _, day := range today.Days {
+			b, err := s.Client.Board(ctx, id, day)
+			if err != nil {
+				return err
+			}
+			add(b)
+		}
+	} else if start := today.SeasonStart; !start.IsZero() {
+		// A cup lists no days. The year its season starts in still has the
+		// last season's knockouts, so whatever came before the start goes
+		for y := start.Year(); y <= time.Now().Year(); y++ {
+			b, err := s.Client.Year(ctx, id, y)
+			if err != nil {
+				return err
+			}
+			b.Games = slices.DeleteFunc(b.Games, func(g espn.Game) bool { return g.Start.Before(start) })
+			add(b)
 		}
 	}
 

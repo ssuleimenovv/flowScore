@@ -131,7 +131,7 @@ func TestErrorStatus(t *testing.T) {
 func TestBoardOfACup(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Write([]byte(`{
-			"leagues": [{"calendar": [{"label": "UEFA Champions League", "entries": [
+			"leagues": [{"season": {"startDate": "2026-07-01T04:00Z"}, "calendar": [{"label": "UEFA Champions League", "entries": [
 				{"label": "League Phase", "startDate": "2026-08-27T07:00Z", "endDate": "2027-02-15T07:59Z"}]}]}],
 			"events": [{"id": "401915386", "name": "Bayern Munich at Atlético Madrid", "date": "2026-11-03T20:00Z",
 				"status": {"type": {"state": "pre"}},
@@ -149,5 +149,18 @@ func TestBoardOfACup(t *testing.T) {
 	}
 	if len(b.Days) != 0 || len(b.Games) != 1 || b.Games[0].Home.Team.Name != "Atlético Madrid" {
 		t.Errorf("board %+v", b)
+	}
+	if want := time.Date(2026, 7, 1, 4, 0, 0, 0, time.UTC); !b.SeasonStart.Equal(want) {
+		t.Errorf("season starts %v, want %v", b.SeasonStart, want)
+	}
+}
+
+func TestYear(t *testing.T) {
+	c, path := fake(t, http.StatusOK, `{"events": []}`)
+	if _, err := c.Year(context.Background(), "uefa.champions", 2026); err != nil {
+		t.Fatal(err)
+	}
+	if want := "/uefa.champions/scoreboard?dates=2026&limit=1000"; *path != want {
+		t.Errorf("asked %s, want %s", *path, want)
 	}
 }

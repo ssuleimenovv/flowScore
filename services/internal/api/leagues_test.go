@@ -169,3 +169,25 @@ func TestRound(t *testing.T) {
 		t.Errorf("to come %+v", r.Items)
 	}
 }
+
+func TestZoneOf(t *testing.T) {
+	for note, want := range map[string]string{
+		"Champions League":                   "champions",
+		"Europa League":                      "europa",
+		"Conference League qualifying":       "conference",
+		"Relegation playoff":                 "relegation",
+		"Qualifies for round of 16":          "last16",
+		"Knockout phase playoffs - seeded":   "playoff",
+		"Knockout phase playoffs - unseeded": "playoff",
+		"Eliminated":                         "",
+		"":                                   "",
+	} {
+		got := ""
+		if z := zoneOf(note); z != nil {
+			got = *z
+		}
+		if got != want {
+			t.Errorf("zoneOf(%q) = %q, want %q", note, got, want)
+		}
+	}
+}

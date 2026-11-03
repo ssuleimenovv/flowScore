@@ -26,6 +26,10 @@ var leagueNames = map[string]string{
 	"ita.1": "Серия A",
 	"ger.1": "Бундеслига",
 	"fra.1": "Лига 1",
+	"uefa.champions":   "Лига чемпионов",
+	"uefa.europa":      "Лига Европы",
+	"uefa.europa.conf": "Лига конференций",
+
 }
 
 // RegisterLeagues adds the league routes of api/openapi.yaml for the leagues

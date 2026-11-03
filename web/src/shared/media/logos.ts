@@ -12,6 +12,9 @@ const LEAGUE_LOGOS: Record<string, number> = {
   'ger.1': 10,
   'ita.1': 12,
   'fra.1': 9,
+  'uefa.champions': 2,
+  'uefa.europa': 2310,
+  'uefa.europa.conf': 20296,
 }
 
 // Twice the size on screen, so the edges stay sharp on a retina display

@@ -11,7 +11,7 @@ describe('logos', () => {
   it("knows each league's logo by its own number", () => {
     expect(leagueLogo('eng.1', 18)).toContain('/i/leaguelogos/soccer/500/23.png&w=36')
     expect(leagueLogo('eng.1', 18, 'dark')).toContain('/i/leaguelogos/soccer/500-dark/23.png')
-    expect(leagueLogo('uefa.champions', 18)).toBeNull()
+    expect(leagueLogo('uefa.champions', 18)).toContain('/i/leaguelogos/soccer/500/2.png&w=36')
   })
 
   it("finds a real team's crest by its ESPN id and a demo team's by its name", () => {

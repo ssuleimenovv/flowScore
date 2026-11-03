@@ -7,11 +7,18 @@ import { flowText, flowWidth, goals, zoneMark } from '../league'
 
 // "Турнирная таблица" from the League boards. The desktop has every column;
 // the phone keeps the place, the team, games, points and Flow, as on MobileLeague.
-const { rows } = defineProps<{ rows: Standing[] }>()
+// A European cup's league phase, as on CompetitionsExtended, is headed
+// "Общий этап" and has its own legend, on the phone too.
+const { rows, cup = false } = defineProps<{ rows: Standing[]; cup?: boolean }>()
 </script>
 
 <template>
   <AppCard as="section" class="table fs-in" style="--fs-i: 1" aria-label="Турнирная таблица">
+    <div v-if="cup" class="stage">
+      <h2 class="title">Общий этап</h2>
+      <span class="count">{{ rows.length }} команд</span>
+    </div>
+
     <div class="grid head" aria-hidden="true">
       <span>#</span>
       <span>Команда</span>
@@ -45,7 +52,12 @@ const { rows } = defineProps<{ rows: Standing[] }>()
         <span class="num value">{{ flowText(r.flow) }}</span>
       </span>
     </div>
-    <div class="legend">
+    <div v-if="cup" class="legend">
+      <span class="key"><span class="mark champions" />1–8 · сразу в 1/8</span>
+      <span class="key"><span class="mark europa" />9–24 · стыки</span>
+      <span class="key"><span class="mark none" />25–36 · выбывают</span>
+    </div>
+    <div v-else class="legend league">
       <span class="key"><span class="mark champions" />Лига чемпионов</span>
       <span class="key"><span class="mark europa" />Лига Европы</span>
     </div>
@@ -102,6 +114,10 @@ const { rows } = defineProps<{ rows: Standing[] }>()
   background: var(--fs-track);
 }
 
+.none {
+  background: var(--fs-track);
+}
+
 .champions {
   background: var(--fs-home);
 }
@@ -148,7 +164,48 @@ const { rows } = defineProps<{ rows: Standing[] }>()
   color: var(--fs-home);
 }
 
+.stage {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--fs-space-8) 0 6px;
+}
+
+.title {
+  font-size: var(--fs-text-title-3);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.count {
+  color: var(--fs-muted);
+  font-size: var(--fs-text-caption);
+}
+
 .legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fs-space-16);
+  padding-top: 14px;
+  color: var(--fs-muted);
+  font-size: var(--fs-text-caption);
+}
+
+.key {
+  display: flex;
+  gap: var(--fs-space-8);
+  align-items: center;
+}
+
+.mark {
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+/* The leagues' legend is on the desktop board only */
+.legend.league {
   display: none;
 }
 
@@ -219,24 +276,14 @@ const { rows } = defineProps<{ rows: Standing[] }>()
     animation: grow var(--fs-duration-bar-h) var(--fs-ease) both;
   }
 
-  .legend {
+  .stage {
+    padding-top: 0;
+  }
+
+  .legend.league {
     display: flex;
     gap: 20px;
     padding-top: var(--fs-space-16);
-    color: var(--fs-muted);
-    font-size: var(--fs-text-caption);
-  }
-
-  .key {
-    display: flex;
-    gap: var(--fs-space-8);
-    align-items: center;
-  }
-
-  .mark {
-    width: 4px;
-    height: 14px;
-    border-radius: 2px;
   }
 }
 

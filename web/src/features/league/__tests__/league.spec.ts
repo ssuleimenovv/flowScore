@@ -5,6 +5,7 @@ import {
   flowText,
   flowWidth,
   goals,
+  isEuroCup,
   recordRows,
   roundStatus,
   roundTabs,
@@ -40,6 +41,15 @@ describe('the table', () => {
     expect(zoneMark('conference')).toBe('none')
     expect(zoneMark('relegation')).toBe('none')
     expect(zoneMark(null)).toBe('none')
+    expect(zoneMark('last16')).toBe('champions')
+    expect(zoneMark('playoff')).toBe('europa')
+  })
+
+  it('tells a European cup from a league', () => {
+    expect(isEuroCup('uefa.champions')).toBe(true)
+    expect(isEuroCup('uefa.europa.conf')).toBe(true)
+    expect(isEuroCup('eng.1')).toBe(false)
+    expect(isEuroCup(null)).toBe(false)
   })
 
   it('writes goals and Flow as the board does', () => {

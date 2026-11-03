@@ -5,12 +5,21 @@ export function seasonLine(l: Pick<League, 'season' | 'round'>): string {
   return `Сезон ${l.season} · ${l.round}-й тур`
 }
 
-// The mark beside a place. The board marks the places that lead to the
-// Champions League and to the Europa League; every other place is plain.
+// The mark beside a place. The League board marks the places that lead to
+// the Champions League and to the Europa League; the cup board marks the
+// round of 16 the same as the first and the playoffs the same as the second.
+// Every other place is plain.
 export type ZoneMark = 'champions' | 'europa' | 'none'
 
 export function zoneMark(zone: Standing['zone']): ZoneMark {
-  return zone === 'champions' || zone === 'europa' ? zone : 'none'
+  if (zone === 'champions' || zone === 'last16') return 'champions'
+  if (zone === 'europa' || zone === 'playoff') return 'europa'
+  return 'none'
+}
+
+// The Champions, Europa and Conference League: a league phase of 36, not a league
+export function isEuroCup(leagueId: string | null): boolean {
+  return leagueId?.startsWith('uefa.') ?? false
 }
 
 // "17:5"

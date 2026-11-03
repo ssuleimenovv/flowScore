@@ -5,7 +5,7 @@
 // and a shared link come back to them.
 import { computed, onScopeDispose, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { roundTabs, seasonLine } from '@/features/league/league'
+import { isEuroCup, roundTabs, seasonLine } from '@/features/league/league'
 import FlowRecords from '@/features/league/ui/FlowRecords.vue'
 import RoundMatches from '@/features/league/ui/RoundMatches.vue'
 import StandingsTable from '@/features/league/ui/StandingsTable.vue'
@@ -113,7 +113,7 @@ function retryAll() {
 
     <template v-if="screen.view === 'content' && league">
       <div class="main">
-        <StandingsTable :rows="standings" />
+        <StandingsTable :rows="standings" :cup="isEuroCup(leagueId)" />
       </div>
       <aside class="side">
         <RoundMatches

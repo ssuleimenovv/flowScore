@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { FlowRecord } from '@/shared/api/types'
+import type { FlowRecord, Stage } from '@/shared/api/types'
 import AppCard from '@/shared/ui/AppCard.vue'
 import { recordRows } from '../league'
 
 // "Рекорды Flow" from the League board: the season's matches where a team's
-// Flow was highest on average over the whole match.
-const { records } = defineProps<{ records: FlowRecord[] }>()
-const rows = computed(() => recordRows(records))
+// Flow was highest on average over the whole match. A cup's stages name the
+// matches of its knockouts.
+const { records, stages = [] } = defineProps<{ records: FlowRecord[]; stages?: Stage[] }>()
+const rows = computed(() => recordRows(records, stages))
 </script>
 
 <template>

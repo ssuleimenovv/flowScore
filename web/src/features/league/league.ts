@@ -1,8 +1,28 @@
-import type { FlowRecord, League, RoundMatch, Standing } from '@/shared/api/types'
+import type {
+  FlowRecord,
+  League,
+  LeagueItem,
+  RoundMatch,
+  Stage,
+  Standing,
+} from '@/shared/api/types'
 
-// "Сезон 2026/27 · 7-й тур", the line over the table
-export function seasonLine(l: Pick<League, 'season' | 'round'>): string {
-  return `Сезон ${l.season} · ${l.round}-й тур`
+// "1/8" is written "1/8 финала"; "Финал", "Стыки" and "3-й раунд" stay as they are
+export function stageTitle(name: string): string {
+  return /^1\/\d+$/.test(name) ? `${name} финала` : name
+}
+
+// "Сезон 2026/27 · 7-й тур", the line over the table. A cup in its knockouts
+// names the stage ("1/8 финала"), the Super Cup its one match, and a cup
+// before its first stage only the season.
+export function seasonLine(
+  l: Pick<League, 'season' | 'round' | 'rounds' | 'stage' | 'stages'>,
+): string {
+  const stage = l.stages.find((s) => s.id === l.stage)
+  if (stage) return `Сезон ${l.season} · ${stageTitle(stage.name)}`
+  if (l.rounds === 1) return `Сезон ${l.season} · Матч за трофей`
+  if (l.round > 0) return `Сезон ${l.season} · ${l.round}-й тур`
+  return `Сезон ${l.season}`
 }
 
 // The mark beside a place. The League board marks the places that lead to
@@ -20,6 +40,33 @@ export function zoneMark(zone: Standing['zone']): ZoneMark {
 // The Champions, Europa and Conference League: a league phase of 36, not a league
 export function isEuroCup(leagueId: string | null): boolean {
   return leagueId?.startsWith('uefa.') ?? false
+}
+
+// What a competition's page shows. A league ("eng.1", a country and a tier)
+// and a European cup have a table; a cup has knockout stages and no table.
+// The Super Cup is one match: a cup, though it sits among the European cups.
+export type CompetitionKind = 'league' | 'euro' | 'cup'
+
+export function competitionKind(leagueId: string | null): CompetitionKind {
+  if (leagueId === null || /^[a-z]+\.\d+$/.test(leagueId)) return 'league'
+  return isEuroCup(leagueId) && leagueId !== 'uefa.super_cup' ? 'euro' : 'cup'
+}
+
+// The chips in groups, as on the CompetitionsExtended board: the leagues, the
+// European cups and the national cups, each in the gateway's order; a group
+// with nothing in it is left out
+const GROUPS = ['Лиги', 'Еврокубки', 'Кубки'] as const
+
+export function competitionGroup(leagueId: string): (typeof GROUPS)[number] {
+  if (isEuroCup(leagueId)) return 'Еврокубки'
+  return competitionKind(leagueId) === 'league' ? 'Лиги' : 'Кубки'
+}
+
+export function competitionGroups(items: LeagueItem[]): { name: string; items: LeagueItem[] }[] {
+  return GROUPS.map((name) => ({
+    name,
+    items: items.filter((l) => competitionGroup(l.id) === name),
+  })).filter((g) => g.items.length > 0)
 }
 
 // "17:5"
@@ -84,7 +131,8 @@ export function roundStatus(
     .replace('.', '')
 }
 
-// A Flow record as the board lists it: "01", the match, "тур 5", the value
+// A Flow record as the board lists it: "01", the match, "тур 5", the value.
+// A match of a cup's knockouts names its stage instead: "3-й раунд".
 export interface RecordRow {
   id: string
   rank: string
@@ -93,12 +141,15 @@ export interface RecordRow {
   flow: string
 }
 
-export function recordRows(records: FlowRecord[]): RecordRow[] {
-  return records.map((r, i) => ({
-    id: r.matchId,
-    rank: String(i + 1).padStart(2, '0'),
-    match: pairing(r),
-    round: `тур ${r.round}`,
-    flow: String(Math.round(r.flow)),
-  }))
+export function recordRows(records: FlowRecord[], stages: Stage[] = []): RecordRow[] {
+  return records.map((r, i) => {
+    const stage = stages.find((s) => s.id === r.stage)
+    return {
+      id: r.matchId,
+      rank: String(i + 1).padStart(2, '0'),
+      match: pairing(r),
+      round: stage ? stageTitle(stage.name) : r.round > 0 ? `тур ${r.round}` : '',
+      flow: String(Math.round(r.flow)),
+    }
+  })
 }

@@ -1,11 +1,20 @@
 <script setup lang="ts">
 // The Leagues screen (League and MobileLeague boards): the table with each
 // team's average Flow, the matches of a round and the season's Flow records.
+// A European cup adds its knockouts beside the table, and a national cup has
+// its knockouts in place of the table (CupsExtended board).
 // The league and the round live in the URL (?league=ger.1&round=6), so "Назад"
 // and a shared link come back to them.
 import { computed, onScopeDispose, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { isEuroCup, roundTabs, seasonLine } from '@/features/league/league'
+import PlayoffCard from '@/features/cup/ui/PlayoffCard.vue'
+import {
+  competitionGroups,
+  competitionKind,
+  isEuroCup,
+  roundTabs,
+  seasonLine,
+} from '@/features/league/league'
 import FlowRecords from '@/features/league/ui/FlowRecords.vue'
 import RoundMatches from '@/features/league/ui/RoundMatches.vue'
 import StandingsTable from '@/features/league/ui/StandingsTable.vue'
@@ -36,6 +45,9 @@ function pick(id: string) {
   void router.replace({ query: { league: id === first ? undefined : id } })
 }
 
+const groups = computed(() => competitionGroups(leagues.items.value))
+const kind = computed(() => competitionKind(leagueId.value))
+
 const { league, standings, request, preparing, error, updatedAt, retry } = useLeague(leagueId)
 
 // The round in the URL, if the season has it; else the one being played
@@ -62,12 +74,20 @@ const now = ref(new Date())
 const timer = setInterval(() => (now.value = new Date()), 60_000)
 onScopeDispose(() => clearInterval(timer))
 
+// Nothing to show yet: a league before its table, a cup before its first
+// stage. The Super Cup has no stages, only the round of its one match.
+const isEmpty = computed(() => {
+  const l = league.value
+  if (!l || l.stages.length > 0) return false
+  return kind.value === 'cup' ? l.rounds === 0 : standings.value.length === 0
+})
+
 const { online } = useNetwork()
 const screen = computed(() =>
   resolveScreenState({
     status: leagues.request.value === 'error' ? 'error' : request.value,
     hasData: league.value !== null,
-    isEmpty: standings.value.length === 0,
+    isEmpty: isEmpty.value,
     online: online.value,
   }),
 )
@@ -86,46 +106,98 @@ function retryAll() {
       <div class="heading">
         <span v-if="league" class="season">{{ seasonLine(league) }}</span>
         <AppSkeleton v-else width="180px" :height="14" />
-        <h1 class="h1">
+        <h1 v-if="kind === 'cup'" class="h1">
+          <span class="desktop-word">Сетка <span class="accent">кубка</span></span>
+          <span class="phone-word">Кубок</span>
+        </h1>
+        <h1 v-else class="h1">
           <span class="desktop-word">Турнирная <span class="accent">таблица</span></span>
           <span class="phone-word">Таблица</span>
         </h1>
       </div>
-      <div v-if="leagues.items.value.length > 1" class="chips" role="group" aria-label="Лиги">
-        <button
-          v-for="l in leagues.items.value"
-          :key="l.id"
-          type="button"
-          class="chip fs-press"
-          :aria-pressed="l.id === leagueId"
-          @click="pick(l.id)"
-        >
-          <template v-if="leagueLogo(l.id, 18)">
-            <img class="chip-logo on-light" :src="leagueLogo(l.id, 18)!" alt="" />
-            <img class="chip-logo on-dark" :src="leagueLogo(l.id, 18, 'dark')!" alt="" />
-          </template>
-          {{ l.name }}
-        </button>
+      <div v-if="leagues.items.value.length > 1" class="groups">
+        <div v-for="(g, i) in groups" :key="g.name" class="group">
+          <span :id="`group-${i}`" class="group-name">{{ g.name }}</span>
+          <div class="chips" role="group" :aria-labelledby="`group-${i}`">
+            <button
+              v-for="l in g.items"
+              :key="l.id"
+              type="button"
+              class="chip fs-press"
+              :aria-pressed="l.id === leagueId"
+              @click="pick(l.id)"
+            >
+              <template v-if="leagueLogo(l.id, 18)">
+                <img class="chip-logo on-light" :src="leagueLogo(l.id, 18)!" alt="" />
+                <img class="chip-logo on-dark" :src="leagueLogo(l.id, 18, 'dark')!" alt="" />
+              </template>
+              {{ l.name }}
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
     <OfflineBanner v-if="screen.banner === 'offline'" class="banner" :updated-at="updatedAt" />
 
-    <template v-if="screen.view === 'content' && league">
+    <!-- A national cup: its knockouts in place of the table, or the Super
+         Cup's one match; the records beside them -->
+    <template v-if="screen.view === 'content' && league && kind === 'cup'">
       <div class="main">
-        <StandingsTable :rows="standings" :cup="isEuroCup(leagueId)" />
-      </div>
-      <aside class="side">
+        <PlayoffCard
+          v-if="league.stages.length > 0"
+          main
+          :league-id="league.id"
+          :stages="league.stages"
+          :current="league.stage"
+        />
         <RoundMatches
+          v-else
           v-model="round"
           :tabs
           :matches="matches.items.value"
           :loading="matches.request.value !== 'success'"
           :now
         />
-        <FlowRecords :records="league.records" class="records" />
+      </div>
+      <aside class="side">
+        <FlowRecords :records="league.records" :stages="league.stages" class="records" />
       </aside>
     </template>
+
+    <!-- A league, or a European cup: once its knockouts begin, they take the
+         place of the rounds of its league phase -->
+    <template v-else-if="screen.view === 'content' && league">
+      <div class="main">
+        <StandingsTable :rows="standings" :cup="isEuroCup(leagueId)" />
+      </div>
+      <aside class="side">
+        <PlayoffCard
+          v-if="league.stages.length > 0"
+          class="playoff"
+          :league-id="league.id"
+          :stages="league.stages"
+          :current="league.stage"
+        />
+        <RoundMatches
+          v-else
+          v-model="round"
+          :tabs
+          :matches="matches.items.value"
+          :loading="matches.request.value !== 'success'"
+          :now
+        />
+        <FlowRecords :records="league.records" :stages="league.stages" class="records" />
+      </aside>
+    </template>
+
+    <AppCard v-else-if="screen.view === 'empty' && kind === 'cup'" class="main notice">
+      <StateMessage
+        icon="trophy"
+        title="Сетки пока нет"
+        text="Кубок ещё не начался. Пары появятся после жеребьёвки."
+      />
+    </AppCard>
 
     <AppCard v-else-if="screen.view === 'empty'" class="main notice">
       <StateMessage
@@ -214,10 +286,43 @@ function retryAll() {
   color: var(--fs-home);
 }
 
+/* The chips in groups, each under its name (CompetitionsExtended). On the
+   phone a group is one row that scrolls from edge to edge of the screen. */
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.group-name {
+  color: var(--fs-muted);
+  font-size: var(--fs-text-caption);
+  font-weight: 600;
+}
+
 .chips {
   display: flex;
   gap: var(--fs-space-8);
+  margin: 0 calc(-1 * var(--fs-screen-padding));
+  padding: 0 var(--fs-screen-padding);
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* On the phone, as on the cup board, the knockouts come before the table */
+.top,
+.banner {
+  order: -2;
+}
+
+.playoff {
+  order: -1;
 }
 
 /* The picked chip is filled with the text color, as on the board */
@@ -323,6 +428,8 @@ function retryAll() {
 
   .chips {
     flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
   }
 
   .main {

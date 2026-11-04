@@ -4,8 +4,10 @@ import {
   attemptsLeft,
   authError,
   countdown,
+  detour,
   flowBars,
   formReady,
+  initials,
   nextPath,
   passwordOk,
   triesLeft,
@@ -72,5 +74,25 @@ describe('the code screen', () => {
     expect(nextPath('/matches/1')).toBe('/matches/1')
     expect(nextPath('//evil.example')).toBe('/')
     expect(nextPath(undefined)).toBe('/')
+  })
+})
+
+describe('the header', () => {
+  it('draws the initials as the boards do', () => {
+    expect(initials({ name: 'Аян Жумабеков', email: 'a@b.kz' })).toBe('АЖ')
+    expect(initials({ name: 'аян', email: 'a@b.kz' })).toBe('А')
+    expect(initials({ name: 'Аян Серикович Жумабеков', email: 'a@b.kz' })).toBe('АС')
+    expect(initials({ name: '  ', email: 'zhan@b.kz' })).toBe('Z')
+  })
+
+  it('sends a guest to Вход and someone signed in past it', () => {
+    const settings = { name: undefined, fullPath: '/settings', query: {}, meta: { signedIn: true } }
+    expect(detour(settings, false)).toBe('/login?redirect=%2Fsettings')
+    expect(detour(settings, true)).toBeNull()
+
+    const login = { name: 'login', fullPath: '/login', query: { redirect: '/leagues' }, meta: {} }
+    expect(detour(login, true)).toBe('/leagues')
+    expect(detour({ ...login, query: {} }, true)).toBe('/')
+    expect(detour(login, false)).toBeNull()
   })
 })

@@ -5,11 +5,15 @@ import DesktopHeader from './layout/DesktopHeader.vue'
 import MobileNavBar from './layout/MobileNavBar.vue'
 import TabBar from './layout/TabBar.vue'
 import ToastHost from '@/shared/toast/ToastHost.vue'
+import { useSessionStore } from '@/stores/session'
 
 const route = useRoute()
 const active = computed(() => route.meta.tab)
 const inner = computed(() => route.meta.inner === true)
 const bare = computed(() => route.meta.bare === true)
+
+// A kept token may have expired since the last visit: the server says whose it is
+void useSessionStore().check()
 </script>
 
 <template>

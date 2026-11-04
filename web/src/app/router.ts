@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { detour } from '@/features/auth/auth'
+import { useSessionStore } from '@/stores/session'
 
 const stub = () => import('@/pages/StubPage.vue')
 
@@ -57,7 +59,11 @@ export const router = createRouter({
     // Screens from the mockup that are not built yet
     { path: '/simulator', component: stub, meta: { tab: 'simulator', stubTitle: 'Симулятор' } },
     { path: '/search', component: stub, meta: { tab: 'search', stubTitle: 'Поиск' } },
-    { path: '/settings', component: stub, meta: { tab: 'profile', stubTitle: 'Настройки' } },
+    {
+      path: '/settings',
+      component: stub,
+      meta: { tab: 'profile', stubTitle: 'Настройки', signedIn: true },
+    },
     { path: '/favorites', component: stub, meta: { tab: 'favorites', stubTitle: 'Избранное' } },
     { path: '/notifications', component: stub, meta: { inner: true, stubTitle: 'Уведомления' } },
     { path: '/forgot', component: stub, meta: { inner: true, stubTitle: 'Восстановление пароля' } },
@@ -69,3 +75,6 @@ export const router = createRouter({
     },
   ],
 })
+
+// Профиль is for the signed in, and Вход for guests
+router.beforeEach((to) => detour(to, useSessionStore().signedIn) ?? true)

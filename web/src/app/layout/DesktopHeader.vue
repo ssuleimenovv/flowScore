@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { initials } from '@/features/auth/auth'
 import AppIcon from '@/shared/ui/AppIcon.vue'
 import AppLogo from '@/shared/ui/AppLogo.vue'
+import { useSessionStore } from '@/stores/session'
 import ThemeToggle from './ThemeToggle.vue'
 import { sections, type TabId } from './navigation'
 
 defineProps<{ active: TabId | undefined }>()
+
+// Signed in, the avatar has the user's initials, as on the boards; a guest
+// sees the figure, and Профиль takes them to Вход first
+const session = useSessionStore()
 </script>
 
 <template>
@@ -39,7 +45,15 @@ defineProps<{ active: TabId | undefined }>()
         <AppIcon name="bell" :size="20" />
       </RouterLink>
       <ThemeToggle variant="boxed" />
-      <RouterLink to="/settings" class="avatar fs-link" aria-label="Профиль">
+      <RouterLink
+        v-if="session.user"
+        to="/settings"
+        class="avatar initials fs-link"
+        :aria-label="`Профиль: ${session.user.name}`"
+      >
+        {{ initials(session.user) }}
+      </RouterLink>
+      <RouterLink v-else to="/settings" class="avatar fs-link" aria-label="Войти">
         <AppIcon name="person" :size="20" />
       </RouterLink>
     </div>
@@ -154,6 +168,12 @@ defineProps<{ active: TabId | undefined }>()
 .avatar {
   border-radius: var(--fs-radius-full);
   background: var(--fs-surface-2);
+}
+
+.initials {
+  font-size: var(--fs-text-subheadline);
+  font-weight: 700;
+  text-decoration: none;
 }
 
 /* 768–1199: no room for the full search field, it becomes a square button */

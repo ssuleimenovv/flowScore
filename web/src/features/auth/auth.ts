@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/api/http'
-import type { WrongCode } from '@/shared/api/types'
+import type { User, WrongCode } from '@/shared/api/types'
 
 export type AuthMode = 'login' | 'reg'
 
@@ -85,4 +85,29 @@ export function triesLeft(n: number): string {
 // "0:42"
 export function countdown(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+// The letters on the avatar, as the boards draw them: "АЖ" for "Аян Жумабеков",
+// "А" for "Аян"; the email's first letter when there is no name
+export function initials(user: Pick<User, 'name' | 'email'>): string {
+  const words = user.name.trim().split(/\s+/).filter(Boolean)
+  const letters = words.length ? words.slice(0, 2).map((w) => w.charAt(0)) : [user.email.charAt(0)]
+  return letters.join('').toUpperCase()
+}
+
+// Where a navigation goes instead, if anywhere: a guest on a screen for the
+// signed in goes to Вход and comes back after; Вход sends someone signed in
+// on to where they were going. null lets it through
+export function detour(
+  to: {
+    name?: unknown
+    fullPath: string
+    query: Record<string, unknown>
+    meta: { signedIn?: boolean }
+  },
+  signedIn: boolean,
+): string | null {
+  if (to.meta.signedIn && !signedIn) return `/login?redirect=${encodeURIComponent(to.fullPath)}`
+  if (to.name === 'login' && signedIn) return nextPath(to.query.redirect)
+  return null
 }

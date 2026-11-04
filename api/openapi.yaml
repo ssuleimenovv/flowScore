@@ -516,6 +516,81 @@ paths:
         '502':
           $ref: '#/components/responses/MailFailed'
 
+  /auth/forgot:
+    post:
+      tags: [auth]
+      operationId: forgot
+      summary: Send a code to set a new password with
+      description: |
+        Every email gets the same 202, known or not, so the answer does not
+        tell which emails are signed up. Asked for again within a minute, no
+        new code goes out.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resend'
+      responses:
+        '202':
+          description: A code is on its way, if the email is signed up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pending'
+        '400':
+          description: Not a JSON body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '502':
+          $ref: '#/components/responses/MailFailed'
+
+  /auth/reset:
+    post:
+      tags: [auth]
+      operationId: reset
+      summary: Set a new password with the code from the email, and sign in
+      description: |
+        The code confirms the email too. A weak password is turned away
+        before the code is checked, so it costs no try.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reset'
+      responses:
+        '200':
+          description: The password is set; signed in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Not a JSON body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          description: 'No code to check (never sent, used, expired or out of tries): ask for a new one'
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: A wrong code, with the tries left, or a weak password
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/WrongCode'
+                  - $ref: '#/components/schemas/Problem'
+
   /me:
     get:
       tags: [auth]
@@ -1671,6 +1746,22 @@ components:
         email:
           type: string
           format: email
+
+    Reset:
+      type: object
+      required: [email, code, password]
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+          example: '482193'
+        password:
+          type: string
+          minLength: 8
+          description: At least 8 characters, one of them a digit
 
     WrongCode:
       allOf:

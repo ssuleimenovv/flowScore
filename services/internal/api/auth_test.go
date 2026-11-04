@@ -57,6 +57,15 @@ func (f fakeUsers) MarkVerified(_ context.Context, id string) error {
 	return nil
 }
 
+func (f fakeUsers) SetPassword(_ context.Context, id, hash string) error {
+	for _, row := range f {
+		if row.user.ID == id {
+			row.hash, row.user.Verified = hash, true
+		}
+	}
+	return nil
+}
+
 // fakeCodes is the codes table: a code once put stays "too soon" to replace
 type fakeCodes map[string]*fakeCode
 
@@ -253,6 +262,60 @@ func TestMe(t *testing.T) {
 		}
 		if c.want == http.StatusOK && body.Name != "Аян" {
 			t.Errorf("%s: %+v", c.name, body)
+		}
+	}
+}
+
+func TestResetPassword(t *testing.T) {
+	s := newAuthServer(t)
+	old, _ := auth.HashPassword("flowscore1")
+	u, _ := s.users.Create(context.Background(), "ayan@mail.com", "Аян", old)
+	s.users.MarkVerified(context.Background(), u.ID)
+	var body map[string]any
+
+	// An unknown email gets the same answer, and no email goes out
+	if res := post(t, s.url+"/auth/forgot", `{"email":"nobody@mail.com"}`, &body); res.StatusCode != http.StatusAccepted || len(s.box.sent) != 0 {
+		t.Errorf("unknown email: %d, %d emails", res.StatusCode, len(s.box.sent))
+	}
+	var p pending
+	if res := post(t, s.url+"/auth/forgot", `{"email":"Ayan@mail.com"}`, &p); res.StatusCode != http.StatusAccepted || p.Email != "ayan@mail.com" || len(s.box.sent) != 1 {
+		t.Fatalf("forgot: %d %+v, %d emails", res.StatusCode, p, len(s.box.sent))
+	}
+	code := s.box.code()
+	// Asked again at once: the same answer, and no second email
+	if res := post(t, s.url+"/auth/forgot", `{"email":"ayan@mail.com"}`, &body); res.StatusCode != http.StatusAccepted || len(s.box.sent) != 1 {
+		t.Errorf("forgot again: %d, %d emails", res.StatusCode, len(s.box.sent))
+	}
+
+	// A weak password costs no try; a wrong code tells the tries left
+	if res := post(t, s.url+"/auth/reset", `{"email":"ayan@mail.com","code":"`+code+`","password":"short"}`, &body); res.StatusCode != http.StatusUnprocessableEntity {
+		t.Errorf("weak password: %d, want 422", res.StatusCode)
+	}
+	wrong := "000000"
+	if code == wrong {
+		wrong = "111111"
+	}
+	var w struct{ AttemptsLeft int }
+	res := post(t, s.url+"/auth/reset", `{"email":"ayan@mail.com","code":"`+wrong+`","password":"newpass22"}`, &w)
+	if res.StatusCode != http.StatusUnprocessableEntity || w.AttemptsLeft != db.MaxAttempts-1 {
+		t.Errorf("wrong code: %d, %d left", res.StatusCode, w.AttemptsLeft)
+	}
+
+	// The right code sets the password and signs in
+	var sess session
+	if res := post(t, s.url+"/auth/reset", `{"email":"ayan@mail.com","code":"`+code+`","password":"newpass22"}`, &sess); res.StatusCode != http.StatusOK || sess.User.ID != u.ID {
+		t.Fatalf("reset: %d %+v", res.StatusCode, sess)
+	}
+	if res := post(t, s.url+"/auth/login", `{"email":"ayan@mail.com","password":"newpass22"}`, &sess); res.StatusCode != http.StatusOK {
+		t.Errorf("the new password: %d", res.StatusCode)
+	}
+	if res := post(t, s.url+"/auth/login", `{"email":"ayan@mail.com","password":"flowscore1"}`, &body); res.StatusCode != http.StatusUnauthorized {
+		t.Errorf("the old password: %d, want 401", res.StatusCode)
+	}
+	// The code is used up, and an unknown email has none
+	for _, email := range []string{"ayan@mail.com", "nobody@mail.com"} {
+		if res := post(t, s.url+"/auth/reset", `{"email":"`+email+`","code":"`+code+`","password":"newpass33"}`, &body); res.StatusCode != http.StatusGone {
+			t.Errorf("%s: %d, want 410", email, res.StatusCode)
 		}
 	}
 }

@@ -47,4 +47,13 @@ func TestUsers(t *testing.T) {
 	if _, err := u.ByID(ctx, "00000000-0000-0000-0000-000000000000"); !errors.Is(err, ErrNoUser) {
 		t.Errorf("unknown ID: %v, want ErrNoUser", err)
 	}
+
+	// A new password confirms the email as well
+	if err := u.SetPassword(ctx, made.ID, "new hash"); err != nil {
+		t.Fatal(err)
+	}
+	if got, hash, err := u.ByEmail(ctx, "test@flowscore.dev"); err != nil || hash != "new hash" || !got.Verified {
+		t.Errorf("after a new password: %+v, %q, %v", got, hash, err)
+	}
+
 }

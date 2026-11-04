@@ -21,6 +21,7 @@ type Accounts interface {
 	ByEmail(ctx context.Context, email string) (db.User, string, error)
 	ByID(ctx context.Context, id string) (db.User, error)
 	MarkVerified(ctx context.Context, id string) error
+	SetPassword(ctx context.Context, id, hash string) error
 }
 
 // CodeStore keeps the codes sent by email: db.Codes.
@@ -51,6 +52,8 @@ func (a Auth) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/auth/login", a.login)
 	mux.HandleFunc("POST /api/v1/auth/verify", a.verify)
 	mux.HandleFunc("POST /api/v1/auth/resend", a.resend)
+	mux.HandleFunc("POST /api/v1/auth/forgot", a.forgot)
+	mux.HandleFunc("POST /api/v1/auth/reset", a.reset)
 	mux.HandleFunc("GET /api/v1/me", signedIn(a.Tokens, a.me))
 }
 
@@ -167,20 +170,11 @@ func (a Auth) verify(w http.ResponseWriter, r *http.Request) {
 		serverError(w, "verify", err)
 		return
 	}
-	code := strings.TrimSpace(in.Code)
-	left, err := a.Codes.Use(r.Context(), u.ID, db.Verify, a.Hasher.Hash(u.ID, db.Verify, code))
-	switch {
-	case errors.Is(err, db.ErrWrongCode):
-		writeWrongCode(w, left)
-		return
-	case errors.Is(err, db.ErrNoCode):
-		writeProblem(w, http.StatusGone, "No code to check")
-		return
-	case err != nil:
-		serverError(w, "verify", err)
+	if !a.useCode(r.Context(), w, u, db.Verify, in.Code) {
 		return
 	}
 	if err := a.Users.MarkVerified(r.Context(), u.ID); err != nil {
+
 		serverError(w, "verify", err)
 		return
 	}
@@ -214,6 +208,64 @@ func (a Auth) resend(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusAccepted, pending{Email: in.Email})
 }
 
+// forgot sends a code to set a new password with. Every email gets the same
+// answer, known or not; a code asked for again within the minute is not sent,
+// and the screen counts that minute down itself
+func (a Auth) forgot(w http.ResponseWriter, r *http.Request) {
+	in, ok := readCredentials(w, r)
+	if !ok {
+		return
+	}
+	u, _, err := a.Users.ByEmail(r.Context(), in.Email)
+	if err != nil && !errors.Is(err, db.ErrNoUser) {
+		serverError(w, "forgot", err)
+		return
+	}
+	if err == nil {
+		if err := a.sendCode(r.Context(), u, db.Reset); err != nil && !errors.Is(err, db.ErrTooSoon) {
+			mailError(w, err)
+			return
+		}
+	}
+	writeJSON(w, http.StatusAccepted, pending{Email: in.Email})
+}
+
+// reset sets a new password with the code from the email. The code shows the
+// email is the user's, so it confirms it too, and signs in. A weak password
+// is turned away before the code is checked, so it costs no try
+func (a Auth) reset(w http.ResponseWriter, r *http.Request) {
+	in, ok := readCredentials(w, r)
+	if !ok {
+		return
+	}
+	if err := auth.CheckPassword(in.Password); err != nil {
+		writeProblem(w, http.StatusUnprocessableEntity, "Weak password")
+		return
+	}
+	u, _, err := a.Users.ByEmail(r.Context(), in.Email)
+	if errors.Is(err, db.ErrNoUser) {
+		writeProblem(w, http.StatusGone, "No code to check")
+		return
+	}
+	if err != nil {
+		serverError(w, "reset", err)
+		return
+	}
+	if !a.useCode(r.Context(), w, u, db.Reset, in.Code) {
+		return
+	}
+	hash, err := auth.HashPassword(in.Password)
+	if err != nil {
+		serverError(w, "hash", err)
+		return
+	}
+	if err := a.Users.SetPassword(r.Context(), u.ID, hash); err != nil {
+		serverError(w, "reset", err)
+		return
+	}
+	a.writeSession(w, http.StatusOK, u)
+}
+
 func (a Auth) me(w http.ResponseWriter, r *http.Request, userID string) {
 	u, err := a.Users.ByID(r.Context(), userID)
 	// A token outlives an account deleted after it was issued
@@ -239,6 +291,25 @@ func (a Auth) sendCode(ctx context.Context, u db.User, purpose string) error {
 		return err
 	}
 	return a.Mail.Send(ctx, mail.CodeMail(u.Email, code, purpose == db.Reset))
+}
+
+// useCode checks a code from the email and answers a wrong or lost one
+// itself; true means it was right, and it is used up
+func (a Auth) useCode(ctx context.Context, w http.ResponseWriter, u db.User, purpose, code string) bool {
+	code = strings.TrimSpace(code)
+	left, err := a.Codes.Use(ctx, u.ID, purpose, a.Hasher.Hash(u.ID, purpose, code))
+	switch {
+	case errors.Is(err, db.ErrWrongCode):
+		writeWrongCode(w, left)
+		return false
+	case errors.Is(err, db.ErrNoCode):
+		writeProblem(w, http.StatusGone, "No code to check")
+		return false
+	case err != nil:
+		serverError(w, "check code", err)
+		return false
+	}
+	return true
 }
 
 func (a Auth) writeSession(w http.ResponseWriter, status int, u db.User) {

@@ -90,3 +90,12 @@ func (u *Users) MarkVerified(ctx context.Context, id string) error {
 		UPDATE users SET email_verified_at = now() WHERE id = $1 AND email_verified_at IS NULL`, id)
 	return err
 }
+
+// SetPassword gives the user a new password, by its hash. It comes with a
+// code from the email, so the email is confirmed too.
+func (u *Users) SetPassword(ctx context.Context, id, hash string) error {
+	_, err := u.Pool.Exec(ctx, `
+		UPDATE users SET password_hash = $2, email_verified_at = coalesce(email_verified_at, now())
+		WHERE id = $1`, id, hash)
+	return err
+}

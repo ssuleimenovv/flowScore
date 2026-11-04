@@ -348,6 +348,49 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/auth/forgot': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Send a code to set a new password with
+     * @description Every email gets the same 202, known or not, so the answer does not
+     *     tell which emails are signed up. Asked for again within a minute, no
+     *     new code goes out.
+     */
+    post: operations['forgot']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Set a new password with the code from the email, and sign in
+     * @description The code confirms the email too. A weak password is turned away
+     *     before the code is checked, so it costs no try.
+     */
+    post: operations['reset']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/me': {
     parameters: {
       query?: never
@@ -958,6 +1001,14 @@ export interface components {
     Resend: {
       /** Format: email */
       email: string
+    }
+    Reset: {
+      /** Format: email */
+      email: string
+      /** @example 482193 */
+      code: string
+      /** @description At least 8 characters, one of them a digit */
+      password: string
     }
     WrongCode: components['schemas']['Problem'] & {
       /** @description Tries left for this code; at 0 ask for a new one */
@@ -1616,6 +1667,92 @@ export interface operations {
         }
       }
       502: components['responses']['MailFailed']
+    }
+  }
+  forgot: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Resend']
+      }
+    }
+    responses: {
+      /** @description A code is on its way, if the email is signed up */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Pending']
+        }
+      }
+      /** @description Not a JSON body */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      502: components['responses']['MailFailed']
+    }
+  }
+  reset: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Reset']
+      }
+    }
+    responses: {
+      /** @description The password is set; signed in */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Session']
+        }
+      }
+      /** @description Not a JSON body */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description No code to check (never sent, used, expired or out of tries): ask for a new one */
+      410: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json': components['schemas']['Problem']
+        }
+      }
+      /** @description A wrong code, with the tries left, or a weak password */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/problem+json':
+            components['schemas']['WrongCode'] | components['schemas']['Problem']
+        }
+      }
     }
   }
   me: {

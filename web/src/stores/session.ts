@@ -37,6 +37,17 @@ export const useSessionStore = defineStore('session', () => {
     await apiPost<Pending>('/auth/resend', { email })
   }
 
+  // A forgotten password: a code goes to the email, if it is signed up. The
+  // answer is the email, the same for any
+  async function forgot(email: string): Promise<string> {
+    return (await apiPost<Pending>('/auth/forgot', { email })).email
+  }
+
+  // The code from that email sets the new password and signs in
+  async function reset(email: string, code: string, password: string) {
+    keep(await apiPost<Session>('/auth/reset', { email, code, password }))
+  }
+
   function signOut() {
     token.value = null
     user.value = null
@@ -54,7 +65,7 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  return { token, user, signedIn, signIn, signUp, verify, resend, signOut, check }
+  return { token, user, signedIn, signIn, signUp, verify, resend, forgot, reset, signOut, check }
 })
 
 // localStorage can throw (private mode, blocked storage): then the session

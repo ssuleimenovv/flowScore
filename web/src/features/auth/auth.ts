@@ -9,6 +9,11 @@ export function passwordOk(p: string): boolean {
   return [...p].length >= 8 && /\d/.test(p)
 }
 
+// "Новый пароль" is ready to send: all six digits and a password the rule allows
+export function resetReady(code: string, password: string): boolean {
+  return /^\d{6}$/.test(code) && passwordOk(password)
+}
+
 // The form is ready to send: the button stays off until it is
 export function formReady(mode: AuthMode, name: string, email: string, password: string): boolean {
   const filled = email.includes('@') && password.length > 0

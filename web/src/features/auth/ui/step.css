@@ -1,0 +1,159 @@
+/* The screens of the AuthCode board: "Проверь почту", "Восстановление пароля"
+   and "Новый пароль". They share the head, the fields and the main button */
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.back {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fs-muted);
+  font-size: var(--fs-text-footnote);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--fs-home-soft);
+  color: var(--fs-home);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.text {
+  color: var(--fs-muted);
+  font-size: var(--fs-text-subheadline);
+  line-height: 1.5;
+}
+
+.email {
+  color: var(--fs-text);
+  font-weight: 600;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.error {
+  color: var(--fs-home);
+  font-size: var(--fs-text-footnote);
+  font-weight: 600;
+}
+
+/* AppButton's root: full width and 52 px, as the board's main button */
+.submit {
+  width: 100%;
+  height: 52px;
+}
+
+.resend {
+  color: var(--fs-muted);
+  font-size: var(--fs-text-footnote);
+  text-align: center;
+}
+
+.timer {
+  color: var(--fs-text);
+  font-family: var(--fs-font-mono);
+}
+
+.again {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fs-home);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.note {
+  color: var(--fs-faint);
+  font-size: var(--fs-text-caption);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fs-space-8);
+  color: var(--fs-muted);
+  font-size: var(--fs-text-footnote);
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--fs-line);
+  border-radius: var(--fs-radius-md);
+  background: var(--fs-bg);
+  color: var(--fs-text);
+  font: inherit;
+  font-size: var(--fs-text-subheadline);
+}
+
+.password {
+  position: relative;
+  display: block;
+}
+
+.password .input {
+  padding-right: 52px;
+}
+
+.reveal {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--fs-touch);
+  height: var(--fs-touch);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fs-muted);
+  cursor: pointer;
+}
+
+.reveal[aria-pressed='true'] {
+  color: var(--fs-text);
+}
+
+.rule {
+  margin-top: -8px;
+  color: var(--fs-muted);
+  font-size: var(--fs-text-caption);
+}

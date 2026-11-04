@@ -10,6 +10,7 @@ import {
   initials,
   nextPath,
   passwordOk,
+  resetReady,
   triesLeft,
 } from '../auth'
 
@@ -28,6 +29,14 @@ describe('formReady', () => {
     expect(formReady('reg', '', 'a@b.kz', 'flowscore1')).toBe(false) // no name
     expect(formReady('reg', 'Аян', 'a@b.kz', 'short')).toBe(false)
     expect(formReady('reg', 'Аян', 'a@b.kz', 'flowscore1')).toBe(true)
+  })
+})
+
+describe('resetReady', () => {
+  it('wants the whole code and a password the rule allows', () => {
+    expect(resetReady('482193', 'newpass22')).toBe(true)
+    expect(resetReady('48219', 'newpass22')).toBe(false)
+    expect(resetReady('482193', 'short1')).toBe(false)
   })
 })
 

@@ -56,6 +56,13 @@ export const router = createRouter({
       meta: { bare: true },
     },
 
+    {
+      path: '/forgot',
+      name: 'forgot',
+      component: () => import('@/pages/AuthPage.vue'),
+      meta: { bare: true },
+    },
+
     // Screens from the mockup that are not built yet
     { path: '/simulator', component: stub, meta: { tab: 'simulator', stubTitle: 'Симулятор' } },
     { path: '/search', component: stub, meta: { tab: 'search', stubTitle: 'Поиск' } },
@@ -66,7 +73,6 @@ export const router = createRouter({
     },
     { path: '/favorites', component: stub, meta: { tab: 'favorites', stubTitle: 'Избранное' } },
     { path: '/notifications', component: stub, meta: { inner: true, stubTitle: 'Уведомления' } },
-    { path: '/forgot', component: stub, meta: { inner: true, stubTitle: 'Восстановление пароля' } },
     ...(import.meta.env.DEV ? devRoutes : []),
     {
       path: '/:pathMatch(.*)*',

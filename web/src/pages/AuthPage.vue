@@ -3,11 +3,19 @@ import ThemeToggle from '@/app/layout/ThemeToggle.vue'
 import AuthForm from '@/features/auth/ui/AuthForm.vue'
 import AuthPromo from '@/features/auth/ui/AuthPromo.vue'
 import AppLogo from '@/shared/ui/AppLogo.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import CodeStep from '@/features/auth/ui/CodeStep.vue'
+import ForgotStep from '@/features/auth/ui/ForgotStep.vue'
+import ResetStep from '@/features/auth/ui/ResetStep.vue'
 
 // the email the code went to: the page shows the code screen instead of the form
 const pending = ref<string | null>(null)
+
+// "Забыли пароль?" opens /forgot: the email, then the code and the new password
+const route = useRoute()
+const forgot = computed(() => route.name === 'forgot')
+const resetFor = ref<string | null>(null)
 
 // "Вход" from the Auth boards. A desktop has the promo on the left and the
 // form on the right; a phone has the logo, the title and the form.
@@ -28,7 +36,12 @@ const pending = ref<string | null>(null)
         </RouterLink>
         <ThemeToggle variant="boxed" />
       </div>
-      <div class="column fs-in">
+      <div v-if="forgot" class="column fs-in">
+        <!-- v-show keeps the email: "Изменить почту" comes back to it -->
+        <ForgotStep v-show="!resetFor" @sent="resetFor = $event" />
+        <ResetStep v-if="resetFor" class="fs-in" :email="resetFor" @back="resetFor = null" />
+      </div>
+      <div v-else class="column fs-in">
         <h1 v-if="!pending" class="title">
           Почувствуй, кто <span class="accent">владеет игрой</span>
         </h1>

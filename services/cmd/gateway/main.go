@@ -137,8 +137,11 @@ func main() {
 	}
 
 	var leagues []string
-	if *espnLeagues != "" {
-		leagues = strings.Split(*espnLeagues, ",")
+	for _, id := range strings.Split(*espnLeagues, ",") {
+		// A value pasted into a host's settings may bring a space or a line break
+		if id = strings.TrimSpace(id); id != "" {
+			leagues = append(leagues, id)
+		}
 	}
 
 	// The league screens and the ratings of the real matches: each league's

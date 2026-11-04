@@ -85,6 +85,13 @@ func (s *Seasons) Refresh(ctx context.Context, id string) error {
 		return err
 	}
 
+	// A cup's table may be on the next season while its matches are still the
+	// last one's, as the Coupe de France's is before its draw: the season is
+	// the one the matches are of
+	if today.SeasonYear > 0 {
+		table.Season = today.SeasonYear
+	}
+
 	seen := map[string]bool{}
 	var games []Game
 	add := func(b espn.Board) {

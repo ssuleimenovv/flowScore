@@ -65,6 +65,7 @@ type Board struct {
 	Games       []Game
 	Days        []time.Time // none for a cup
 	SeasonStart time.Time   // zero when ESPN does not say
+	SeasonYear  int         // 2026 for 2026/27; 0 when ESPN does not say
 }
 
 // Scoreboard returns today's matches of a league: "eng.1" is the Premier League.
@@ -100,6 +101,7 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 			// instead ({label: "League Phase", ...}), so it is read below
 			Calendar json.RawMessage `json:"calendar"`
 			Season   struct {
+				Year      int    `json:"year"`
 				StartDate string `json:"startDate"` // "2026-07-01T04:00Z"
 			} `json:"season"`
 		} `json:"leagues"`
@@ -153,6 +155,7 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 
 	var b Board
 	if len(raw.Leagues) > 0 {
+		b.SeasonYear = raw.Leagues[0].Season.Year
 		if s := raw.Leagues[0].Season.StartDate; s != "" {
 			t, err := time.Parse(dateLayout, s)
 			if err != nil {

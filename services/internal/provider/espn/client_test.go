@@ -131,7 +131,7 @@ func TestErrorStatus(t *testing.T) {
 func TestBoardOfACup(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Write([]byte(`{
-			"leagues": [{"season": {"startDate": "2026-07-01T04:00Z"}, "calendar": [{"label": "UEFA Champions League", "entries": [
+			"leagues": [{"season": {"year": 2026, "startDate": "2026-07-01T04:00Z"}, "calendar": [{"label": "UEFA Champions League", "entries": [
 				{"label": "League Phase", "startDate": "2026-08-27T07:00Z", "endDate": "2027-02-15T07:59Z"}]}]}],
 			"events": [{"id": "401915386", "name": "Bayern Munich at Atlético Madrid", "date": "2026-11-03T20:00Z",
 				"status": {"type": {"state": "pre"}},
@@ -152,6 +152,9 @@ func TestBoardOfACup(t *testing.T) {
 	}
 	if want := time.Date(2026, 7, 1, 4, 0, 0, 0, time.UTC); !b.SeasonStart.Equal(want) {
 		t.Errorf("season starts %v, want %v", b.SeasonStart, want)
+	}
+	if b.SeasonYear != 2026 {
+		t.Errorf("season %d, want 2026", b.SeasonYear)
 	}
 }
 

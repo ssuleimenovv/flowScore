@@ -63,8 +63,12 @@ function dayKey(date: Date, timeZone?: string): string {
 
 // Where a match of the round stands, as the board writes it: "ФТ" once it is
 // over, the minute while it is played ("72′"), and before kick-off the time
-// today, "Завтра", or the date ("28 окт")
-export function roundStatus(m: RoundMatch, now: Date, timeZone?: string): string {
+// today, "Завтра", or the date ("28 окт"). A leg of a cup tie is written the same way.
+export function roundStatus(
+  m: Pick<RoundMatch, 'state' | 'clock' | 'kickoffAt'>,
+  now: Date,
+  timeZone?: string,
+): string {
   if (m.state === 'post') return 'ФТ'
   if (m.state === 'in') return m.clock.replace(/'/g, '′')
   const kickoff = new Date(m.kickoffAt)

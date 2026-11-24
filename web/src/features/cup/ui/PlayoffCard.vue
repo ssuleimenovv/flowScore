@@ -11,6 +11,7 @@ import {
   type ComponentPublicInstance,
 } from 'vue'
 import TeamBadge from '@/features/match/ui/TeamBadge.vue'
+import TeamLink from '@/features/team/ui/TeamLink.vue'
 import type { Stage } from '@/shared/api/types'
 import { teamLogo } from '@/shared/media/logos'
 import AppCard from '@/shared/ui/AppCard.vue'
@@ -164,7 +165,9 @@ const titleId = useId()
             :logo="teamLogo(l.team.id, 22)"
             size="mini"
           />
-          <span class="name" :class="{ muted: l.mark === 'out' }">{{ l.team.name }}</span>
+          <TeamLink :team-id="l.team.id" class="name" :class="{ muted: l.mark === 'out' }">
+            {{ l.team.name }}
+          </TeamLink>
           <span class="cells" aria-hidden="true">
             <span
               v-for="(c, i) in l.cells"

@@ -1,4 +1,4 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, RouterLinkStub } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Stage, Tie, TieList } from '@/shared/api/types'
 import PlayoffCard from '../ui/PlayoffCard.vue'
@@ -40,7 +40,9 @@ describe('PlayoffCard', () => {
     const fetch = respond([shootout])
     const card = mount(PlayoffCard, {
       props: { leagueId: 'ita.coppa_italia', stages, current: 'second-round', main: true },
+      global: { stubs: { RouterLink: RouterLinkStub } },
     })
+
     expect(card.find('[aria-busy="true"]').exists()).toBe(true)
     await flushPromises()
 
@@ -64,7 +66,9 @@ describe('PlayoffCard', () => {
     const fetch = respond([shootout])
     const card = mount(PlayoffCard, {
       props: { leagueId: 'uefa.champions', stages, current: '' },
+      global: { stubs: { RouterLink: RouterLinkStub } },
     })
+
     await flushPromises()
     expect(card.find('h2').text()).toBe('Плей-офф')
     expect(card.find('.side').text()).toBe('один матч')
@@ -80,7 +84,9 @@ describe('PlayoffCard', () => {
     const fetch = respond([], 500)
     const card = mount(PlayoffCard, {
       props: { leagueId: 'ita.coppa_italia', stages, current: 'second-round' },
+      global: { stubs: { RouterLink: RouterLinkStub } },
     })
+
     await flushPromises()
     expect(card.text()).toContain('Не удалось загрузить пары')
 

@@ -8,6 +8,7 @@ import type { MatchLive } from '../matchState'
 import FlowShareBar from './FlowShareBar.vue'
 import LiveBadge from './LiveBadge.vue'
 import TeamBadge from './TeamBadge.vue'
+import TeamLink from '@/features/team/ui/TeamLink.vue'
 
 // The scoreboard card from the desktop Match board.
 const { live, seconds } = defineProps<{ live: MatchLive; seconds: number }>()
@@ -38,7 +39,9 @@ const clockLine = computed(() => {
       <div class="team">
         <TeamBadge :code="match.home.code" side="home" :logo="matchTeamLogo(match, 'home', 72)" />
         <div class="team-body">
-          <span class="name">{{ match.home.name }}</span>
+          <TeamLink :team-id="match.source === 'espn' ? match.home.id : null" class="name">
+            {{ match.home.name }}
+          </TeamLink>
           <div class="flow-line">
             <span class="flow home">{{ flowHome }}</span>
             <span class="flow-label">FLOW</span>
@@ -57,7 +60,9 @@ const clockLine = computed(() => {
       <div class="team away-team">
         <TeamBadge :code="match.away.code" side="away" :logo="matchTeamLogo(match, 'away', 72)" />
         <div class="team-body end">
-          <span class="name">{{ match.away.name }}</span>
+          <TeamLink :team-id="match.source === 'espn' ? match.away.id : null" class="name">
+            {{ match.away.name }}
+          </TeamLink>
           <div class="flow-line away-line">
             <span class="flow away end">{{ flowAway }}</span>
             <span class="flow-label">FLOW</span>

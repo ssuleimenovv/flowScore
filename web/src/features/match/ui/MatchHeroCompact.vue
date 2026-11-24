@@ -7,6 +7,7 @@ import type { MatchLive } from '../matchState'
 import FlowShareBar from './FlowShareBar.vue'
 import LiveBadge from './LiveBadge.vue'
 import TeamBadge from './TeamBadge.vue'
+import TeamLink from '@/features/team/ui/TeamLink.vue'
 
 // The scoreboard from the MobileMatch board: no card, teams stacked over their
 // names, and the two Flow figures at the ends of one bar.
@@ -33,7 +34,9 @@ const minute = computed(() => formatMinute(seconds, match.value.clock.period))
           size="md"
           :logo="matchTeamLogo(match, 'home', 52)"
         />
-        <span class="name">{{ match.home.name }}</span>
+        <TeamLink :team-id="match.source === 'espn' ? match.home.id : null" class="name">
+          {{ match.home.name }}
+        </TeamLink>
       </div>
       <div class="score" :aria-label="`Счёт ${live.score.home}:${live.score.away}`">
         {{ live.score.home }}<span class="colon" aria-hidden="true">:</span>{{ live.score.away }}
@@ -45,7 +48,9 @@ const minute = computed(() => formatMinute(seconds, match.value.clock.period))
           size="md"
           :logo="matchTeamLogo(match, 'away', 52)"
         />
-        <span class="name">{{ match.away.name }}</span>
+        <TeamLink :team-id="match.source === 'espn' ? match.away.id : null" class="name">
+          {{ match.away.name }}
+        </TeamLink>
       </div>
     </div>
 

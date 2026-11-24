@@ -130,3 +130,8 @@ export const POSITION_WORD: Record<string, string> = {
   midfielder: 'Полузащитник',
   forward: 'Нападающий',
 }
+
+// The team's page: /teams/382
+export function teamPath(teamId: string): string {
+  return `/teams/${encodeURIComponent(teamId)}`
+}

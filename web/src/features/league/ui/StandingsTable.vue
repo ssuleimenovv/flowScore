@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TeamBadge from '@/features/match/ui/TeamBadge.vue'
+import TeamLink from '@/features/team/ui/TeamLink.vue'
 import type { Standing } from '@/shared/api/types'
 import { teamLogo } from '@/shared/media/logos'
 import AppCard from '@/shared/ui/AppCard.vue'
@@ -35,10 +36,11 @@ const { rows, cup = false } = defineProps<{ rows: Standing[]; cup?: boolean }>()
         <span class="zone" :class="zoneMark(r.zone)" />
         <span class="num">{{ r.rank }}</span>
       </span>
-      <span class="team">
+      <TeamLink :team-id="r.team.id" class="team">
         <TeamBadge :code="r.team.code" :logo="teamLogo(r.team.id, 30)" size="xs" />
         <span class="name">{{ r.team.name }}</span>
-      </span>
+      </TeamLink>
+
       <span class="num muted" :aria-label="`игр: ${r.played}`">{{ r.played }}</span>
       <span class="num wide">{{ r.won }}</span>
       <span class="num wide">{{ r.drawn }}</span>

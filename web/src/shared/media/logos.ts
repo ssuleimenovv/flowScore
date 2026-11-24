@@ -27,6 +27,14 @@ const LEAGUE_LOGOS: Record<string, number> = {
 // Logos ESPN draws once, for a light background only: the dark one is a 404
 const LIGHT_ONLY = new Set(['ita.coppa_italia'])
 
+// Logos whose dark version is the same black drawing: on a dark chip
+// they stand on a white plate
+const PLATED = new Set(['ger.dfb_pokal'])
+
+export function needsPlate(leagueId: string): boolean {
+  return PLATED.has(leagueId)
+}
+
 // Twice the size on screen, so the edges stay sharp on a retina display
 function image(path: string, px: number): string {
   const size = px * 2

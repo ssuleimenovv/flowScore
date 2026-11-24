@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { leagueLogo, matchTeamLogo, teamLogo } from '../logos'
+import { leagueLogo, matchTeamLogo, needsPlate, teamLogo } from '../logos'
 
 describe('logos', () => {
   it("asks ESPN for a team's crest at twice the size on screen", () => {
@@ -17,6 +17,11 @@ describe('logos', () => {
     expect(leagueLogo('ita.coppa_italia', 18, 'dark')).toContain(
       '/i/leaguelogos/soccer/500/2192.png',
     )
+  })
+
+  it('puts only the black DFB-Pokal logo on a white plate', () => {
+    expect(needsPlate('ger.dfb_pokal')).toBe(true)
+    expect(needsPlate('eng.1')).toBe(false)
   })
 
   it("finds a real team's crest by its ESPN id and a demo team's by its name", () => {

@@ -19,7 +19,7 @@ import FlowRecords from '@/features/league/ui/FlowRecords.vue'
 import RoundMatches from '@/features/league/ui/RoundMatches.vue'
 import StandingsTable from '@/features/league/ui/StandingsTable.vue'
 import { useLeague, useLeagues, useRound } from '@/features/league/useLeague'
-import { leagueLogo } from '@/shared/media/logos'
+import { leagueLogo, needsPlate } from '@/shared/media/logos'
 import { resolveScreenState } from '@/shared/state/screenState'
 import { useNetwork } from '@/shared/state/useNetwork'
 import AppCard from '@/shared/ui/AppCard.vue'
@@ -129,7 +129,12 @@ function retryAll() {
             >
               <template v-if="leagueLogo(l.id, 18)">
                 <img class="chip-logo on-light" :src="leagueLogo(l.id, 18)!" alt="" />
-                <img class="chip-logo on-dark" :src="leagueLogo(l.id, 18, 'dark')!" alt="" />
+                <img
+                  class="chip-logo on-dark"
+                  :class="{ plate: needsPlate(l.id) }"
+                  :src="leagueLogo(l.id, 18, 'dark')!"
+                  alt=""
+                />
               </template>
               {{ l.name }}
             </button>
@@ -347,6 +352,12 @@ function retryAll() {
   width: 18px;
   height: 18px;
   object-fit: contain;
+}
+
+.chip-logo.plate {
+  padding: 2px;
+  border-radius: var(--fs-radius-full);
+  background: var(--fs-on-accent);
 }
 
 /* The logo drawn for the chip's background: a chip is dark in the dark

@@ -2,11 +2,12 @@
 // A player's photo square from the Team board. ESPN has photos of few
 // players, so it holds the board's silhouette. "number" pins the shirt
 // number to its corner, as on MobileTeam; the desktop has a column for it.
-const { number = '' } = defineProps<{ number?: string }>()
+// "hero" is the player page's: 104 px on MobilePlayer, 200 px on Player
+const { number = '', size = 'row' } = defineProps<{ number?: string; size?: 'row' | 'hero' }>()
 </script>
 
 <template>
-  <span class="photo" aria-hidden="true">
+  <span class="photo" :class="size" aria-hidden="true">
     <svg viewBox="0 0 48 48" preserveAspectRatio="xMidYMax meet">
       <circle cx="24" cy="19" r="8.5" />
       <path d="M7 48c1.5-10 8.5-15.5 17-15.5S39.5 38 41 48z" />
@@ -54,16 +55,46 @@ svg {
   font-weight: 800;
 }
 
+.hero {
+  width: 104px;
+  height: 104px;
+  border-radius: 21px;
+}
+
+.hero .number {
+  right: 6px;
+  bottom: 6px;
+  min-width: 27px;
+  height: 27px;
+  border-radius: 7px;
+  font-size: 17px;
+}
+
 /* Desktop, as on Team: smaller, the number has its own column */
 @media (min-width: 768px) {
-  .photo {
+  .row {
     width: 44px;
     height: 44px;
     border-radius: 9px;
   }
 
-  .number {
+  .row .number {
     display: none;
+  }
+
+  .hero {
+    width: 200px;
+    height: 200px;
+    border-radius: 40px;
+  }
+
+  .hero .number {
+    right: 12px;
+    bottom: 12px;
+    min-width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    font-size: 32px;
   }
 }
 </style>

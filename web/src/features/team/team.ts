@@ -1,4 +1,4 @@
-import type { Team, TeamMatch } from '@/shared/api/types'
+import type { Team, TeamLeague, TeamMatch } from '@/shared/api/types'
 
 // The page is the team's, so each match is read from its side: its Flow,
 // its opponent, its result. The matches come by kick-off, oldest first.
@@ -19,6 +19,25 @@ export function flowOf(m: TeamMatch, teamId: string): number | null {
 
 export const RESULT_LETTER = { win: 'В', draw: 'Н', loss: 'П' } as const
 export type Result = keyof typeof RESULT_LETTER
+
+// For a screen reader: «В» alone says nothing
+export const RESULT_WORD = { win: 'победа', draw: 'ничья', loss: 'поражение' } as const
+
+// The country of a domestic league, as on the board: «Премьер-лига · Англия»
+const COUNTRIES: Record<string, string> = {
+  eng: 'Англия',
+  esp: 'Испания',
+  ger: 'Германия',
+  ita: 'Италия',
+  fra: 'Франция',
+}
+
+// «Премьер-лига · Англия · 3-е место»; the phone's nav bar has no room for the country
+export function leagueLine(league: TeamLeague | null, withCountry = true): string {
+  if (!league) return ''
+  const country = withCountry ? COUNTRIES[league.id.split('.')[0]!] : undefined
+  return [league.name, country, `${league.rank}-е место`].filter(Boolean).join(' · ')
+}
 
 function played(matches: TeamMatch[]): TeamMatch[] {
   return matches.filter((m) => m.state === 'post' && m.result !== '')

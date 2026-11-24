@@ -7,6 +7,7 @@ import type { Side } from '@/shared/api/types'
 // "lg" is the desktop scoreboard, "md" the phone one, "sm" a card on the home
 // screen, "xs" a row of the league table, "mini" a team's name in a list.
 // Without a side the tile is neutral.
+// "hero" the team page's card
 const {
   code,
   side,
@@ -16,7 +17,7 @@ const {
   code: string
   side?: Side
   logo?: string | null
-  size?: 'lg' | 'md' | 'sm' | 'xs' | 'mini'
+  size?: 'hero' | 'lg' | 'md' | 'sm' | 'xs' | 'mini'
 }>()
 
 const failed = ref(false)
@@ -54,6 +55,23 @@ watch(
   font-family: var(--fs-font-display);
   font-weight: 800;
   letter-spacing: 0.04em;
+}
+
+/* The team page: 64px on MobileTeam, 112px on Team */
+.hero {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  font-size: 20px;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    width: 112px;
+    height: 112px;
+    border-radius: 31px;
+    font-size: 36px;
+  }
 }
 
 .lg {

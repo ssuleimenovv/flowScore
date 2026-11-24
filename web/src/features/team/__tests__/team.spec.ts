@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import type { TeamMatch } from '@/shared/api/types'
-import { averageFlow, form, lastFlows, opponentOf, results, upcoming } from '../team'
+import { averageFlow, form, lastFlows, opponentOf, results, upcoming, leagueLine } from '../team'
 
 const team = (code: string) => ({ id: code, code, name: code })
 
@@ -53,5 +53,15 @@ describe('team', () => {
   it('splits the season into the matches to come and the results', () => {
     expect(upcoming(season).map((m) => m.id)).toEqual(['d', 'e'])
     expect(results(season, 2).map((m) => m.id)).toEqual(['c', 'b'])
+  })
+
+  it('names the league, its country and the place', () => {
+    const league = { id: 'eng.1', name: 'Премьер-лига', rank: 3 }
+    expect(leagueLine(league)).toBe('Премьер-лига · Англия · 3-е место')
+    expect(leagueLine(league, false)).toBe('Премьер-лига · 3-е место')
+    expect(leagueLine({ id: 'uefa.champions', name: 'Лига чемпионов', rank: 12 })).toBe(
+      'Лига чемпионов · 12-е место',
+    )
+    expect(leagueLine(null)).toBe('')
   })
 })

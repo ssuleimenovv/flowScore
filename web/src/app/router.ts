@@ -44,6 +44,13 @@ export const router = createRouter({
     },
 
     {
+      path: '/teams/:teamId',
+      name: 'team',
+      component: () => import('@/pages/TeamPage.vue'),
+      meta: { tab: 'leagues', inner: true },
+    },
+
+    {
       path: '/matches/:matchId/simulator',
       name: 'simulator',
       component: () => import('@/pages/SimulatorPage.vue'),

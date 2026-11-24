@@ -122,3 +122,11 @@ export function kickoffLine(m: TeamMatch, now: Date, timeZone?: string): string 
   const day = dayKey(at, timeZone) === dayKey(now, timeZone) ? 'Сегодня' : dayMonth(at, timeZone)
   return `${day}, ${time}`
 }
+
+// ESPN names only the line of a squad's player
+export const POSITION_WORD: Record<string, string> = {
+  goalkeeper: 'Вратарь',
+  defender: 'Защитник',
+  midfielder: 'Полузащитник',
+  forward: 'Нападающий',
+}

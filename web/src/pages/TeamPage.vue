@@ -9,8 +9,9 @@ import { leagueLine, results, upcoming } from '@/features/team/team'
 import TeamFlowCard from '@/features/team/ui/TeamFlowCard.vue'
 import TeamHero from '@/features/team/ui/TeamHero.vue'
 import TeamMatchesCard from '@/features/team/ui/TeamMatchesCard.vue'
+import TeamSquadCard from '@/features/team/ui/TeamSquadCard.vue'
 import TeamTabs, { type TeamTab } from '@/features/team/ui/TeamTabs.vue'
-import { useTeam } from '@/features/team/useTeam'
+import { useSquad, useTeam } from '@/features/team/useTeam'
 import { ApiError } from '@/shared/api/http'
 import { resolveScreenState } from '@/shared/state/screenState'
 import { useNetwork } from '@/shared/state/useNetwork'
@@ -51,6 +52,17 @@ const tab = computed<TeamTab>({
   set: (next) =>
     void router.replace({ query: { ...route.query, tab: next === 'overview' ? undefined : next } }),
 })
+
+// The squad is asked for once its tab is opened
+const {
+  items: players,
+  request: squadRequest,
+  error: squadError,
+  retry: retrySquad,
+} = useSquad(
+  teamId,
+  computed(() => tab.value === 'squad'),
+)
 
 // Mobile nav bar: "Manchester City" / "Премьер-лига · 3-е место", as on MobileTeam
 const { setTitle } = useNavTitle()
@@ -100,8 +112,18 @@ onUnmounted(() => setTitle(null))
           />
         </aside>
       </div>
-      <!-- Состав и Расписание: D2.4–D2.5 -->
-      <div v-else :id="`panel-${tab}`" role="tabpanel" :aria-labelledby="`tab-${tab}`" />
+      <TeamSquadCard
+        v-else-if="tab === 'squad'"
+        id="panel-squad"
+        role="tabpanel"
+        aria-labelledby="tab-squad"
+        :players
+        :request="squadRequest"
+        :error="squadError"
+        @retry="retrySquad"
+      />
+      <!-- Расписание: D2.5 -->
+      <div v-else id="panel-fixtures" role="tabpanel" aria-labelledby="tab-fixtures" />
     </template>
 
     <div

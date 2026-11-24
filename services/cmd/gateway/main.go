@@ -182,6 +182,7 @@ func main() {
 	live.Register(mux, hub, origins)
 	api.Register(mux, store)
 	api.RegisterLeagues(mux, seasons, leagues)
+	api.RegisterTeams(mux, seasons, seasons.Client, leagues)
 	api.RegisterPreMatch(mux, store, seasons)
 	// Signing up and in need the database to keep the users in
 	if users != nil {

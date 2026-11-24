@@ -12,6 +12,7 @@ security:
 tags:
   - name: matches
   - name: leagues
+  - name: teams
   - name: auth
 
 paths:
@@ -315,6 +316,50 @@ paths:
                 $ref: '#/components/schemas/TieList'
         '404':
           $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/SeasonNotReady'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /teams/{teamId}:
+    get:
+      tags: [teams]
+      operationId: getTeam
+      summary: A team, its league and its matches of the season in every competition
+      parameters:
+        - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamPage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/SeasonNotReady'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /teams/{teamId}/squad:
+    get:
+      tags: [teams]
+      operationId: getTeamSquad
+      summary: The team's players of the season, ESPN's; kept for 6 hours
+      parameters:
+        - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SquadList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '502':
+          $ref: '#/components/responses/SourceFailed'
         '503':
           $ref: '#/components/responses/SeasonNotReady'
         default:
@@ -633,6 +678,15 @@ components:
         type: string
       example: eng.1
 
+    TeamId:
+      name: teamId
+      in: path
+      required: true
+      description: ESPN's team ID
+      schema:
+        type: string
+      example: '382'
+
   headers:
     ETag:
       schema:
@@ -675,6 +729,12 @@ components:
             $ref: '#/components/schemas/Problem'
     MailFailed:
       description: The email with the code could not be sent; ask for it again
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    SourceFailed:
+      description: ESPN did not answer, and nothing was kept from it before
       content:
         application/problem+json:
           schema:
@@ -1106,6 +1166,111 @@ components:
           description: The league's news, newest first
           items:
             $ref: '#/components/schemas/NewsItem'
+
+    TeamPage:
+      type: object
+      required: [team, league, matches]
+      properties:
+        team:
+          $ref: '#/components/schemas/Team'
+        league:
+          description: The first league whose table has the team; null for none
+          oneOf:
+            - $ref: '#/components/schemas/TeamLeague'
+            - type: 'null'
+        matches:
+          type: array
+          description: The whole season in every competition the gateway follows, by kick-off
+          items:
+            $ref: '#/components/schemas/TeamMatch'
+
+    TeamLeague:
+      type: object
+      required: [id, name, rank]
+      properties:
+        id:
+          type: string
+          example: eng.1
+        name:
+          type: string
+          example: Премьер-лига
+        rank:
+          type: integer
+          description: The team's place in the table
+
+    TeamMatch:
+      type: object
+      required: [id, leagueId, league, kickoffAt, state, clock, home, away, score, flow, result]
+      properties:
+        id:
+          type: string
+        leagueId:
+          type: string
+        league:
+          type: string
+          example: Лига чемпионов
+        kickoffAt:
+          type: string
+          format: date-time
+        state:
+          type: string
+          enum: [pre, in, post]
+        clock:
+          type: string
+          description: "72' while in play; empty otherwise"
+        home:
+          $ref: '#/components/schemas/Team'
+        away:
+          $ref: '#/components/schemas/Team'
+        score:
+          description: Null before kick-off
+          oneOf:
+            - $ref: '#/components/schemas/Score'
+            - type: 'null'
+        flow:
+          description: Each team's Flow averaged over the match; null until it is over and read
+          oneOf:
+            - $ref: '#/components/schemas/FlowValues'
+            - type: 'null'
+        result:
+          type: string
+          enum: [win, draw, loss, '']
+          description: For the team whose page it is; empty until the match is over
+
+    SquadList:
+      type: object
+      required: [teamId, items]
+      properties:
+        teamId:
+          type: string
+        items:
+          type: array
+          description: The goalkeepers first, each line by number
+          items:
+            $ref: '#/components/schemas/SquadPlayer'
+
+    SquadPlayer:
+      type: object
+      required: [id, name, number, position, age, country]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Rúben Dias
+        number:
+          type: string
+          description: Empty when ESPN gives none
+          example: '3'
+        position:
+          type: string
+          enum: [goalkeeper, defender, midfielder, forward, '']
+          description: ESPN names only the line; empty for none
+        age:
+          type: integer
+        country:
+          type: string
+          example: Portugal
 
     TeamForm:
       type: object

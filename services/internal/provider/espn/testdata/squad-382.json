@@ -1,0 +1,81 @@
+{
+  "team": {
+    "id": "382",
+    "displayName": "Manchester City",
+    "color": "99c5ea"
+  },
+  "athletes": [
+    {
+      "id": "167192",
+      "displayName": "Gerónimo Rulli",
+      "jersey": "28",
+      "age": 34,
+      "citizenship": "Argentina",
+      "position": {
+        "name": "Goalkeeper",
+        "abbreviation": "G"
+      },
+      "injuries": [],
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    },
+    {
+      "id": "234878",
+      "displayName": "Rúben Dias",
+      "jersey": "3",
+      "age": 29,
+      "citizenship": "Portugal",
+      "position": {
+        "name": "Defender",
+        "abbreviation": "D"
+      },
+      "injuries": [],
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    },
+    {
+      "id": "250787",
+      "displayName": "Phil Foden",
+      "jersey": "47",
+      "age": 26,
+      "citizenship": "England",
+      "position": {
+        "name": "Midfielder",
+        "abbreviation": "M"
+      },
+      "injuries": [],
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    },
+    {
+      "id": "253989",
+      "displayName": "Erling Haaland",
+      "jersey": "9",
+      "age": 26,
+      "citizenship": "Norway",
+      "position": {
+        "name": "Forward",
+        "abbreviation": "F"
+      },
+      "injuries": [],
+      "status": {
+        "id": "1",
+        "name": "Active",
+        "type": "active",
+        "abbreviation": "Active"
+      }
+    }
+  ]
+}

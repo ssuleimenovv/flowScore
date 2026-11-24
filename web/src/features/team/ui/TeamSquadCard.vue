@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { SquadPlayer } from '@/shared/api/types'
 import type { RequestStatus } from '@/shared/state/screenState'
+import { RouterLink } from 'vue-router'
+import { playerPath } from '@/features/player/player'
 import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
 import ErrorState from '@/shared/ui/ErrorState.vue'
 import { POSITION_WORD } from '../team'
@@ -41,16 +43,18 @@ defineEmits<{ retry: [] }>()
         <span>Позиция</span>
       </div>
       <ul class="list">
-        <li v-for="p in players" :key="p.id" class="row">
-          <span class="number">{{ p.number || '—' }}</span>
-          <span class="who">
-            <PlayerPhoto :number="p.number" />
-            <span class="text">
-              <span class="name">{{ p.name }}</span>
-              <span class="line">{{ POSITION_WORD[p.position] }}</span>
+        <li v-for="p in players" :key="p.id">
+          <RouterLink :to="playerPath(p.id)" class="row link fs-link">
+            <span class="number">{{ p.number || '—' }}</span>
+            <span class="who">
+              <PlayerPhoto :number="p.number" />
+              <span class="text">
+                <span class="name">{{ p.name }}</span>
+                <span class="line">{{ POSITION_WORD[p.position] }}</span>
+              </span>
             </span>
-          </span>
-          <span class="position">{{ POSITION_WORD[p.position] }}</span>
+            <span class="position">{{ POSITION_WORD[p.position] }}</span>
+          </RouterLink>
         </li>
       </ul>
     </template>
@@ -81,6 +85,18 @@ defineEmits<{ retry: [] }>()
   align-items: center;
   padding: var(--fs-space-12) 0;
   border-top: 1px solid var(--fs-line);
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* As on the board: a row lights up under the mouse */
+@media (hover: hover) {
+  .link:hover {
+    background: var(--fs-surface-2);
+  }
 }
 
 .header,

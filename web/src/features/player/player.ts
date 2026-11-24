@@ -141,3 +141,8 @@ export function logRow(m: PlayerMatch, timeZone?: string): LogRow {
     xg: m.xg.toFixed(2),
   }
 }
+
+// The player's page: /players/253989
+export function playerPath(playerId: string): string {
+  return `/players/${encodeURIComponent(playerId)}`
+}

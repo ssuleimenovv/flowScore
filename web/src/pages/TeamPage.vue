@@ -2,11 +2,13 @@
 // The team page (Team and MobileTeam boards): its card, then "Обзор",
 // "Состав" and "Расписание". The open tab lives in the URL (?tab=squad),
 // so "Назад" and a shared link come back to it.
-import { computed, onUnmounted, watchEffect } from 'vue'
+import { computed, onScopeDispose, onUnmounted, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNavTitle } from '@/app/layout/navigation'
-import { leagueLine } from '@/features/team/team'
+import { leagueLine, results, upcoming } from '@/features/team/team'
+import TeamFlowCard from '@/features/team/ui/TeamFlowCard.vue'
 import TeamHero from '@/features/team/ui/TeamHero.vue'
+import TeamMatchesCard from '@/features/team/ui/TeamMatchesCard.vue'
 import TeamTabs, { type TeamTab } from '@/features/team/ui/TeamTabs.vue'
 import { useTeam } from '@/features/team/useTeam'
 import { ApiError } from '@/shared/api/http'
@@ -26,6 +28,11 @@ const router = useRouter()
 
 const teamId = computed(() => String(route.params.teamId))
 const { page, request, preparing, error, updatedAt, retry } = useTeam(teamId)
+
+// "Сегодня, 21:00" follows the clock
+const now = ref(new Date())
+const timer = setInterval(() => (now.value = new Date()), 60_000)
+onScopeDispose(() => clearInterval(timer))
 
 const { online } = useNetwork()
 const screen = computed(() =>
@@ -61,8 +68,40 @@ onUnmounted(() => setTitle(null))
     <template v-if="screen.view === 'content' && page">
       <TeamHero :page />
       <TeamTabs v-model="tab" />
-      <!-- Обзор, Состав и Расписание: D2.3–D2.5 -->
-      <div :id="`panel-${tab}`" class="panel" role="tabpanel" :aria-labelledby="`tab-${tab}`" />
+      <div
+        v-if="tab === 'overview'"
+        id="panel-overview"
+        class="overview"
+        role="tabpanel"
+        aria-labelledby="tab-overview"
+      >
+        <div class="main">
+          <TeamFlowCard :matches="page.matches" :team-id="page.team.id" />
+          <TeamMatchesCard
+            kind="upcoming"
+            title="Ближайшие матчи"
+            phone-title="Ближайшие"
+            :matches="upcoming(page.matches, 4)"
+            :team-id="page.team.id"
+            :league-id="page.league?.id ?? null"
+            :now
+            empty="Ближайших матчей пока нет."
+          />
+        </div>
+        <aside class="side">
+          <TeamMatchesCard
+            kind="results"
+            title="Результаты"
+            :matches="results(page.matches, 4)"
+            :team-id="page.team.id"
+            :league-id="page.league?.id ?? null"
+            :now
+            empty="Сыгранных матчей пока нет."
+          />
+        </aside>
+      </div>
+      <!-- Состав и Расписание: D2.4–D2.5 -->
+      <div v-else :id="`panel-${tab}`" role="tabpanel" :aria-labelledby="`tab-${tab}`" />
     </template>
 
     <div
@@ -132,8 +171,36 @@ onUnmounted(() => setTitle(null))
   padding: 20px;
 }
 
+.overview,
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fs-space-16);
+}
+
+/* MobileTeam shows no results on the overview */
+.side {
+  display: none;
+}
+
 /* Desktop, as on Team */
 @media (min-width: 768px) {
+  /* Team: the main column beside a 400 px one */
+  .overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: var(--fs-space-24);
+    align-items: start;
+  }
+
+  .main,
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--fs-space-24);
+    min-width: 0;
+  }
+
   .page {
     gap: 22px;
     padding: var(--fs-space-24) var(--fs-page-padding) var(--fs-space-40);

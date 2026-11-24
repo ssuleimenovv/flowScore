@@ -4,7 +4,8 @@ import { flowText } from '@/features/league/league'
 import TeamBadge from '@/features/match/ui/TeamBadge.vue'
 import type { TeamPage } from '@/shared/api/types'
 import { teamLogo } from '@/shared/media/logos'
-import { averageFlow, form, leagueLine, RESULT_LETTER, RESULT_WORD } from '../team'
+import { averageFlow, form, leagueLine } from '../team'
+import ResultChip from './ResultChip.vue'
 
 // The team's card from the Team board: crest, league and place, name, form,
 // and its Flow averaged over the season. On the phone (MobileTeam) it lies
@@ -31,15 +32,7 @@ const flow = computed(() => averageFlow(page.matches, page.team.id))
     <div v-if="results.length > 0" class="form">
       <span class="label">Форма</span>
       <ol class="results" aria-label="Последние матчи, от старых к новым">
-        <li
-          v-for="(r, i) in results"
-          :key="i"
-          class="result"
-          :class="r"
-          :aria-label="RESULT_WORD[r]"
-        >
-          {{ RESULT_LETTER[r] }}
-        </li>
+        <li v-for="(r, i) in results" :key="i"><ResultChip :result="r" /></li>
       </ol>
     </div>
     <div class="flow">
@@ -112,33 +105,6 @@ const flow = computed(() => averageFlow(page.matches, page.team.id))
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-/* A win is the team's color, as on the board; a draw and a loss are quiet */
-.result {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--fs-radius-sm);
-  font-size: var(--fs-text-footnote);
-  font-weight: 700;
-}
-
-.win {
-  background: var(--fs-home);
-  color: var(--fs-on-home);
-}
-
-.draw {
-  background: var(--fs-surface-2);
-  color: var(--fs-text);
-}
-
-.loss {
-  background: var(--fs-line);
-  color: var(--fs-text);
 }
 
 .flow {

@@ -1,7 +1,19 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import type { TeamMatch } from '@/shared/api/types'
-import { averageFlow, form, lastFlows, opponentOf, results, upcoming, leagueLine } from '../team'
+import {
+  averageFlow,
+  form,
+  kickoffLine,
+  lastFlows,
+  leagueLine,
+  opponentLine,
+  opponentOf,
+  results,
+  scoreFor,
+  upcoming,
+  venueOf,
+} from '../team'
 
 const team = (code: string) => ({ id: code, code, name: code })
 
@@ -63,5 +75,25 @@ describe('team', () => {
       'Лига чемпионов · 12-е место',
     )
     expect(leagueLine(null)).toBe('')
+  })
+
+  it('writes a match from the side of the team', () => {
+    const away = season[1]! // LIV 60:50 MNC... the score is 1:0 for the home side
+    expect(scoreFor(away, 'MNC')).toBe('0:1')
+    expect(venueOf(away, 'MNC')).toBe('В гостях')
+    expect(opponentLine(away, 'MNC', 'eng.1')).toBe('LIV')
+    expect(
+      opponentLine(
+        { ...away, leagueId: 'uefa.champions', league: 'Лига чемпионов' },
+        'MNC',
+        'eng.1',
+      ),
+    ).toBe('LIV · Лига чемпионов')
+  })
+
+  it('names the day of a kick-off', () => {
+    const m = match({ kickoffAt: '2026-11-24T20:00:00Z' })
+    expect(kickoffLine(m, new Date('2026-11-24T10:00:00Z'), 'UTC')).toBe('Сегодня, 20:00')
+    expect(kickoffLine(m, new Date('2026-11-20T10:00:00Z'), 'UTC')).toBe('24 нояб, 20:00')
   })
 })

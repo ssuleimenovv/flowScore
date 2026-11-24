@@ -82,3 +82,43 @@ export function upcoming(matches: TeamMatch[], n = Infinity): TeamMatch[] {
 export function results(matches: TeamMatch[], n = Infinity): TeamMatch[] {
   return played(matches).reverse().slice(0, n)
 }
+
+// The team's goals first, as on the board: «3:1» a win, «1:2» a loss
+export function scoreFor(m: TeamMatch, teamId: string): string {
+  if (!m.score) return '—'
+  const { home, away } = m.score
+  return isHome(m, teamId) ? `${home}:${away}` : `${away}:${home}`
+}
+
+export function venueOf(m: TeamMatch, teamId: string): string {
+  return isHome(m, teamId) ? 'Дома' : 'В гостях'
+}
+
+// The opponent; a match of another competition names it: «Inter · Лига чемпионов»
+export function opponentLine(m: TeamMatch, teamId: string, leagueId: string | null): string {
+  const name = opponentOf(m, teamId).name
+  return m.leagueId === leagueId ? name : `${name} · ${m.league}`
+}
+
+function dayKey(date: Date, timeZone?: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(date)
+}
+
+// «20 сент»
+export function dayMonth(date: Date, timeZone?: string): string {
+  return new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'short', timeZone })
+    .format(date)
+    .replace('.', '')
+}
+
+// «Сегодня, 21:00» or «28 сент, 19:30»
+export function kickoffLine(m: TeamMatch, now: Date, timeZone?: string): string {
+  const at = new Date(m.kickoffAt)
+  const time = new Intl.DateTimeFormat('ru', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone,
+  }).format(at)
+  const day = dayKey(at, timeZone) === dayKey(now, timeZone) ? 'Сегодня' : dayMonth(at, timeZone)
+  return `${day}, ${time}`
+}

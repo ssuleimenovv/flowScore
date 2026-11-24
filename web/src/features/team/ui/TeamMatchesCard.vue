@@ -51,14 +51,14 @@ function live(m: TeamMatch): string {
 .card {
   display: flex;
   flex-direction: column;
-  padding: 18px var(--fs-space-16);
+  padding: 14px var(--fs-space-16);
   border: 1px solid var(--fs-line);
   border-radius: var(--fs-radius-lg);
   background: var(--fs-surface);
 }
 
 .title {
-  padding-bottom: var(--fs-space-8);
+  padding: var(--fs-space-4) 0 var(--fs-space-8);
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -92,7 +92,7 @@ function live(m: TeamMatch): string {
 
 .opponent {
   overflow: hidden;
-  font-size: var(--fs-text-subheadline);
+  font-size: var(--fs-text-body);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -100,7 +100,7 @@ function live(m: TeamMatch): string {
 
 .when {
   color: var(--fs-muted);
-  font-size: var(--fs-text-caption);
+  font-size: var(--fs-text-footnote);
 }
 
 .score {
@@ -112,8 +112,13 @@ function live(m: TeamMatch): string {
 
 .results .score {
   color: var(--fs-text);
-  font-size: var(--fs-text-subheadline);
+  font-size: var(--fs-text-body);
   font-weight: 600;
+}
+
+/* MobileTeam: in the results the opponent is a size smaller */
+.results .opponent {
+  font-size: var(--fs-text-subheadline);
 }
 
 .empty {
@@ -125,6 +130,20 @@ function live(m: TeamMatch): string {
 @media (min-width: 768px) {
   .card {
     padding: 20px 28px;
+  }
+
+  .title {
+    padding: 0 0 var(--fs-space-8);
+  }
+
+  .opponent,
+  .results .opponent,
+  .results .score {
+    font-size: var(--fs-text-subheadline);
+  }
+
+  .when {
+    font-size: var(--fs-text-caption);
   }
 
   .results {

@@ -7,8 +7,17 @@ import type { RequestStatus } from '@/shared/state/screenState'
 // answers 503 meanwhile; the screen asks again this often
 const PREPARING_EVERY = 30_000
 
-// useTeam loads a team's page, again whenever the team changes. While the
-// seasons are still being read it says so and keeps asking.
+// A match of the team under way: asked again this often, for the minute and the score
+const LIVE_EVERY = 30_000
+
+// Otherwise now and then: a season still being read after a restart fills
+// in, and a match that kicks off turns live
+const QUIET_EVERY = 5 * 60_000
+
+// useTeam loads a team's page, again whenever the team changes, and keeps it
+// fresh while the tab is visible. While the seasons are still being read it
+// says so and keeps asking.
+
 export function useTeam(id: Ref<string>) {
   const page = shallowRef<TeamPage | null>(null)
   const request = ref<RequestStatus>('idle')
@@ -23,7 +32,8 @@ export function useTeam(id: Ref<string>) {
     loading?.abort()
     const ctrl = new AbortController()
     loading = ctrl
-    request.value = 'pending'
+    // Asked again with the page on screen: it stays, no skeleton
+    if (!page.value) request.value = 'pending'
     try {
       page.value = await apiGet<TeamPage>(`/teams/${encodeURIComponent(id.value)}`, ctrl.signal)
       preparing.value = false
@@ -32,12 +42,27 @@ export function useTeam(id: Ref<string>) {
       request.value = 'success'
     } catch (err) {
       if (ctrl.signal.aborted) return
-      preparing.value = err instanceof ApiError && err.status === 503
       error.value = err
-      request.value = 'error'
-      if (preparing.value) timer = setTimeout(load, PREPARING_EVERY)
+      preparing.value = err instanceof ApiError && err.status === 503
+      // The page on screen stays: the next time may go better
+      if (!page.value) request.value = 'error'
+      if (preparing.value && !page.value) timer = setTimeout(load, PREPARING_EVERY)
     }
+    next()
   }
+
+  // The next time to ask: soon while a match is under way. A hidden tab is
+  // not asked at all, and catches up once it is visible again.
+  function next() {
+    if (!page.value || document.visibilityState !== 'visible') return
+    const live = page.value.matches.some((m) => m.state === 'in')
+    timer = setTimeout(load, live ? LIVE_EVERY : QUIET_EVERY)
+  }
+
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') void load()
+  }
+  document.addEventListener('visibilitychange', onVisible)
 
   watch(
     id,
@@ -50,6 +75,7 @@ export function useTeam(id: Ref<string>) {
   onScopeDispose(() => {
     clearTimeout(timer)
     loading?.abort()
+    document.removeEventListener('visibilitychange', onVisible)
   })
 
   return { page, request, preparing, error, updatedAt, retry: load }

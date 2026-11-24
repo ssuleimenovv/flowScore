@@ -122,8 +122,32 @@ onUnmounted(() => setTitle(null))
         :error="squadError"
         @retry="retrySquad"
       />
-      <!-- Расписание: D2.5 -->
-      <div v-else id="panel-fixtures" role="tabpanel" aria-labelledby="tab-fixtures" />
+      <div
+        v-else
+        id="panel-fixtures"
+        class="fixtures"
+        role="tabpanel"
+        aria-labelledby="tab-fixtures"
+      >
+        <TeamMatchesCard
+          kind="upcoming"
+          title="Расписание"
+          :matches="upcoming(page.matches)"
+          :team-id="page.team.id"
+          :league-id="page.league?.id ?? null"
+          :now
+          empty="Ближайших матчей пока нет."
+        />
+        <TeamMatchesCard
+          kind="results"
+          title="Сыгранные"
+          :matches="results(page.matches)"
+          :team-id="page.team.id"
+          :league-id="page.league?.id ?? null"
+          :now
+          empty="Сыгранных матчей пока нет."
+        />
+      </div>
     </template>
 
     <div
@@ -194,7 +218,8 @@ onUnmounted(() => setTitle(null))
 }
 
 .overview,
-.main {
+.main,
+.fixtures {
   display: flex;
   flex-direction: column;
   gap: var(--fs-space-16);
@@ -221,6 +246,14 @@ onUnmounted(() => setTitle(null))
     flex-direction: column;
     gap: var(--fs-space-24);
     min-width: 0;
+  }
+
+  /* Team: the schedule and the results side by side */
+  .fixtures {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--fs-space-24);
+    align-items: start;
   }
 
   .page {

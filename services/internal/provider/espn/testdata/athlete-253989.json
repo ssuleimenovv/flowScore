@@ -1,0 +1,24 @@
+{
+  "athlete": {
+    "id": "253989",
+    "displayName": "Erling Haaland",
+    "jersey": "9",
+    "age": 26,
+    "citizenship": "Norway",
+    "position": {
+      "name": "Forward",
+      "abbreviation": "F"
+    },
+    "team": {
+      "id": "382",
+      "abbreviation": "MNC",
+      "displayName": "Manchester City"
+    },
+    "status": {
+      "id": "1",
+      "name": "Active",
+      "type": "active",
+      "abbreviation": "Active"
+    }
+  }
+}

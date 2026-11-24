@@ -13,6 +13,7 @@ tags:
   - name: matches
   - name: leagues
   - name: teams
+  - name: players
   - name: auth
 
 paths:
@@ -365,6 +366,27 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /players/{playerId}:
+    get:
+      tags: [players]
+      operationId: getPlayer
+      summary: A player, ESPN's, and their season in our matches in every competition
+      parameters:
+        - $ref: '#/components/parameters/PlayerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerPage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '502':
+          $ref: '#/components/responses/SourceFailed'
+        default:
+          $ref: '#/components/responses/Error'
+
   /ws/matches/{matchId}/stream:
     servers:
       - url: ws://localhost:8080
@@ -686,6 +708,15 @@ components:
       schema:
         type: string
       example: '382'
+
+    PlayerId:
+      name: playerId
+      in: path
+      required: true
+      description: ESPN's player ID
+      schema:
+        type: string
+      example: '253989'
 
   headers:
     ETag:
@@ -1271,6 +1302,88 @@ components:
         country:
           type: string
           example: Portugal
+
+    PlayerPage:
+      type: object
+      required: [player, matches]
+      properties:
+        player:
+          $ref: '#/components/schemas/PlayerInfo'
+        matches:
+          type: array
+          description: The matches the player got on the pitch in, in every competition the gateway follows, newest first
+          items:
+            $ref: '#/components/schemas/PlayerMatch'
+
+    PlayerInfo:
+      type: object
+      required: [id, name, number, position, age, country, team]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Erling Haaland
+        number:
+          type: string
+          description: Empty when ESPN gives none
+          example: '9'
+        position:
+          type: string
+          enum: [goalkeeper, defender, midfielder, forward, '']
+        age:
+          type: integer
+        country:
+          type: string
+          example: Norway
+        team:
+          description: The player's club; null for one without
+          oneOf:
+            - $ref: '#/components/schemas/Team'
+            - type: 'null'
+
+    PlayerMatch:
+      type: object
+      required:
+        [id, leagueId, league, kickoffAt, home, away, score, side, starter, minutes, goals, assists, shots, onTarget, xg]
+      properties:
+        id:
+          type: string
+        leagueId:
+          type: string
+        league:
+          type: string
+          example: Премьер-лига
+        kickoffAt:
+          type: string
+          format: date-time
+        home:
+          $ref: '#/components/schemas/Team'
+        away:
+          $ref: '#/components/schemas/Team'
+        score:
+          oneOf:
+            - $ref: '#/components/schemas/Score'
+            - type: 'null'
+        side:
+          $ref: '#/components/schemas/Side'
+        starter:
+          type: boolean
+        minutes:
+          type: integer
+        goals:
+          type: integer
+          description: Own goals are not counted
+        assists:
+          type: integer
+        shots:
+          type: integer
+          description: A goal is a shot on target too
+        onTarget:
+          type: integer
+        xg:
+          type: number
+          description: Our model's, over the player's shots
 
     TeamForm:
       type: object

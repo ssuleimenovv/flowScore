@@ -7,6 +7,7 @@ package espn
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,21 +18,26 @@ import (
 
 const (
 	baseURL      = "https://site.api.espn.com/apis/site/v2/sports/soccer"
-	standingsURL = "https://site.api.espn.com/apis/v2/sports/soccer" // the tables live elsewhere
+	standingsURL = "https://site.api.espn.com/apis/v2/sports/soccer"            // the tables live elsewhere
+	athleteURL   = "https://site.web.api.espn.com/apis/common/v3/sports/soccer" // and the players elsewhere again
 )
 
 // A summary is about 200 KB; a body far past that is not one
 const maxBody = 10 << 20
 
-// Client asks the API. BaseURL and StandingsURL are there for tests.
+// Client asks the API. BaseURL, StandingsURL and AthleteURL are there for tests.
 type Client struct {
 	HTTP         *http.Client
 	BaseURL      string
 	StandingsURL string
+	AthleteURL   string
 }
 
 func NewClient() *Client {
-	return &Client{HTTP: &http.Client{Timeout: 15 * time.Second}, BaseURL: baseURL, StandingsURL: standingsURL}
+	return &Client{
+		HTTP:    &http.Client{Timeout: 15 * time.Second},
+		BaseURL: baseURL, StandingsURL: standingsURL, AthleteURL: athleteURL,
+	}
 }
 
 // Game is one match of the scoreboard, with what picking it and listing it
@@ -238,6 +244,10 @@ func (c *Client) Summary(ctx context.Context, league, id string) ([]byte, error)
 	return c.get(ctx, fmt.Sprintf("%s/%s/summary?event=%s", c.BaseURL, league, id))
 }
 
+// ErrNotFound is ESPN saying there is no such thing: a 404, or the 400 it
+// gives for a player ID it does not know
+var ErrNotFound = errors.New("espn: not found")
+
 func (c *Client) get(ctx context.Context, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -248,8 +258,13 @@ func (c *Client) get(ctx context.Context, url string) ([]byte, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
+	switch res.StatusCode {
+	case http.StatusOK:
+	case http.StatusNotFound, http.StatusBadRequest:
+		return nil, fmt.Errorf("GET %s: %w", url, ErrNotFound)
+	default:
 		return nil, fmt.Errorf("GET %s: %s", url, res.Status)
 	}
+
 	return io.ReadAll(io.LimitReader(res.Body, maxBody))
 }

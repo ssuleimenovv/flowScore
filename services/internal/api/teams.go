@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
@@ -24,7 +23,9 @@ type Squads interface {
 // the seasons the gateway follows: the table of its league and its matches
 // in every competition, cups too. Its squad is ESPN's.
 func RegisterTeams(mux *http.ServeMux, seasons Seasons, squads Squads, ids []string) {
-	kept := &squadCache{squads: squads, kept: map[string]keptSquad{}}
+	kept := newCache(squadFor, func(ctx context.Context, league, team string) ([]espn.Player, error) {
+		return squads.Squad(ctx, league, team)
+	})
 	mux.HandleFunc("GET /api/v1/teams/{teamId}", teamHandler(seasons, ids))
 	mux.HandleFunc("GET /api/v1/teams/{teamId}/squad", squadHandler(seasons, kept, ids))
 }
@@ -154,7 +155,7 @@ type squadList struct {
 	Items  []squadPlayer `json:"items"`
 }
 
-func squadHandler(seasons Seasons, kept *squadCache, ids []string) http.HandlerFunc {
+func squadHandler(seasons Seasons, kept *cache[[]espn.Player], ids []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("teamId")
 		league, reading := leagueOfTeam(seasons, ids, id)
@@ -224,36 +225,3 @@ func numberOf(p squadPlayer) int {
 
 // A squad changes in the transfer windows, and ESPN's roster is 200 KB
 const squadFor = 6 * time.Hour
-
-// squadCache keeps each team's squad for squadFor. When ESPN does not
-// answer, the squad it kept last stands in, however old.
-type squadCache struct {
-	squads Squads
-	mu     sync.Mutex
-	kept   map[string]keptSquad // by team ID
-}
-
-type keptSquad struct {
-	players []espn.Player
-	at      time.Time
-}
-
-func (c *squadCache) get(ctx context.Context, league, team string) ([]espn.Player, error) {
-	c.mu.Lock()
-	k, ok := c.kept[team]
-	c.mu.Unlock()
-	if ok && time.Since(k.at) < squadFor {
-		return k.players, nil
-	}
-	players, err := c.squads.Squad(ctx, league, team)
-	if err != nil {
-		if ok {
-			return k.players, nil
-		}
-		return nil, err
-	}
-	c.mu.Lock()
-	c.kept[team] = keptSquad{players: players, at: time.Now()}
-	c.mu.Unlock()
-	return players, nil
-}

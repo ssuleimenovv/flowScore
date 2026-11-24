@@ -276,6 +276,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/players/{playerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A player, ESPN's, and their season in our matches in every competition */
+        get: operations["getPlayer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ws/matches/{matchId}/stream": {
         parameters: {
             query?: never;
@@ -720,6 +737,50 @@ export interface components {
             /** @example Portugal */
             country: string;
         };
+        PlayerPage: {
+            player: components["schemas"]["PlayerInfo"];
+            /** @description The matches the player got on the pitch in, in every competition the gateway follows, newest first */
+            matches: components["schemas"]["PlayerMatch"][];
+        };
+        PlayerInfo: {
+            id: string;
+            /** @example Erling Haaland */
+            name: string;
+            /**
+             * @description Empty when ESPN gives none
+             * @example 9
+             */
+            number: string;
+            /** @enum {string} */
+            position: "goalkeeper" | "defender" | "midfielder" | "forward" | "";
+            age: number;
+            /** @example Norway */
+            country: string;
+            /** @description The player's club; null for one without */
+            team: components["schemas"]["Team"] | null;
+        };
+        PlayerMatch: {
+            id: string;
+            leagueId: string;
+            /** @example Премьер-лига */
+            league: string;
+            /** Format: date-time */
+            kickoffAt: string;
+            home: components["schemas"]["Team"];
+            away: components["schemas"]["Team"];
+            score: components["schemas"]["Score"] | null;
+            side: components["schemas"]["Side"];
+            starter: boolean;
+            minutes: number;
+            /** @description Own goals are not counted */
+            goals: number;
+            assists: number;
+            /** @description A goal is a shot on target too */
+            shots: number;
+            onTarget: number;
+            /** @description Our model's, over the player's shots */
+            xg: number;
+        };
         TeamForm: {
             /** @description The team's last matches of any competition, oldest first */
             matches: components["schemas"]["FormMatch"][];
@@ -1162,6 +1223,11 @@ export interface components {
          * @example 382
          */
         TeamId: string;
+        /**
+         * @description ESPN's player ID
+         * @example 253989
+         */
+        PlayerId: string;
     };
     requestBodies: never;
     headers: {
@@ -1579,6 +1645,35 @@ export interface operations {
             404: components["responses"]["NotFound"];
             502: components["responses"]["SourceFailed"];
             503: components["responses"]["SeasonNotReady"];
+            default: components["responses"]["Error"];
+        };
+    };
+    getPlayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description ESPN's player ID
+                 * @example 253989
+                 */
+                playerId: components["parameters"]["PlayerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerPage"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            502: components["responses"]["SourceFailed"];
             default: components["responses"]["Error"];
         };
     };

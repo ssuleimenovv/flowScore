@@ -172,7 +172,8 @@ func (s *Seasons) flow(matchID string) (MatchFlow, bool) {
 	return f, ok
 }
 
-// read reads a finished match and runs it through the engine.
+// read reads a finished match: runs it through the engine, and works out
+// from its lineups what each player did
 func (s *Seasons) read(ctx context.Context, league, matchID string) (MatchFlow, error) {
 	body, err := s.Client.Summary(ctx, league, matchID)
 	if err != nil {
@@ -182,7 +183,12 @@ func (s *Seasons) read(ctx context.Context, league, matchID string) (MatchFlow, 
 	if err != nil {
 		return MatchFlow{}, err
 	}
-	return Measure(events, s.Params, s.XG), nil
+	f := Measure(events, s.Params, s.XG)
+	// A match without the lineups still has its Flow
+	if lineups, err := espn.ParseRosters(body); err == nil {
+		f.Players = Players(events, lineups, s.XG)
+	}
+	return f, nil
 }
 
 // numberRounds gives each match its round: one more than the last round

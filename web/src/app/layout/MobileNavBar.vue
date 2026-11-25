@@ -7,7 +7,8 @@ import { useNavTitle } from './navigation'
 
 // "root" is a tab screen (logo, bell, theme); "inner" is a pushed screen
 // (Назад, title, theme), as on MobileMatch.
-defineProps<{ inner: boolean }>()
+// onArt: the bar lies clear on a competition's artwork, its text white
+defineProps<{ inner: boolean; onArt?: boolean }>()
 
 const router = useRouter()
 const { title } = useNavTitle()
@@ -20,7 +21,7 @@ function back() {
 </script>
 
 <template>
-  <header class="bar" :class="{ inner }">
+  <header class="bar" :class="{ inner, 'on-art': onArt }">
     <div v-if="!inner" class="row root">
       <RouterLink to="/" class="brand fs-link" aria-label="FlowScore, на главную">
         <AppLogo variant="filled" :size="26" />
@@ -59,6 +60,20 @@ function back() {
   background: var(--fs-bar-bg);
   -webkit-backdrop-filter: var(--fs-material);
   backdrop-filter: var(--fs-material);
+  transition: background-color var(--fs-duration-color);
+}
+
+/* On a competition's artwork: clear, the logo and the buttons white */
+.bar.on-art {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.on-art .brand,
+.on-art .icon-button,
+.on-art :deep(.toggle) {
+  color: var(--fs-on-art);
 }
 
 .inner {

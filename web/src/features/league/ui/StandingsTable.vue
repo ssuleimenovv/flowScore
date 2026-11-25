@@ -163,7 +163,7 @@ const { rows, cup = false } = defineProps<{ rows: Standing[]; cup?: boolean }>()
 }
 
 .flow .value {
-  color: var(--fs-home);
+  color: var(--fs-tint);
 }
 
 .stage {
@@ -273,7 +273,7 @@ const { rows, cup = false } = defineProps<{ rows: Standing[]; cup?: boolean }>()
     display: block;
     height: 100%;
     border-radius: var(--fs-radius-full);
-    background: var(--fs-home);
+    background: var(--fs-tint);
     transform-origin: left;
     animation: grow var(--fs-duration-bar-h) var(--fs-ease) both;
   }

@@ -5,16 +5,19 @@
 // its knockouts in place of the table (CupsExtended board).
 // The league and the round live in the URL (?league=ger.1&round=6), so "Назад"
 // and a shared link come back to them.
-import { computed, onScopeDispose, ref } from 'vue'
+import { computed, onScopeDispose, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useBackdrop } from '@/app/layout/navigation'
 import PlayoffCard from '@/features/cup/ui/PlayoffCard.vue'
 import {
+  competitionGroup,
   competitionGroups,
   competitionKind,
   isEuroCup,
   roundTabs,
   seasonLine,
 } from '@/features/league/league'
+import { competitionAccent, competitionArt, tintStyle } from '@/features/league/accents'
 import FlowRecords from '@/features/league/ui/FlowRecords.vue'
 import RoundMatches from '@/features/league/ui/RoundMatches.vue'
 import StandingsTable from '@/features/league/ui/StandingsTable.vue'
@@ -23,6 +26,7 @@ import { leagueLogo, needsPlate } from '@/shared/media/logos'
 import { resolveScreenState } from '@/shared/state/screenState'
 import { useNetwork } from '@/shared/state/useNetwork'
 import AppCard from '@/shared/ui/AppCard.vue'
+import AppSegmented from '@/shared/ui/AppSegmented.vue'
 import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
 import AppSpinner from '@/shared/ui/AppSpinner.vue'
 import ErrorState from '@/shared/ui/ErrorState.vue'
@@ -46,6 +50,28 @@ function pick(id: string) {
 }
 
 const groups = computed(() => competitionGroups(leagues.items.value))
+
+// One group of chips at a time, picked with the segmented control above them
+// (CompetitionBackdropsExtended); it follows the competition that is open
+const group = ref('Лиги')
+watch(
+  leagueId,
+  (id) => {
+    if (id) group.value = competitionGroup(id)
+  },
+  { immediate: true },
+)
+const shown = computed(() => groups.value.find((g) => g.name === group.value) ?? groups.value[0])
+
+// The competition's artwork under the top of the screen, drawn by the shell
+const art = computed(() => competitionArt(leagueId.value))
+const { setArt } = useBackdrop()
+watchEffect(() => setArt(art.value ? leagueId.value : null))
+onUnmounted(() => setArt(null))
+const pageStyle = computed(() => ({
+  ...tintStyle(competitionAccent(leagueId.value)),
+  ...(art.value ? { '--fs-art-word': art.value.word, '--fs-art-deep': art.value.deep } : {}),
+}))
 const kind = computed(() => competitionKind(leagueId.value))
 
 const { league, standings, request, preparing, error, updatedAt, retry } = useLeague(leagueId)
@@ -101,7 +127,7 @@ function retryAll() {
 </script>
 
 <template>
-  <div class="page">
+  <div class="page fs-tinted" :class="{ 'on-art': art }" :style="pageStyle">
     <header class="top">
       <div class="heading">
         <span v-if="league" class="season">{{ seasonLine(league) }}</span>
@@ -115,30 +141,34 @@ function retryAll() {
           <span class="phone-word">Таблица</span>
         </h1>
       </div>
-      <div v-if="leagues.items.value.length > 1" class="groups">
-        <div v-for="(g, i) in groups" :key="g.name" class="group">
-          <span :id="`group-${i}`" class="group-name">{{ g.name }}</span>
-          <div class="chips" role="group" :aria-labelledby="`group-${i}`">
-            <button
-              v-for="l in g.items"
-              :key="l.id"
-              type="button"
-              class="chip fs-press"
-              :aria-pressed="l.id === leagueId"
-              @click="pick(l.id)"
-            >
-              <template v-if="leagueLogo(l.id, 18)">
-                <img class="chip-logo on-light" :src="leagueLogo(l.id, 18)!" alt="" />
-                <img
-                  class="chip-logo on-dark"
-                  :class="{ plate: needsPlate(l.id) }"
-                  :src="leagueLogo(l.id, 18, 'dark')!"
-                  alt=""
-                />
-              </template>
-              {{ l.name }}
-            </button>
-          </div>
+      <div v-if="leagues.items.value.length > 1" class="picker">
+        <AppSegmented
+          v-if="groups.length > 1"
+          v-model="group"
+          class="switch"
+          label="Группа турниров"
+          :options="groups.map((g) => ({ value: g.name, label: g.name }))"
+        />
+        <div class="chips" role="group" :aria-label="shown?.name">
+          <button
+            v-for="l in shown?.items ?? []"
+            :key="l.id"
+            type="button"
+            class="chip fs-press"
+            :aria-pressed="l.id === leagueId"
+            @click="pick(l.id)"
+          >
+            <template v-if="leagueLogo(l.id, 18)">
+              <img class="chip-logo on-light" :src="leagueLogo(l.id, 18)!" alt="" />
+              <img
+                class="chip-logo on-dark"
+                :class="{ plate: needsPlate(l.id) }"
+                :src="leagueLogo(l.id, 18, 'dark')!"
+                alt=""
+              />
+            </template>
+            {{ l.name }}
+          </button>
         </div>
       </div>
     </header>
@@ -288,27 +318,20 @@ function retryAll() {
 }
 
 .accent {
-  color: var(--fs-home);
+  color: var(--fs-tint);
 }
 
-/* The chips in groups, each under its name (CompetitionsExtended). On the
-   phone a group is one row that scrolls from edge to edge of the screen. */
-.groups {
+/* "Лиги · Еврокубки · Кубки", then one row of the group's chips
+   (CompetitionBackdropsExtended). On the phone the control is as wide as the
+   screen, and the row scrolls from edge to edge of it. */
+.picker {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--fs-space-12);
 }
 
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.group-name {
-  color: var(--fs-muted);
-  font-size: var(--fs-text-caption);
-  font-weight: 600;
+.switch :deep(.option) {
+  flex: 1 1 0;
 }
 
 .chips {
@@ -360,28 +383,84 @@ function retryAll() {
   background: var(--fs-on-accent);
 }
 
-/* The logo drawn for the chip's background: a chip is dark in the dark
-   theme and light once picked, the other way round in the light theme */
+/* The logo drawn for the theme: a chip is dark in the dark theme, picked or not */
 .chip .on-light,
-.chip[aria-pressed='true'] .on-dark,
-:root[data-theme='light'] .chip[aria-pressed='true'] .on-light {
-  display: none;
-}
-
-.chip[aria-pressed='true'] .on-light,
-:root[data-theme='light'] .chip .on-light,
-:root[data-theme='light'] .chip[aria-pressed='true'] .on-dark {
-  display: block;
-}
-
 :root[data-theme='light'] .chip .on-dark {
   display: none;
 }
 
+:root[data-theme='light'] .chip .on-light {
+  display: block;
+}
+
 .chip[aria-pressed='true'] {
-  border-color: var(--fs-text);
-  background: var(--fs-text);
-  color: var(--fs-bg);
+  border-color: var(--fs-tint);
+  background: var(--fs-tint-soft);
+}
+
+/* On the competition's artwork (CompetitionBackdropsExtended): the heading
+   white in both themes, its word in the art's bright colour, the picker glass.
+   The picked chip and segment are white with the art's deep colour. */
+.on-art .season {
+  color: var(--fs-on-art-muted);
+}
+
+.on-art .h1 {
+  color: var(--fs-on-art);
+}
+
+.on-art .accent,
+.on-art .phone-word {
+  color: var(--fs-art-word);
+}
+
+.on-art .switch {
+  padding: 3px;
+  border: 1px solid var(--fs-art-glass-line);
+  border-radius: var(--fs-radius-md);
+  background: var(--fs-art-glass);
+  -webkit-backdrop-filter: var(--fs-material);
+  backdrop-filter: var(--fs-material);
+}
+
+.on-art .switch :deep(.option) {
+  color: var(--fs-on-art-muted);
+}
+
+.on-art .switch :deep(.option[aria-pressed='true']),
+.on-art .chip[aria-pressed='true'] {
+  border-color: var(--fs-on-art);
+  background: var(--fs-on-art);
+  color: var(--fs-art-deep);
+}
+
+.on-art .chip {
+  border-color: var(--fs-art-glass-line);
+  background: var(--fs-art-glass);
+  color: var(--fs-on-art);
+  -webkit-backdrop-filter: var(--fs-material);
+  backdrop-filter: var(--fs-material);
+}
+
+/* A glass chip is dark in both themes, the picked one white */
+.page.on-art .chip .on-light,
+.page.on-art .chip[aria-pressed='true'] .on-dark {
+  display: none;
+}
+
+.page.on-art .chip .on-dark,
+.page.on-art .chip[aria-pressed='true'] .on-light {
+  display: block;
+}
+
+/* Asked for less transparency: the glass turns solid, without the blur */
+@media (prefers-reduced-transparency: reduce) {
+  .on-art .switch,
+  .on-art .chip {
+    background: var(--fs-art-glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 /* The season's records are a desktop card, as on the boards */
@@ -441,6 +520,25 @@ function retryAll() {
     flex-wrap: wrap;
     margin: 0;
     padding: 0;
+  }
+
+  .switch {
+    align-self: flex-start;
+  }
+
+  .switch :deep(.option) {
+    flex: none;
+    padding: 0 18px;
+  }
+
+  /* On the artwork the heading and the picker take the whole width, and
+     the side column starts beside the table, below the art */
+  .on-art .top {
+    grid-column: 1 / -1;
+  }
+
+  .on-art .side {
+    grid-row: 2 / span 2;
   }
 
   .main {

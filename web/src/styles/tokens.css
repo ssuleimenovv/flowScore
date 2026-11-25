@@ -152,3 +152,36 @@
    < 768    — 1 column, bottom tab bar, tabs on match page
    768–1199 — top nav, 2 card columns, sidebar moves below
    ≥ 1200   — content + sidebar 380–400px, page padding 40px */
+
+/* The accent of a competition or a club (AccentsExtended): a page with the
+   class fs-tinted puts its two colours on its root, --fs-tint-dark and
+   --fs-tint-light. Anywhere else the accent is the home red, as before.
+   The red and blue of a match's sides never take it. */
+:root {
+  --fs-tint: var(--fs-home);
+}
+
+.fs-tinted {
+  --fs-tint: var(--fs-tint-dark, var(--fs-home));
+}
+
+:root[data-theme='light'] .fs-tinted {
+  --fs-tint: var(--fs-tint-light, var(--fs-home));
+}
+
+:root,
+.fs-tinted {
+  --fs-tint-soft: color-mix(in srgb, var(--fs-tint) 16%, transparent);
+}
+
+/* On a competition's artwork (CompetitionBackdropsExtended) the text is white
+   in both themes, and the controls are glass on the art. The art's left side
+   is held dark, so white keeps 7:1 or more there. */
+:root {
+  --fs-on-art: #ffffff;
+  --fs-on-art-muted: rgba(255, 255, 255, 0.8);
+  --fs-art-glass: rgba(0, 0, 0, 0.28);
+  --fs-art-glass-solid: rgba(0, 0, 0, 0.55);
+  --fs-art-glass-line: rgba(255, 255, 255, 0.22);
+  --fs-art-glass-hover: rgba(255, 255, 255, 0.16);
+}

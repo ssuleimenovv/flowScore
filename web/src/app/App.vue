@@ -4,6 +4,8 @@ import { RouterView, useRoute } from 'vue-router'
 import DesktopHeader from './layout/DesktopHeader.vue'
 import MobileNavBar from './layout/MobileNavBar.vue'
 import TabBar from './layout/TabBar.vue'
+import { useBackdrop, useScrolledPast } from './layout/navigation'
+import CompetitionBackdrop from '@/features/league/ui/CompetitionBackdrop.vue'
 import ToastHost from '@/shared/toast/ToastHost.vue'
 import { useSessionStore } from '@/stores/session'
 
@@ -11,6 +13,12 @@ const route = useRoute()
 const active = computed(() => route.meta.tab)
 const inner = computed(() => route.meta.inner === true)
 const bare = computed(() => route.meta.bare === true)
+
+// A competition's page stands on its artwork: the header lies clear on it
+// until the page is scrolled off the art, then it is the usual bar again
+const { art } = useBackdrop()
+const scrolled = useScrolledPast(240)
+const onArt = computed(() => art.value !== null && !scrolled.value)
 
 // A kept token may have expired since the last visit: the server says whose it is
 void useSessionStore().check()
@@ -20,12 +28,14 @@ void useSessionStore().check()
   <!-- Вход is a screen of its own, as on the Auth boards -->
   <RouterView v-if="bare" />
   <template v-else>
+    <CompetitionBackdrop v-if="art" :competition="art" />
+
     <!-- Both layouts are in the DOM; CSS shows one of them at the 768 px breakpoint -->
     <div class="desktop-only">
-      <DesktopHeader :active />
+      <DesktopHeader :active :on-art />
     </div>
     <div class="mobile-only">
-      <MobileNavBar :inner />
+      <MobileNavBar :inner :on-art />
     </div>
 
     <main class="content">
@@ -51,6 +61,9 @@ void useSessionStore().check()
 
 <style scoped>
 .content {
+  /* Above a competition's artwork, which lies under the whole top of the screen */
+  position: relative;
+  z-index: 1;
   /* Room for the fixed tab bar, so the last row is not hidden under it */
   padding-bottom: calc(var(--fs-tab-height) + var(--fs-safe-bottom));
 }

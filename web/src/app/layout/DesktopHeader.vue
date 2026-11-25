@@ -7,7 +7,8 @@ import { useSessionStore } from '@/stores/session'
 import ThemeToggle from './ThemeToggle.vue'
 import { sections, type TabId } from './navigation'
 
-defineProps<{ active: TabId | undefined }>()
+// onArt: the header lies clear on a competition's artwork, its text white
+defineProps<{ active: TabId | undefined; onArt?: boolean }>()
 
 // Signed in, the avatar has the user's initials, as on the boards; a guest
 // sees the figure, and Профиль takes them to Вход first
@@ -15,7 +16,7 @@ const session = useSessionStore()
 </script>
 
 <template>
-  <header class="bar">
+  <header class="bar" :class="{ 'on-art': onArt }">
     <div class="start">
       <RouterLink to="/" class="brand fs-link">
         <AppLogo variant="outline" :size="30" />
@@ -74,6 +75,47 @@ const session = useSessionStore()
   background: var(--fs-bar-bg);
   -webkit-backdrop-filter: var(--fs-material);
   backdrop-filter: var(--fs-material);
+  transition:
+    background-color var(--fs-duration-color),
+    border-color var(--fs-duration-color);
+}
+
+/* On a competition's artwork: clear, the text white, the controls glass
+   (CompetitionBackdropsExtended) */
+.bar.on-art {
+  border-bottom-color: var(--fs-art-glass-line);
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.on-art .brand,
+.on-art .section[aria-current='page'],
+.on-art .square,
+.on-art .avatar,
+.on-art :deep(.toggle) {
+  color: var(--fs-on-art);
+}
+
+.on-art .section {
+  color: var(--fs-on-art-muted);
+}
+
+.on-art .section[aria-current='page'],
+.on-art .avatar {
+  background: var(--fs-art-glass-hover);
+}
+
+.on-art .search,
+.on-art .square,
+.on-art :deep(.toggle) {
+  border-color: var(--fs-art-glass-line);
+  background: var(--fs-art-glass);
+  color: var(--fs-on-art-muted);
+}
+
+.on-art .search-key {
+  border-color: var(--fs-art-glass-line);
 }
 
 .start {

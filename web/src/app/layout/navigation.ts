@@ -1,4 +1,4 @@
-import { readonly, ref } from 'vue'
+import { onScopeDispose, readonly, ref } from 'vue'
 import type { IconName } from '@/shared/ui/AppIcon.vue'
 
 export type TabId = 'home' | 'leagues' | 'simulator' | 'search' | 'profile' | 'favorites'
@@ -38,4 +38,27 @@ export function useNavTitle() {
       title.value = next
     },
   }
+}
+
+// The competition whose artwork the screen stands on (CompetitionBackdropsExtended):
+// the page sets it, the shell draws the art under the header. null for none.
+const art = ref<string | null>(null)
+
+export function useBackdrop() {
+  return {
+    art: readonly(art),
+    setArt(next: string | null) {
+      art.value = next
+    },
+  }
+}
+
+// Whether the page is scrolled past y: the header lies clear on the artwork
+// only while the art is behind it
+export function useScrolledPast(y: number) {
+  const past = ref(window.scrollY > y)
+  const onScroll = () => (past.value = window.scrollY > y)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScopeDispose(() => window.removeEventListener('scroll', onScroll))
+  return readonly(past)
 }

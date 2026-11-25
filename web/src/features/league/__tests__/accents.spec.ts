@@ -21,7 +21,8 @@ describe('accents', () => {
   it('puts a cup on its league’s artwork, and leaves a competition without one plain', () => {
     expect(competitionArt('esp.copa_del_rey')?.key).toBe('esp.1')
     expect(competitionArt('uefa.super_cup')?.key).toBe('uefa.champions')
-    expect(competitionArt('uefa.europa')).toBeNull()
+    expect(competitionArt('uefa.europa')?.key).toBe('uefa.europa')
+    expect(competitionArt('usa.1')).toBeNull()
     expect(competitionArt(null)).toBeNull()
   })
 })

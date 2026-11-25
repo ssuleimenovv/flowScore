@@ -9,6 +9,7 @@ import FlowPeaks from '@/features/home/ui/FlowPeaks.vue'
 import LiveMatchCard from '@/features/home/ui/LiveMatchCard.vue'
 import UpcomingList from '@/features/home/ui/UpcomingList.vue'
 import { useMatchList } from '@/features/home/useMatchList'
+import { leagueLogo, needsPlate } from '@/shared/media/logos'
 import AppCard from '@/shared/ui/AppCard.vue'
 import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
 import ErrorState from '@/shared/ui/ErrorState.vue'
@@ -21,9 +22,9 @@ const now = ref(Date.now())
 const timer = setInterval(() => (now.value = Date.now()), 1000)
 onScopeDispose(() => clearInterval(timer))
 
-// null is "Все"
+// A competition's id; null is "Все"
 const competition = ref<string | null>(null)
-const chips = computed(() => [null, ...competitions(items.value)])
+const chips = computed(() => competitions(items.value))
 
 const day = computed(() => matchDay(items.value, competition.value, new Date(now.value)))
 const peaks = computed(() => flowPeaks([...day.value.live, ...day.value.demo.live]))
@@ -40,16 +41,33 @@ const today = dayTitle(new Date())
         <span class="date">{{ today }}</span>
         <h1 class="h1">Поток <span class="accent">сегодня</span></h1>
       </div>
-      <div class="chips" role="group" aria-label="Лиги">
+      <div class="chips" role="group" aria-label="Турниры">
         <button
-          v-for="c in chips"
-          :key="c ?? 'all'"
           type="button"
           class="chip fs-press"
-          :aria-pressed="competition === c"
-          @click="competition = c"
+          :aria-pressed="competition === null"
+          @click="competition = null"
         >
-          {{ c ?? 'Все' }}
+          Все
+        </button>
+        <button
+          v-for="c in chips"
+          :key="c.id"
+          type="button"
+          class="chip fs-press"
+          :aria-pressed="competition === c.id"
+          @click="competition = c.id"
+        >
+          <template v-if="leagueLogo(c.id, 18)">
+            <img class="chip-logo on-light" :src="leagueLogo(c.id, 18)!" alt="" />
+            <img
+              class="chip-logo on-dark"
+              :class="{ plate: needsPlate(c.id) }"
+              :src="leagueLogo(c.id, 18, 'dark')!"
+              alt=""
+            />
+          </template>
+          {{ c.name }}
         </button>
       </div>
     </header>
@@ -177,15 +195,28 @@ const today = dayTitle(new Date())
   color: var(--fs-home);
 }
 
+/* The competitions of the day with their logos, in the screens' order. On
+   the phone one row that scrolls from edge to edge, with no scroll bar; on
+   the desktop the row wraps */
 .chips {
   display: flex;
   gap: var(--fs-space-8);
+  margin: 0 calc(-1 * var(--fs-screen-padding));
+  padding: 0 var(--fs-screen-padding);
   overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
 }
 
 /* The picked chip is filled with the text color, as on the board */
 .chip {
+  display: inline-flex;
   flex-shrink: 0;
+  gap: var(--fs-space-8);
+  align-items: center;
   height: 40px;
   padding: 0 var(--fs-space-16);
   border: 1px solid var(--fs-line);
@@ -202,6 +233,36 @@ const today = dayTitle(new Date())
   border-color: var(--fs-text);
   background: var(--fs-text);
   color: var(--fs-bg);
+}
+
+.chip-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.chip-logo.plate {
+  padding: 2px;
+  border-radius: var(--fs-radius-full);
+  background: var(--fs-on-accent);
+}
+
+/* The logo drawn for the chip's background: a chip is dark in the dark
+   theme and light once picked, the other way round in the light theme */
+.chip .on-light,
+.chip[aria-pressed='true'] .on-dark,
+:root[data-theme='light'] .chip[aria-pressed='true'] .on-light {
+  display: none;
+}
+
+.chip[aria-pressed='true'] .on-light,
+:root[data-theme='light'] .chip .on-light,
+:root[data-theme='light'] .chip[aria-pressed='true'] .on-dark {
+  display: block;
+}
+
+:root[data-theme='light'] .chip .on-dark {
+  display: none;
 }
 
 .live,
@@ -300,6 +361,13 @@ const today = dayTitle(new Date())
   .page {
     gap: 32px;
     padding: 32px var(--fs-page-padding) var(--fs-space-40);
+  }
+
+  .chips {
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
   }
 
   .main,

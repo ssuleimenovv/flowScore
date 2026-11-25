@@ -55,3 +55,13 @@ func TestListByKickoff(t *testing.T) {
 		t.Errorf("a match before kick-off: %+v", first)
 	}
 }
+
+func TestCompetitionName(t *testing.T) {
+	// A followed competition by the screens' name; a demo match by its source's
+	if got := competitionName(event.Match{CompetitionID: "esp.1", Competition: "LALIGA"}); got != "Ла Лига" {
+		t.Errorf("esp.1 is %q", got)
+	}
+	if got := competitionName(event.Match{CompetitionID: "2", Competition: "Premier League"}); got != "Premier League" {
+		t.Errorf("a demo match is %q", got)
+	}
+}

@@ -72,6 +72,15 @@ func matchResponse(s live.Snapshot) any {
 	return toMatch(s)
 }
 
+// competitionName is a followed competition's name as the screens give it,
+// "Ла Лига"; a demo match and an old archived one keep their source's
+func competitionName(m event.Match) string {
+	if name, ok := leagueNames[m.CompetitionID]; ok {
+		return name
+	}
+	return m.Competition
+}
+
 func toMatch(s live.Snapshot) match {
 	m := s.Match
 	return match{
@@ -79,7 +88,7 @@ func toMatch(s live.Snapshot) match {
 		Source:        m.Source,
 		Status:        s.Status,
 		KickoffAt:     m.KickoffAt,
-		Competition:   competition{ID: m.CompetitionID, Name: m.Competition, Round: m.Round},
+		Competition:   competition{ID: m.CompetitionID, Name: competitionName(m), Round: m.Round},
 		Venue:         venue{Name: m.Venue},
 		Home:          toTeam(m.Home),
 		Away:          toTeam(m.Away),

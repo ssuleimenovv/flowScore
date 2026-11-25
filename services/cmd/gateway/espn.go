@@ -91,6 +91,9 @@ func (l *liveESPN) follow(ctx context.Context, league string, g espn.Game) {
 			log.Printf("espn %s: %v", g.Name, err)
 			return
 		}
+		// ESPN names a competition by a number of its own ("740"); the screens
+		// know it by the league the match was found in ("esp.1")
+		s.Match.CompetitionID = league
 		game = &liveGame{league: league, info: s.Match, publisher: l.newPublisher(g.ID), done: make(chan struct{})}
 		l.games[g.ID] = game
 		l.readSummary(game, body)

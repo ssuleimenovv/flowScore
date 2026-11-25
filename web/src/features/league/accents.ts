@@ -38,7 +38,15 @@ export function tintStyle(accent: Accent | null): Record<string, string> {
 }
 
 // The competitions with an artwork of their own (CompetitionBackdropsExtended)
-export type ArtKey = 'uefa.champions' | 'esp.1' | 'eng.1' | 'ger.1' | 'ita.1' | 'fra.1'
+export type ArtKey =
+  | 'uefa.champions'
+  | 'uefa.europa'
+  | 'uefa.europa.conf'
+  | 'esp.1'
+  | 'eng.1'
+  | 'ger.1'
+  | 'ita.1'
+  | 'fra.1'
 
 export interface Art {
   key: ArtKey
@@ -48,6 +56,8 @@ export interface Art {
 
 const ARTS: Record<ArtKey, Omit<Art, 'key'>> = {
   'uefa.champions': { word: '#8fd8ff', deep: '#071042' },
+  'uefa.europa': { word: '#ffb066', deep: '#2a0f02' },
+  'uefa.europa.conf': { word: '#7dffb0', deep: '#03241a' },
   'esp.1': { word: '#ffd27a', deep: '#a3140f' },
   'eng.1': { word: '#f4b8ff', deep: '#24093f' },
   'ger.1': { word: '#ffc2c6', deep: '#7a0710' },

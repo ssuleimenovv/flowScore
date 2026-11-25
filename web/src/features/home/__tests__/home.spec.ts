@@ -1,7 +1,15 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import type { MatchSummary } from '@/shared/api/types'
-import { dayForecast, flowPeaks, insightLine, liveMinute, matchDay, sparkline } from '../home'
+import {
+  competitions,
+  dayForecast,
+  flowPeaks,
+  insightLine,
+  liveMinute,
+  matchDay,
+  sparkline,
+} from '../home'
 
 function match(over: Partial<MatchSummary> & { id: string }): MatchSummary {
   return {
@@ -90,9 +98,22 @@ describe('matchDay', () => {
   it('keeps one competition', () => {
     const day = matchDay(
       [match({ id: 'a' }), match({ id: 'b', competition: { id: '9', name: 'КПЛ' } })],
-      'КПЛ',
+      '9',
     )
     expect(day.live.map((m) => m.id)).toEqual(['b'])
+  })
+})
+
+describe('competitions', () => {
+  it('lists the leagues, then the European cups, then the cups, and the demo last', () => {
+    const list = competitions([
+      match({ id: 'a', competition: { id: 'ger.dfb_pokal', name: 'Кубок Германии' } }),
+      match({ id: 'b' }),
+      match({ id: 'c', competition: { id: 'uefa.champions', name: 'Лига чемпионов' } }),
+      match({ id: 'd', competition: { id: 'esp.1', name: 'Ла Лига' } }),
+      match({ id: 'e', competition: { id: 'esp.1', name: 'Ла Лига' } }),
+    ])
+    expect(list.map((c) => c.id)).toEqual(['esp.1', 'uefa.champions', 'ger.dfb_pokal', '2'])
   })
 })
 

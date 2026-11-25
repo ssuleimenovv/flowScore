@@ -17,7 +17,7 @@ export interface MatchDay {
   demo: { live: MatchSummary[]; upcoming: MatchSummary[] } // the replays of old matches
 }
 
-// The matches of one competition, or of all when competition is null. Real
+// The matches of one competition, by its id, or of all when competition is null. Real
 // matches come first, by day; the demo replays go apart, so a replay of 2016
 // is never taken for tonight's match. A finished match is not on the home
 // screen: the mockup shows only what is on and what is next.
@@ -27,7 +27,7 @@ export function matchDay(
   now = new Date(),
   timeZone?: string,
 ): MatchDay {
-  const shown = items.filter((m) => competition === null || m.competition.name === competition)
+  const shown = items.filter((m) => competition === null || m.competition.id === competition)
   const playing = (m: MatchSummary) => m.status === 'live' || m.status === 'halftime'
   const real = shown.filter((m) => m.source !== 'replay')
   const demo = shown.filter((m) => m.source === 'replay')
@@ -63,9 +63,39 @@ function dayName(date: Date, now: Date, timeZone?: string): string {
   return dayTitle(date, timeZone)
 }
 
-// The competitions the list has, for the chips: "Premier League"
-export function competitions(items: MatchSummary[]): string[] {
-  return [...new Set(items.map((m) => m.competition.name))].sort()
+// The order of the competitions on the screens: the leagues, the European
+// cups, the national cups, as the gateway follows them
+const ORDER = [
+  'eng.1',
+  'esp.1',
+  'ger.1',
+  'ita.1',
+  'fra.1',
+  'uefa.champions',
+  'uefa.europa',
+  'uefa.europa.conf',
+  'uefa.super_cup',
+  'eng.fa',
+  'eng.league_cup',
+  'ger.dfb_pokal',
+  'esp.copa_del_rey',
+  'ita.coppa_italia',
+  'fra.coupe_de_france',
+]
+
+export interface Competition {
+  id: string // "esp.1"; a demo match's is StatsBomb's
+  name: string // "Ла Лига"
+}
+
+// The competitions the list has, for the chips, in the screens' order; one
+// the order does not know (the demo's) goes last
+export function competitions(items: MatchSummary[]): Competition[] {
+  const seen = new Map<string, Competition>()
+  for (const m of items)
+    seen.set(m.competition.id, { id: m.competition.id, name: m.competition.name })
+  const rank = (id: string) => (ORDER.includes(id) ? ORDER.indexOf(id) : ORDER.length)
+  return [...seen.values()].sort((a, b) => rank(a.id) - rank(b.id) || a.name.localeCompare(b.name))
 }
 
 // The match clock ticks on between polls, from the moment it was measured

@@ -1,14 +1,23 @@
+import { competitionGroup } from '@/features/league/league'
 import type { MatchSummary, Probabilities, Side } from '@/shared/api/types'
 import { explain } from '../match/explain'
 import { formatMinute } from '../match/format'
 
 // The home screen's text and shapes. Pure functions, so they are easy to test.
 
+// One competition's matches of a day: a card of its own (HomeByCompetitionExtended)
+export interface DayCompetition {
+  id: string // "uefa.champions"
+  name: string // "Лига чемпионов"
+  matches: MatchSummary[] // by kick-off, then by the home team
+}
+
 // Real matches not started yet, under the day they are played on
 export interface Day {
   key: string // "2026-10-10", the viewer's own calendar day
   title: string // "Сегодня", "Завтра", "Суббота, 10 октября"
-  matches: MatchSummary[]
+  matches: MatchSummary[] // by kick-off, then by the home team
+  competitions: DayCompetition[] // in the chips' order
 }
 
 export interface MatchDay {
@@ -33,21 +42,44 @@ export function matchDay(
   const demo = shown.filter((m) => m.source === 'replay')
 
   const days: Day[] = []
-  for (const m of real.filter((m) => m.status === 'scheduled')) {
+  for (const m of real.filter((m) => m.status === 'scheduled').sort(byKickoff)) {
     const key = dayKey(new Date(m.kickoffAt), timeZone)
     let day = days.find((d) => d.key === key)
     if (!day) {
-      day = { key, title: dayName(new Date(m.kickoffAt), now, timeZone), matches: [] }
+      day = {
+        key,
+        title: dayName(new Date(m.kickoffAt), now, timeZone),
+        matches: [],
+        competitions: [],
+      }
       days.push(day)
     }
     day.matches.push(m)
+    let comp = day.competitions.find((c) => c.id === m.competition.id)
+    if (!comp) {
+      comp = { id: m.competition.id, name: m.competition.name, matches: [] }
+      day.competitions.push(comp)
+    }
+    comp.matches.push(m)
   }
+  for (const d of days)
+    d.competitions.sort((a, b) => rank(a.id) - rank(b.id) || a.name.localeCompare(b.name))
 
   return {
     live: real.filter(playing),
     days,
     demo: { live: demo.filter(playing), upcoming: demo.filter((m) => m.status === 'scheduled') },
   }
+}
+
+// The same order at every poll: ESPN lists the matches of one kick-off in no
+// fixed order, so they would change places
+function byKickoff(a: MatchSummary, b: MatchSummary): number {
+  return (
+    Date.parse(a.kickoffAt) - Date.parse(b.kickoffAt) ||
+    a.home.name.localeCompare(b.home.name) ||
+    a.id.localeCompare(b.id)
+  )
 }
 
 // "2026-10-10" in the viewer's time zone: a match at 00:30 is on the next day
@@ -83,19 +115,39 @@ const ORDER = [
   'fra.coupe_de_france',
 ]
 
+function rank(id: string): number {
+  return ORDER.includes(id) ? ORDER.indexOf(id) : ORDER.length
+}
+
 export interface Competition {
-  id: string // "esp.1"; a demo match's is StatsBomb's
+  id: string // "esp.1"
   name: string // "Ла Лига"
 }
 
-// The competitions the list has, for the chips, in the screens' order; one
-// the order does not know (the demo's) goes last
+// The home screen's picker, as on the league page with «Все» before the groups
+export type Group = 'Все' | 'Лиги' | 'Еврокубки' | 'Кубки'
+
+// The real competitions the list has, for the chips, in the screens' order.
+// The demo has a block of its own and no chip.
 export function competitions(items: MatchSummary[]): Competition[] {
   const seen = new Map<string, Competition>()
-  for (const m of items)
+  for (const m of items) {
+    if (m.source === 'replay') continue
     seen.set(m.competition.id, { id: m.competition.id, name: m.competition.name })
-  const rank = (id: string) => (ORDER.includes(id) ? ORDER.indexOf(id) : ORDER.length)
+  }
   return [...seen.values()].sort((a, b) => rank(a.id) - rank(b.id) || a.name.localeCompare(b.name))
+}
+
+// The groups that have a competition today, «Все» first
+export function groups(list: Competition[]): Group[] {
+  const present = new Set(list.map((c) => competitionGroup(c.id)))
+  return ['Все', ...(['Лиги', 'Еврокубки', 'Кубки'] as const).filter((g) => present.has(g))]
+}
+
+// The matches a pick shows: a group's real ones; all of them, the demo too, for «Все»
+export function inGroup(items: MatchSummary[], group: Group): MatchSummary[] {
+  if (group === 'Все') return items
+  return items.filter((m) => m.source !== 'replay' && competitionGroup(m.competition.id) === group)
 }
 
 // The match clock ticks on between polls, from the moment it was measured

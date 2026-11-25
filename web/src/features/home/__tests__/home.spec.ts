@@ -5,6 +5,8 @@ import {
   competitions,
   dayForecast,
   flowPeaks,
+  groups,
+  inGroup,
   insightLine,
   liveMinute,
   matchDay,
@@ -105,15 +107,60 @@ describe('matchDay', () => {
 })
 
 describe('competitions', () => {
-  it('lists the leagues, then the European cups, then the cups, and the demo last', () => {
+  const cup = match({ id: 'a', competition: { id: 'ger.dfb_pokal', name: 'Кубок Германии' } })
+  const ucl = match({ id: 'c', competition: { id: 'uefa.champions', name: 'Лига чемпионов' } })
+  const liga = match({ id: 'd', competition: { id: 'esp.1', name: 'Ла Лига' } })
+  const demo = match({
+    id: 'r',
+    source: 'replay',
+    competition: { id: '2', name: 'Premier League' },
+  })
+
+  it('lists the leagues, then the European cups, then the cups, and no chip for the demo', () => {
     const list = competitions([
-      match({ id: 'a', competition: { id: 'ger.dfb_pokal', name: 'Кубок Германии' } }),
-      match({ id: 'b' }),
-      match({ id: 'c', competition: { id: 'uefa.champions', name: 'Лига чемпионов' } }),
-      match({ id: 'd', competition: { id: 'esp.1', name: 'Ла Лига' } }),
-      match({ id: 'e', competition: { id: 'esp.1', name: 'Ла Лига' } }),
+      cup,
+      demo,
+      ucl,
+      liga,
+      match({ id: 'e', competition: liga.competition }),
     ])
-    expect(list.map((c) => c.id)).toEqual(['esp.1', 'uefa.champions', 'ger.dfb_pokal', '2'])
+    expect(list.map((c) => c.id)).toEqual(['esp.1', 'uefa.champions', 'ger.dfb_pokal'])
+    expect(groups(list)).toEqual(['Все', 'Лиги', 'Еврокубки', 'Кубки'])
+    expect(groups([list[1]!])).toEqual(['Все', 'Еврокубки'])
+  })
+
+  it('keeps a group’s matches, and everything, the demo too, for «Все»', () => {
+    const items = [cup, demo, ucl, liga]
+    expect(inGroup(items, 'Еврокубки').map((m) => m.id)).toEqual(['c'])
+    expect(inGroup(items, 'Кубки').map((m) => m.id)).toEqual(['a'])
+    expect(inGroup(items, 'Все')).toHaveLength(4)
+  })
+
+  it('puts a day’s matches in a card per competition, in the same order at every poll', () => {
+    const at = (id: string, kickoffAt: string, comp: MatchSummary['competition'], home: string) =>
+      match({
+        id,
+        status: 'scheduled',
+        kickoffAt,
+        competition: comp,
+        home: { id, code: id, name: home },
+      })
+    const now = new Date('2026-11-25T10:00:00Z')
+    const items = [
+      at('1', '2026-11-25T20:00:00Z', ucl.competition, 'Sporting CP'),
+      at('2', '2026-11-25T17:45:00Z', cup.competition, 'Hertha'),
+      at('3', '2026-11-25T20:00:00Z', ucl.competition, 'Club Brugge'),
+      at('4', '2026-11-25T15:00:00Z', liga.competition, 'Sevilla'),
+    ]
+    for (const list of [items, [...items].reverse()]) {
+      const [d] = matchDay(list, null, now, 'UTC').days
+      expect(d!.competitions.map((c) => [c.id, c.matches.map((m) => m.id)])).toEqual([
+        ['esp.1', ['4']],
+        ['uefa.champions', ['3', '1']],
+        ['ger.dfb_pokal', ['2']],
+      ])
+      expect(d!.matches.map((m) => m.id)).toEqual(['4', '2', '3', '1'])
+    }
   })
 })
 

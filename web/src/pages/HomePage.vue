@@ -2,8 +2,19 @@
 // The home screen (Main and MobileHome boards): what is on now and what is
 // next. Real matches come first, by day; the demo replays have a block of
 // their own at the end.
-import { computed, onScopeDispose, ref } from 'vue'
-import { competitions, dayForecast, dayTitle, flowPeaks, matchDay } from '@/features/home/home'
+import { computed, onScopeDispose, ref, watch } from 'vue'
+import {
+  competitions,
+  dayForecast,
+  dayTitle,
+  flowPeaks,
+  groups,
+  inGroup,
+  matchDay,
+  type Group,
+} from '@/features/home/home'
+import { competitionGroup } from '@/features/league/league'
+import CompetitionMatches from '@/features/home/ui/CompetitionMatches.vue'
 import DayForecast from '@/features/home/ui/DayForecast.vue'
 import FlowPeaks from '@/features/home/ui/FlowPeaks.vue'
 import LiveMatchCard from '@/features/home/ui/LiveMatchCard.vue'
@@ -11,6 +22,7 @@ import UpcomingList from '@/features/home/ui/UpcomingList.vue'
 import { useMatchList } from '@/features/home/useMatchList'
 import { leagueLogo, needsPlate } from '@/shared/media/logos'
 import AppCard from '@/shared/ui/AppCard.vue'
+import AppSegmented from '@/shared/ui/AppSegmented.vue'
 import AppSkeleton from '@/shared/ui/AppSkeleton.vue'
 import ErrorState from '@/shared/ui/ErrorState.vue'
 import WakingNote from '@/shared/ui/WakingNote.vue'
@@ -22,11 +34,22 @@ const now = ref(Date.now())
 const timer = setInterval(() => (now.value = Date.now()), 1000)
 onScopeDispose(() => clearInterval(timer))
 
-// A competition's id; null is "Все"
+// HomeByCompetitionExtended: «Все» or a group, then one row of the group's
+// competitions; a competition's id, or null for the whole group
+const group = ref<Group>('Все')
 const competition = ref<string | null>(null)
-const chips = computed(() => competitions(items.value))
+const all = computed(() => competitions(items.value))
+const groupOptions = computed(() => groups(all.value).map((g) => ({ value: g, label: g })))
+const chips = computed(() => all.value.filter((c) => competitionGroup(c.id) === group.value))
+watch(group, () => (competition.value = null))
+// A group gone from the list (its last match over) gives way to «Все»
+watch(groupOptions, (options) => {
+  if (!options.some((o) => o.value === group.value)) group.value = 'Все'
+})
 
-const day = computed(() => matchDay(items.value, competition.value, new Date(now.value)))
+const day = computed(() =>
+  matchDay(inGroup(items.value, group.value), competition.value, new Date(now.value)),
+)
 const peaks = computed(() => flowPeaks([...day.value.live, ...day.value.demo.live]))
 // The day's forecast is about the nearest real day; the demo only without one
 const forecast = computed(() => dayForecast(day.value.days[0]?.matches ?? day.value.demo.upcoming))
@@ -41,34 +64,35 @@ const today = dayTitle(new Date())
         <span class="date">{{ today }}</span>
         <h1 class="h1">Поток <span class="accent">сегодня</span></h1>
       </div>
-      <div class="chips" role="group" aria-label="Турниры">
-        <button
-          type="button"
-          class="chip fs-press"
-          :aria-pressed="competition === null"
-          @click="competition = null"
-        >
-          Все
-        </button>
-        <button
-          v-for="c in chips"
-          :key="c.id"
-          type="button"
-          class="chip fs-press"
-          :aria-pressed="competition === c.id"
-          @click="competition = c.id"
-        >
-          <template v-if="leagueLogo(c.id, 18)">
-            <img class="chip-logo on-light" :src="leagueLogo(c.id, 18)!" alt="" />
-            <img
-              class="chip-logo on-dark"
-              :class="{ plate: needsPlate(c.id) }"
-              :src="leagueLogo(c.id, 18, 'dark')!"
-              alt=""
-            />
-          </template>
-          {{ c.name }}
-        </button>
+      <div class="picker">
+        <AppSegmented
+          v-if="groupOptions.length > 1"
+          v-model="group"
+          class="groups"
+          label="Турниры"
+          :options="groupOptions"
+        />
+        <div v-if="group !== 'Все'" class="chips" role="group" :aria-label="group">
+          <button
+            v-for="c in chips"
+            :key="c.id"
+            type="button"
+            class="chip fs-press"
+            :aria-pressed="competition === c.id"
+            @click="competition = competition === c.id ? null : c.id"
+          >
+            <template v-if="leagueLogo(c.id, 18)">
+              <img class="chip-logo on-light" :src="leagueLogo(c.id, 18)!" alt="" />
+              <img
+                class="chip-logo on-dark"
+                :class="{ plate: needsPlate(c.id) }"
+                :src="leagueLogo(c.id, 18, 'dark')!"
+                alt=""
+              />
+            </template>
+            {{ c.name }}
+          </button>
+        </div>
       </div>
     </header>
 
@@ -96,7 +120,9 @@ const today = dayTitle(new Date())
           <h2 id="later-title" class="h2"><span class="index">02</span>Ближайшие матчи</h2>
           <div v-for="d in day.days" :key="d.key" class="day">
             <h3 class="day-title">{{ d.title }}</h3>
-            <UpcomingList :matches="d.matches" />
+            <div class="competitions">
+              <CompetitionMatches v-for="c in d.competitions" :key="c.id" :competition="c" />
+            </div>
           </div>
           <UpcomingList v-if="day.days.length === 0" :matches="[]" empty="Ближайших матчей нет" />
         </section>
@@ -195,9 +221,25 @@ const today = dayTitle(new Date())
   color: var(--fs-home);
 }
 
-/* The competitions of the day with their logos, in the screens' order. On
-   the phone one row that scrolls from edge to edge, with no scroll bar; on
-   the desktop the row wraps */
+/* «Все · Лиги · Еврокубки · Кубки», then one row of the group's
+   competitions with their logos. On the phone the control runs the full
+   width and the row scrolls from edge to edge, with no scroll bar */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fs-space-12);
+}
+
+.groups :deep(.option) {
+  flex: 1 1 0;
+}
+
+.competitions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fs-space-12);
+}
+
 .chips {
   display: flex;
   gap: var(--fs-space-8);
@@ -368,6 +410,15 @@ const today = dayTitle(new Date())
     margin: 0;
     padding: 0;
     overflow: visible;
+  }
+
+  .groups {
+    align-self: flex-start;
+    min-width: 440px;
+  }
+
+  .competitions {
+    gap: var(--fs-space-16);
   }
 
   .main,

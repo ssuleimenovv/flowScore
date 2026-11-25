@@ -6,14 +6,21 @@ import { kickoffTime } from '../home'
 
 // "Позже сегодня" from the Main boards: kick-off time, the teams and the
 // model's chances before the match. The phone shows time and teams only.
-const { matches, empty = 'Больше матчей сегодня нет' } = defineProps<{
+// In a competition's card (bare) the rows go without a card of their own and
+// without the competition's name: the card's head has it.
+const {
+  matches,
+  empty = 'Больше матчей сегодня нет',
+  bare = false,
+} = defineProps<{
   matches: MatchSummary[]
   empty?: string
+  bare?: boolean
 }>()
 </script>
 
 <template>
-  <div class="list fs-in" style="--fs-i: 3">
+  <div class="list" :class="bare ? 'bare' : 'fs-in'" style="--fs-i: 3">
     <RouterLink
       v-for="m in matches"
       :key="m.id"
@@ -29,7 +36,7 @@ const { matches, empty = 'Больше матчей сегодня нет' } = d
           :home-logo="matchTeamLogo(m, 'home', 18)"
           :away-logo="matchTeamLogo(m, 'away', 18)"
         />
-        <span class="league">{{ m.competition.name }}</span>
+        <span v-if="!bare" class="league">{{ m.competition.name }}</span>
       </div>
       <div v-if="m.prediction" class="chances">
         <div class="bar" aria-hidden="true">
@@ -56,6 +63,13 @@ const { matches, empty = 'Больше матчей сегодня нет' } = d
   border: 1px solid var(--fs-line);
   border-radius: var(--fs-radius-lg);
   background: var(--fs-surface);
+}
+
+.list.bare {
+  padding-block: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
 }
 
 .row,

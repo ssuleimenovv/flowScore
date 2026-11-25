@@ -1313,10 +1313,18 @@ components:
 
     PlayerPage:
       type: object
-      required: [player, matches]
+      required: [player, colors, matches]
       properties:
         player:
           $ref: '#/components/schemas/PlayerInfo'
+        colors:
+          type: array
+          description: >-
+            The colours of the player's club, as TeamPage.colors; empty for a
+            player without a club or a club none of the seasons has
+          items:
+            type: string
+            example: 99c5ea
         matches:
           type: array
           description: The matches the player got on the pitch in, in every competition the gateway follows, newest first

@@ -48,8 +48,8 @@ svg {
   height: 16px;
   padding: 0 var(--fs-space-4);
   border-radius: 5px;
-  background: var(--fs-accent);
-  color: var(--fs-on-accent);
+  background: var(--fs-tint);
+  color: var(--fs-bg);
   font-family: var(--fs-font-display);
   font-size: 11px;
   font-weight: 800;

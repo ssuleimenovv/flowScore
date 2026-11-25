@@ -61,6 +61,7 @@ type playerMatch struct {
 
 type playerPage struct {
 	Player  playerInfo    `json:"player"`
+	Colors  []string      `json:"colors"`  // the club's, as on its page; [] for none
 	Matches []playerMatch `json:"matches"` // the ones the player got on the pitch in, newest first
 }
 
@@ -82,6 +83,7 @@ func playerHandler(seasons Seasons, kept *cache[espn.Athlete], ids []string) htt
 			Player: playerInfo{
 				ID: a.ID, Name: a.Name, Number: a.Jersey, Position: a.Position, Age: a.Age, Country: a.Country,
 			},
+			Colors:  []string{},
 			Matches: []playerMatch{},
 		}
 		if a.Team != nil {
@@ -96,6 +98,10 @@ func playerHandler(seasons Seasons, kept *cache[espn.Athlete], ids []string) htt
 			for _, g := range l.Games {
 				if m, ok := playerMatchOf(g, l.ID, id); ok {
 					p.Matches = append(p.Matches, m)
+				}
+				// The club's colours from any scoreboard that has the club
+				if a.Team != nil && len(p.Colors) == 0 {
+					p.Colors = colorsOf(g, a.Team.ID)
 				}
 			}
 		}
@@ -125,4 +131,16 @@ func playerMatchOf(g season.Game, leagueID, playerID string) (playerMatch, bool)
 		m.XG = &p.XG
 	}
 	return m, true
+}
+
+// colorsOf are a team's colours as a game's scoreboard gives them; [] for a
+// game it does not play
+func colorsOf(g season.Game, teamID string) []string {
+	switch teamID {
+	case g.Home.Team.ID:
+		return orEmpty(g.Home.Colors)
+	case g.Away.Team.ID:
+		return orEmpty(g.Away.Colors)
+	}
+	return []string{}
 }

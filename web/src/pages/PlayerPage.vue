@@ -4,7 +4,16 @@
 import { computed, onUnmounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNavTitle } from '@/app/layout/navigation'
-import { finishing, logRow, navLine, seasonTiles, totals } from '@/features/player/player'
+import { tintStyle } from '@/features/league/accents'
+import { teamAccent } from '@/features/team/clubColor'
+import {
+  clubLeague,
+  finishing,
+  logRow,
+  navLine,
+  seasonTiles,
+  totals,
+} from '@/features/player/player'
 import FinishingCard from '@/features/player/ui/FinishingCard.vue'
 import MatchLogCard from '@/features/player/ui/MatchLogCard.vue'
 import PlayerHero from '@/features/player/ui/PlayerHero.vue'
@@ -39,6 +48,11 @@ const notFound = computed(() => error.value instanceof ApiError && error.value.s
 const season = computed(() => (page.value ? totals(page.value.matches) : null))
 const rows = computed(() => page.value?.matches.map((m) => logRow(m)) ?? [])
 
+// The club's colour, else its league's accent, as on the club's page
+const accent = computed(() =>
+  page.value ? teamAccent(page.value.colors, clubLeague(page.value.matches)) : null,
+)
+
 // Mobile nav bar: "Erling Haaland" / "Manchester City · №9", as on MobilePlayer
 const { setTitle } = useNavTitle()
 watchEffect(() => {
@@ -49,7 +63,7 @@ onUnmounted(() => setTitle(null))
 </script>
 
 <template>
-  <div class="page">
+  <div class="page fs-tinted" :style="tintStyle(accent)">
     <OfflineBanner v-if="screen.banner === 'offline'" :updated-at="updatedAt" />
 
     <template v-if="screen.view === 'content' && page">

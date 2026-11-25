@@ -1,3 +1,4 @@
+import { competitionKind } from '@/features/league/league'
 import { dayMonth, POSITION_WORD } from '@/features/team/team'
 import type { PlayerInfo, PlayerMatch, Team } from '@/shared/api/types'
 
@@ -178,4 +179,10 @@ export function logRow(m: PlayerMatch, timeZone?: string): LogRow {
 // The player's page: /players/253989
 export function playerPath(playerId: string): string {
   return `/players/${encodeURIComponent(playerId)}`
+}
+
+// The player's league, for his club's page colour when the club has none:
+// the first league match of his log, a cup's left out
+export function clubLeague(matches: PlayerMatch[]): string | null {
+  return matches.find((m) => competitionKind(m.leagueId) === 'league')?.leagueId ?? null
 }

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import type { PlayerMatch } from '@/shared/api/types'
-import { finishing, logRow, per90, seasonTiles, totals } from '../player'
+import { clubLeague, finishing, logRow, per90, seasonTiles, totals } from '../player'
 
 const team = (code: string) => ({ id: code, code, name: code })
 
@@ -82,6 +82,13 @@ describe('player', () => {
       note: '',
       text: 'Для этих матчей источник не даёт мест ударов.',
     })
+  })
+
+  it('finds the player’s league in his log, past the cups', () => {
+    const cup = match({ id: '3', leagueId: 'ger.dfb_pokal' })
+    const ucl = match({ id: '4', leagueId: 'uefa.champions' })
+    expect(clubLeague([cup, ucl, match({ leagueId: 'ger.1' })])).toBe('ger.1')
+    expect(clubLeague([cup])).toBeNull()
   })
 
   it('writes a match from the side of the player', () => {

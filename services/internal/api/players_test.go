@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"testing"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
@@ -29,6 +30,8 @@ func TestPlayer(t *testing.T) {
 	l.Games[1].Flow.Players = []season.PlayerMatch{{ID: "9", Side: event.Away, Minutes: 20}}
 	// The first has the places of its shots, the second not: no xG for it
 	l.Games[0].Flow.XGKnown = true
+	// Arsenal's colours, on the scoreboard of the first game
+	l.Games[0].Home.Colors = []string{"db0007", "ffffff"}
 	espnPlayer := athletes{athlete: espn.Athlete{
 		ID: "9", Name: "Haaland", Jersey: "9", Position: "forward",
 		Team: &event.Team{ID: "ARS", Code: "ARS", Name: "ARS"},
@@ -40,6 +43,9 @@ func TestPlayer(t *testing.T) {
 	getLeague(t, mux, "/api/v1/players/9", http.StatusOK, &p)
 	if p.Player.Name != "Haaland" || p.Player.Team == nil || p.Player.Team.ID != "ARS" {
 		t.Errorf("player %+v", p.Player)
+	}
+	if !slices.Equal(p.Colors, []string{"db0007", "ffffff"}) {
+		t.Errorf("colours %v", p.Colors)
 	}
 	if len(p.Matches) != 2 {
 		t.Fatalf("%d matches, want 2", len(p.Matches))

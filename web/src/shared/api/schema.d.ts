@@ -741,6 +741,8 @@ export interface components {
         };
         PlayerPage: {
             player: components["schemas"]["PlayerInfo"];
+            /** @description The colours of the player's club, as TeamPage.colors; empty for a player without a club or a club none of the seasons has */
+            colors: string[];
             /** @description The matches the player got on the pitch in, in every competition the gateway follows, newest first */
             matches: components["schemas"]["PlayerMatch"][];
         };

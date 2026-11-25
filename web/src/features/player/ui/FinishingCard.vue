@@ -86,7 +86,7 @@ const { f } = defineProps<{ f: Finishing }>()
 }
 
 .goals {
-  background: var(--fs-home);
+  background: var(--fs-tint);
 }
 
 .xg {
@@ -114,7 +114,7 @@ const { f } = defineProps<{ f: Finishing }>()
 }
 
 .diff {
-  color: var(--fs-home);
+  color: var(--fs-tint);
   font-family: var(--fs-font-display);
   font-size: 32px;
   font-weight: 800;

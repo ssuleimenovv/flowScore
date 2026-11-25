@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"testing"
 	"time"
 
@@ -18,7 +19,7 @@ const board = `{
 		{"id": "401879268", "name": "Leeds United at Arsenal", "date": "2026-10-10T11:30Z",
 		 "status": {"displayClock": "72'", "type": {"state": "in", "name": "STATUS_SECOND_HALF"}},
 		 "competitions": [{"competitors": [
-			{"homeAway": "home", "score": "2", "team": {"id": "359", "abbreviation": "ARS", "displayName": "Arsenal"}},
+			{"homeAway": "home", "score": "2", "team": {"id": "359", "abbreviation": "ARS", "displayName": "Arsenal", "color": "DB0007", "alternateColor": "FFFFFF"}},			
 			{"homeAway": "away", "score": "1", "team": {"id": "357", "abbreviation": "LEE", "displayName": "Leeds United"}}
 		 ]}]},
 		{"id": "401878776", "name": "Brentford at Aston Villa", "date": "2026-10-10T14:00Z",
@@ -56,6 +57,10 @@ func TestScoreboard(t *testing.T) {
 	if len(games) != 2 || !games[0].Start.Equal(want.Start) || games[0].ID != want.ID ||
 		games[0].State != want.State || games[1].State != "pre" {
 		t.Errorf("games = %+v", games)
+	}
+	// In one case; Leeds has none
+	if !slices.Equal(games[0].Home.Colors, []string{"db0007", "ffffff"}) || games[0].Away.Colors != nil {
+		t.Errorf("colours %v, %v", games[0].Home.Colors, games[0].Away.Colors)
 	}
 }
 

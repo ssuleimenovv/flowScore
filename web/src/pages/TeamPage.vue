@@ -6,6 +6,8 @@ import { computed, onScopeDispose, onUnmounted, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNavTitle } from '@/app/layout/navigation'
 import { leagueLine, results, upcoming } from '@/features/team/team'
+import { tintStyle } from '@/features/league/accents'
+import { teamAccent } from '@/features/team/clubColor'
 import TeamFlowCard from '@/features/team/ui/TeamFlowCard.vue'
 import TeamHero from '@/features/team/ui/TeamHero.vue'
 import TeamMatchesCard from '@/features/team/ui/TeamMatchesCard.vue'
@@ -46,6 +48,13 @@ const screen = computed(() =>
 )
 const notFound = computed(() => error.value instanceof ApiError && error.value.status === 404)
 
+// The club's colour, else its league's accent (AccentsExtended): on the
+// emblem's stand-in, the «В» of the form, the big Flow, the bars of 70 and
+// more, the open tab
+const accent = computed(() =>
+  page.value ? teamAccent(page.value.colors, page.value.league?.id ?? null) : null,
+)
+
 const TABS: TeamTab[] = ['overview', 'squad', 'fixtures']
 const tab = computed<TeamTab>({
   get: () => TABS.find((t) => t === route.query.tab) ?? 'overview',
@@ -74,7 +83,7 @@ onUnmounted(() => setTitle(null))
 </script>
 
 <template>
-  <div class="page">
+  <div class="page fs-tinted" :style="tintStyle(accent)">
     <OfflineBanner v-if="screen.banner === 'offline'" :updated-at="updatedAt" />
 
     <template v-if="screen.view === 'content' && page">

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"testing"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/espn"
@@ -17,6 +18,8 @@ func TestTeam(t *testing.T) {
 		game("9", 0, "post", "INT", "ARS", "1", "1", nil),
 	}}
 	cup.Games[0].Away.Winner = true
+	cup.Games[0].Away.Colors = []string{"db0007", "ffffff"}
+
 	mux := http.NewServeMux()
 	RegisterTeams(mux, seasons{"eng.1": premierLeague(), "uefa.champions": cup}, nil, []string{"eng.1", "uefa.champions"})
 
@@ -24,6 +27,9 @@ func TestTeam(t *testing.T) {
 	getLeague(t, mux, "/api/v1/teams/ARS", http.StatusOK, &p)
 	if p.Team.ID != "ARS" || p.League == nil || p.League.ID != "eng.1" || p.League.Rank != 1 {
 		t.Fatalf("team %+v, league %+v", p.Team, p.League)
+	}
+	if !slices.Equal(p.Colors, []string{"db0007", "ffffff"}) {
+		t.Errorf("colours %v", p.Colors)
 	}
 	if len(p.Matches) != 4 {
 		t.Fatalf("%d matches, want 4", len(p.Matches))

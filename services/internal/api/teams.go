@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ssuleimenovv/flowscore/services/internal/event"
 	"github.com/ssuleimenovv/flowscore/services/internal/live"
 	"github.com/ssuleimenovv/flowscore/services/internal/provider/espn"
 	"github.com/ssuleimenovv/flowscore/services/internal/season"
@@ -52,6 +51,7 @@ type teamMatch struct {
 
 type teamPage struct {
 	Team    team        `json:"team"`
+	Colors  []string    `json:"colors"`  // ESPN's, its main one first: "99c5ea"; [] for none
 	League  *teamLeague `json:"league"`  // the first league whose table has the team; null for none
 	Matches []teamMatch `json:"matches"` // the whole season in every competition, by kick-off
 }
@@ -61,7 +61,7 @@ type teamPage struct {
 func teamHandler(seasons Seasons, ids []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.PathValue("teamId")
-		p := teamPage{Matches: []teamMatch{}}
+		p := teamPage{Colors: []string{}, Matches: []teamMatch{}}
 		found, reading := false, false
 		for _, lid := range ids {
 			l, ok := seasons.League(lid)
@@ -80,7 +80,11 @@ func teamHandler(seasons Seasons, ids []string) http.HandlerFunc {
 			}
 			for _, g := range l.Games {
 				if m, us, ok := teamMatchOf(g, l.ID, id); ok {
-					p.Team, found = toTeam(us), true
+					p.Team, found = toTeam(us.Team), true
+					// Any scoreboard names the club's colours: the first that has them
+					if len(p.Colors) == 0 && len(us.Colors) > 0 {
+						p.Colors = us.Colors
+					}
 					p.Matches = append(p.Matches, m)
 				}
 			}
@@ -98,12 +102,13 @@ func teamHandler(seasons Seasons, ids []string) http.HandlerFunc {
 	}
 }
 
-// teamMatchOf is a game as the team's page lists it, and the team as the
-// game names it; false for a game the team does not play
-func teamMatchOf(g season.Game, leagueID, teamID string) (teamMatch, event.Team, bool) {
+// teamMatchOf is a game as the team's page lists it, and the team's side of
+// it: the team as the game names it, with its colours; false for a game the
+// team does not play
+func teamMatchOf(g season.Game, leagueID, teamID string) (teamMatch, espn.Side, bool) {
 	home := g.Home.Team.ID == teamID
 	if !home && g.Away.Team.ID != teamID {
-		return teamMatch{}, event.Team{}, false
+		return teamMatch{}, espn.Side{}, false
 	}
 	us, them := g.Home, g.Away
 	if !home {
@@ -122,7 +127,7 @@ func teamMatchOf(g season.Game, leagueID, teamID string) (teamMatch, event.Team,
 	if g.State == "post" && m.Score != nil {
 		m.Result = resultOf(*m.Score, home, us.Winner, them.Winner)
 	}
-	return m, us.Team, true
+	return m, us, true
 }
 
 // resultOf is how a match that is over went for one of its teams. Level

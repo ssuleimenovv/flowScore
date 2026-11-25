@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RESULT_LETTER, RESULT_WORD, type Result } from '../team'
 
-// «В», «Н» or «П» on a square: a win in the team's color, a draw and a loss quiet
+// «В», «Н» or «П» on a square: a win in the club's colour, a draw and a loss quiet
 const { result } = defineProps<{ result: Result }>()
 </script>
 
@@ -24,9 +24,11 @@ const { result } = defineProps<{ result: Result }>()
   font-weight: 700;
 }
 
+/* The tint reads on the theme's page, 4.5:1 or more, so the page's colour
+   reads on the tint: dark on a light blue, light on a dark one */
 .win {
-  background: var(--fs-home);
-  color: var(--fs-on-home);
+  background: var(--fs-tint);
+  color: var(--fs-bg);
 }
 
 .draw {

@@ -16,7 +16,7 @@ const bars = computed(() =>
   <section class="card fs-in">
     <div class="head">
       <h2 class="title">Flow по матчам</h2>
-      <span class="note">последние {{ bars.length }} · красным ≥ 70</span>
+      <span class="note">последние {{ bars.length }} · цветом ≥ 70</span>
     </div>
     <ol v-if="bars.length > 0" class="bars">
       <li
@@ -106,7 +106,7 @@ const bars = computed(() =>
 }
 
 .high {
-  background: var(--fs-home);
+  background: var(--fs-tint);
 }
 
 @keyframes grow {

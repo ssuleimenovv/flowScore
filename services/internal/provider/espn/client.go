@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
@@ -59,10 +60,11 @@ type Game struct {
 type Side struct {
 	Team      event.Team
 	Score     string
-	Winner    bool // won the match, on penalties too
-	Shootout  *int // its goals in a shootout; nil without one
-	Aggregate *int // its goals over both legs of a tie; nil for a single match
-	Through   bool // went through a tie of two legs that is over
+	Winner    bool     // won the match, on penalties too
+	Shootout  *int     // its goals in a shootout; nil without one
+	Aggregate *int     // its goals over both legs of a tie; nil for a single match
+	Through   bool     // went through a tie of two legs that is over
+	Colors    []string // the club's main colour, then ESPN's alternate (often an away kit's): "99c5ea"; none when ESPN gives none
 }
 
 // Board is a league's scoreboard of one day: its matches, and every day of
@@ -142,9 +144,11 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 					Winner        bool     `json:"winner"`
 					ShootoutScore *float64 `json:"shootoutScore"`
 					Team          struct {
-						ID           string `json:"id"`
-						Abbreviation string `json:"abbreviation"`
-						DisplayName  string `json:"displayName"`
+						ID             string `json:"id"`
+						Abbreviation   string `json:"abbreviation"`
+						DisplayName    string `json:"displayName"`
+						Color          string `json:"color"`          // "99c5ea"
+						AlternateColor string `json:"alternateColor"` // often absent
 					} `json:"team"`
 				} `json:"competitors"`
 				Odds []struct {
@@ -198,7 +202,7 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 			}
 			for _, t := range c.Competitors {
 				side := Side{Team: event.Team{ID: t.Team.ID, Code: t.Team.Abbreviation, Name: t.Team.DisplayName}, Score: t.Score,
-					Winner: t.Winner, Shootout: whole(t.ShootoutScore)}
+					Winner: t.Winner, Shootout: whole(t.ShootoutScore), Colors: colors(t.Team.Color, t.Team.AlternateColor)}
 				for _, s := range c.Series.Competitors {
 					if s.ID == t.Team.ID {
 						side.Aggregate, side.Through = whole(s.AggregateScore), s.Winner
@@ -214,6 +218,18 @@ func (c *Client) board(ctx context.Context, league, query string) (Board, error)
 		b.Games = append(b.Games, g)
 	}
 	return b, nil
+}
+
+// colors are a club's colours as ESPN gives them, in one case: ESPN writes
+// "FFFFFF" and "99c5ea" alike. The empty ones are left out.
+func colors(all ...string) []string {
+	var out []string
+	for _, c := range all {
+		if c != "" {
+			out = append(out, strings.ToLower(c))
+		}
+	}
+	return out
 }
 
 // finish names how a match over was decided past the 90 minutes

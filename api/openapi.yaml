@@ -1200,10 +1200,18 @@ components:
 
     TeamPage:
       type: object
-      required: [team, league, matches]
+      required: [team, colors, league, matches]
       properties:
         team:
           $ref: '#/components/schemas/Team'
+        colors:
+          type: array
+          description: >-
+            The club's colours as ESPN gives them, its main one first, as hex
+            without the hash; empty when ESPN gives none
+          items:
+            type: string
+            example: 99c5ea
         league:
           description: The first league whose table has the team; null for none
           oneOf:

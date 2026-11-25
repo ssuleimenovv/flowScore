@@ -70,7 +70,7 @@ function onKey(e: KeyboardEvent) {
 }
 
 .tab[aria-selected='true'] {
-  border-bottom-color: var(--fs-home);
+  border-bottom-color: var(--fs-tint);
   color: var(--fs-text);
 }
 

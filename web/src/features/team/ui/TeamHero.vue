@@ -116,7 +116,7 @@ const flow = computed(() => averageFlow(page.matches, page.team.id))
 }
 
 .value {
-  color: var(--fs-home);
+  color: var(--fs-tint);
   font-family: var(--fs-font-display);
   font-size: 44px;
   font-weight: 800;

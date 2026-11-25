@@ -678,6 +678,8 @@ export interface components {
         };
         TeamPage: {
             team: components["schemas"]["Team"];
+            /** @description The club's colours as ESPN gives them, its main one first, as hex without the hash; empty when ESPN gives none */
+            colors: string[];
             /** @description The first league whose table has the team; null for none */
             league: components["schemas"]["TeamLeague"] | null;
             /** @description The whole season in every competition the gateway follows, by kick-off */

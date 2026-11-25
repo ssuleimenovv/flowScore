@@ -11,11 +11,14 @@ import (
 func TestRatings(t *testing.T) {
 	game := func(home, away string, xgHome, xgAway float64) Game {
 		g := Game{Game: espn.Game{Home: espn.Side{Team: event.Team{ID: home}}, Away: espn.Side{Team: event.Team{ID: away}}}}
-		g.Flow = &MatchFlow{XGHome: xgHome, XGAway: xgAway}
+		g.Flow = &MatchFlow{XGHome: xgHome, XGAway: xgAway, XGKnown: true}
 		return g
 	}
+	// A cup match without the places of its shots: no xG to count
+	cup := game("B", "D", 0, 0)
+	cup.Flow.XGKnown = false
 	// A beat B 2.0 to 0.5 and C 1.5 to 1.0; C–D is still to come
-	games := []Game{game("A", "B", 2.0, 0.5), game("C", "A", 1.0, 1.5), {Game: espn.Game{
+	games := []Game{game("A", "B", 2.0, 0.5), game("C", "A", 1.0, 1.5), cup, {Game: espn.Game{
 		Home: espn.Side{Team: event.Team{ID: "C"}}, Away: espn.Side{Team: event.Team{ID: "D"}}}}}
 	r := ratings(games)
 	// A: (1.5 + 0.5) / (2 + 5); B: -1.5 / (1 + 5); D has played nothing

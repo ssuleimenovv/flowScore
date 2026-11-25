@@ -2,7 +2,8 @@
 import type { Finishing } from '../player'
 
 // "Голы против xG" from PlayerSeason: the two bars on the desktop; the
-// phone (MobilePlayerSeason) says it in a line under the difference
+// phone (MobilePlayerSeason) says it in a line under the difference. The
+// note under them names the matches without an xG.
 const { f } = defineProps<{ f: Finishing }>()
 </script>
 
@@ -26,6 +27,7 @@ const { f } = defineProps<{ f: Finishing }>()
         <span class="phone">{{ f.goals }} при xG {{ f.xg }}. </span>{{ f.text }}
       </span>
     </div>
+    <p v-if="f.note" class="note">{{ f.note }}</p>
   </section>
 </template>
 
@@ -122,6 +124,15 @@ const { f } = defineProps<{ f: Finishing }>()
 .text {
   color: var(--fs-muted);
   font-size: var(--fs-text-footnote);
+  line-height: 1.45;
+}
+
+/* The cup matches left out: ESPN gives their goals without a place */
+.note {
+  padding-top: var(--fs-space-12);
+  border-top: 1px solid var(--fs-line);
+  color: var(--fs-muted);
+  font-size: var(--fs-text-caption);
   line-height: 1.45;
 }
 

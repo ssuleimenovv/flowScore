@@ -778,8 +778,8 @@ export interface components {
             /** @description A goal is a shot on target too */
             shots: number;
             onTarget: number;
-            /** @description Our model's, over the player's shots */
-            xg: number;
+            /** @description Our model's, over the player's shots; null when the source gave no places of the match's shots (ESPN's commentary of a cup match has the goals only) */
+            xg: number | null;
         };
         TeamForm: {
             /** @description The team's last matches of any competition, oldest first */

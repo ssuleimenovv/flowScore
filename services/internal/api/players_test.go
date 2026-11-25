@@ -27,6 +27,8 @@ func TestPlayer(t *testing.T) {
 	// He scored twice in the first round and came on in the second
 	l.Games[0].Flow.Players = []season.PlayerMatch{{ID: "9", Side: event.Home, Starter: true, Minutes: 90, Goals: 2, XG: 1.3}}
 	l.Games[1].Flow.Players = []season.PlayerMatch{{ID: "9", Side: event.Away, Minutes: 20}}
+	// The first has the places of its shots, the second not: no xG for it
+	l.Games[0].Flow.XGKnown = true
 	espnPlayer := athletes{athlete: espn.Athlete{
 		ID: "9", Name: "Haaland", Jersey: "9", Position: "forward",
 		Team: &event.Team{ID: "ARS", Code: "ARS", Name: "ARS"},
@@ -43,10 +45,10 @@ func TestPlayer(t *testing.T) {
 		t.Fatalf("%d matches, want 2", len(p.Matches))
 	}
 	// The newest first
-	if p.Matches[0].ID != "2" || p.Matches[0].Starter || p.Matches[0].Minutes != 20 {
+	if p.Matches[0].ID != "2" || p.Matches[0].Starter || p.Matches[0].Minutes != 20 || p.Matches[0].XG != nil {
 		t.Errorf("came on: %+v", p.Matches[0])
 	}
-	if p.Matches[1].Goals != 2 || p.Matches[1].XG != 1.3 || p.Matches[1].Score == nil {
+	if p.Matches[1].Goals != 2 || p.Matches[1].XG == nil || *p.Matches[1].XG != 1.3 || p.Matches[1].Score == nil {
 		t.Errorf("scored twice: %+v", p.Matches[1])
 	}
 }

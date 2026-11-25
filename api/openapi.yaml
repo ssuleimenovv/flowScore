@@ -1382,8 +1382,11 @@ components:
         onTarget:
           type: integer
         xg:
-          type: number
-          description: Our model's, over the player's shots
+          type: [number, 'null']
+          description: >-
+            Our model's, over the player's shots; null when the source gave no
+            places of the match's shots (ESPN's commentary of a cup match has
+            the goals only)
 
     TeamForm:
       type: object

@@ -26,7 +26,8 @@ func ratings(games []Game) map[string]float64 {
 		r.n++
 	}
 	for _, g := range games {
-		if g.Flow == nil {
+		// A match with no xG would count as a draw in xG
+		if g.Flow == nil || !g.Flow.XGKnown {
 			continue
 		}
 		diff := g.Flow.XGHome - g.Flow.XGAway

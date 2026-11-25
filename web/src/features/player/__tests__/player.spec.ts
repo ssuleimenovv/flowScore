@@ -64,6 +64,26 @@ describe('player', () => {
     expect(finishing(totals([match({ shots: 4, xg: 2 })])).diff).toBe('−2.0')
   })
 
+  it('leaves the matches without an xG out of the weighing', () => {
+    // A cup match: two goals, and no places of the shots at ESPN
+    const cup = match({ id: '3', goals: 2, shots: 2, onTarget: 2, xg: null })
+    const t = totals([...season, cup])
+    expect(t).toMatchObject({ goals: 4, xg: 1.5, xgGoals: 2, xgMinutes: 120, noXG: 1 })
+    const f = finishing(t)
+    expect(f.goals).toBe(2)
+    expect(f.diff).toBe('+0.5')
+    expect(f.note).toBe('Не считая 1 матча: в них источник не даёт мест ударов.')
+    expect(logRow(cup).xg).toBe('—')
+    expect(finishing(totals(season)).note).toBe('')
+
+    const cupsOnly = totals([cup])
+    expect(seasonTiles(cupsOnly)[4]!.value).toBe('—')
+    expect(finishing(cupsOnly)).toMatchObject({
+      note: '',
+      text: 'Для этих матчей источник не даёт мест ударов.',
+    })
+  })
+
   it('writes a match from the side of the player', () => {
     const row = logRow(season[1]!, 'UTC')
     expect(row).toMatchObject({ opponent: 'LIV', venue: 'Г', score: '1:3', date: '21 нояб' })

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/ssuleimenovv/flowscore/services/internal/event"
+	"github.com/ssuleimenovv/flowscore/services/internal/flow"
+	"github.com/ssuleimenovv/flowscore/services/internal/xg"
 )
 
 func TestPlayers(t *testing.T) {
@@ -56,5 +58,28 @@ func TestPlayers(t *testing.T) {
 
 	if Players(events, nil, nil) != nil {
 		t.Error("players without lineups")
+	}
+}
+
+// ESPN's commentary of a cup match has the goals only, with no places on
+// the pitch: its xG is unknown, not 0
+func TestXGKnown(t *testing.T) {
+	model := &xg.Model{Name: "test", Intercept: -1, Weights: xg.Weights{Distance: -0.1}}
+	placed := event.Event{Type: event.ShotOnTarget, Side: event.Home, Pos: &event.Position{X: 90, Y: 50}}
+	cupGoal := event.Event{Type: event.Goal, Side: event.Home}
+
+	f := Measure([]event.Event{placed}, flow.Params{}, model)
+	if !f.XGKnown || f.XGHome <= 0 {
+		t.Errorf("a placed shot: %v, %.2f", f.XGKnown, f.XGHome)
+	}
+	if f := Measure([]event.Event{placed, cupGoal}, flow.Params{}, model); f.XGKnown || f.XGHome != 0 {
+		t.Errorf("a goal with no place: %v, %.2f", f.XGKnown, f.XGHome)
+	}
+	if f := Measure([]event.Event{placed}, flow.Params{}, nil); f.XGKnown {
+		t.Error("xG known without a model")
+	}
+	// An own goal is no shot of the team: its place does not matter
+	if f := Measure([]event.Event{placed, {Type: event.Goal, OwnGoal: true}}, flow.Params{}, model); !f.XGKnown {
+		t.Error("an own goal with no place")
 	}
 }

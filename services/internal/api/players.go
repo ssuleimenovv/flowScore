@@ -56,7 +56,7 @@ type playerMatch struct {
 	Assists   int         `json:"assists"`
 	Shots     int         `json:"shots"`
 	OnTarget  int         `json:"onTarget"`
-	XG        float64     `json:"xg"` // our model's
+	XG        *float64    `json:"xg"` // our model's; null when the source gave no places of the shots
 }
 
 type playerPage struct {
@@ -115,10 +115,14 @@ func playerMatchOf(g season.Game, leagueID, playerID string) (playerMatch, bool)
 		return playerMatch{}, false
 	}
 	p := g.Flow.Players[i]
-	return playerMatch{
+	m := playerMatch{
 		ID: g.ID, LeagueID: leagueID, League: nameOf(leagueID), KickoffAt: g.Start,
 		Home: toTeam(g.Home.Team), Away: toTeam(g.Away.Team), Score: scoreOf(g),
 		Side: p.Side, Starter: p.Starter, Minutes: p.Minutes,
-		Goals: p.Goals, Assists: p.Assists, Shots: p.Shots, OnTarget: p.OnTarget, XG: p.XG,
-	}, true
+		Goals: p.Goals, Assists: p.Assists, Shots: p.Shots, OnTarget: p.OnTarget,
+	}
+	if g.Flow.XGKnown {
+		m.XG = &p.XG
+	}
+	return m, true
 }

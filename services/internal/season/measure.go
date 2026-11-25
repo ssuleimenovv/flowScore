@@ -12,8 +12,12 @@ type MatchFlow struct {
 	Peak           float64 // the highest Flow either team reached
 	PeakSide       event.Side
 	PeakMinute     int
-	XGHome, XGAway float64       // our model's, over the shots of each team
-	Players        []PlayerMatch // who got on the pitch and what they did; nil without lineups
+	XGHome, XGAway float64 // our model's, over the shots of each team
+	// XGKnown is false when the xG above says nothing: without a model, or
+	// with a shot the source gave no place on the pitch. ESPN's commentary of
+	// a cup match has the goals only, without their places.
+	XGKnown bool
+	Players []PlayerMatch // who got on the pitch and what they did; nil without lineups
 }
 
 // event.Position is 0–100; the xG model measures in StatsBomb's yards
@@ -43,7 +47,8 @@ func Measure(events []event.Event, p flow.Params, model *xg.Model) MatchFlow {
 		f.Away /= n
 	}
 
-	if model == nil {
+	f.XGKnown = model != nil && shotsPlaced(events)
+	if !f.XGKnown {
 		return f
 	}
 	for _, e := range events {
@@ -65,6 +70,17 @@ func Measure(events []event.Event, p flow.Params, model *xg.Model) MatchFlow {
 func isShot(e event.Event) bool {
 	return e.Type == event.ShotOnTarget || e.Type == event.ShotOffTarget ||
 		e.Type == event.ShotBlocked || (e.Type == event.Goal && !e.OwnGoal)
+}
+
+// shotsPlaced reports whether every shot of the match has its place on the
+// pitch: a match without a shot has nothing to measure wrong either
+func shotsPlaced(events []event.Event) bool {
+	for _, e := range events {
+		if isShot(e) && e.Pos == nil {
+			return false
+		}
+	}
+	return true
 }
 
 // shotXG is our model's xG of a shot; false for anything else, for a shot
